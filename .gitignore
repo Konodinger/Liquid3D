@@ -14,15 +14,9 @@ tpSph
 
 *.json
 
-./dep/glfw/tests
-
 *.make
 *.css
 *.xml
 *.less
 *.html
 *.a
-
-docs
-tests
-examples
