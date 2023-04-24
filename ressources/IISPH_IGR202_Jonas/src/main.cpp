@@ -723,24 +723,24 @@ void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods
     if (gSaveMovie) {
       std::cout << "Recording video..." << std::endl;
       const char* cmd = "ffmpeg -y -r 60 -f image2 -i capture/s%04d.tga -vcodec libx264 -crf 25  -pix_fmt yuv420p output.mp4";
-      #ifdef __linux__ 
-         ffmpeg = popen(cmd, "wb");
-      	pclose(ffmpeg);
-      	ffmpeg = popen("rm -r -f capture", "wb");
-    	pclose(ffmpeg);
-	#elif _WIN32
+     #ifdef _WIN32
 	 ffmpeg = _popen(cmd, "wb");
       	_pclose(ffmpeg);
       	ffmpeg = _popen("rm -r -f capture", "wb");
-    	_pclose(ffmpeg);	
+    	_pclose(ffmpeg);
+    	#else 
+    	ffmpeg = popen(cmd, "wb");
+      	pclose(ffmpeg);
+      	ffmpeg = popen("rm -r -f capture", "wb");
+    	pclose(ffmpeg);
 	#endif
     } else {
-    #ifdef __linux__
-     ffmpeg = popen("md capture", "wb");
-      pclose(ffmpeg); 
-    #elif _WIN32
+    #ifdef _WIN32
       ffmpeg = _popen("md capture", "wb");
       _pclose(ffmpeg);
+      #else
+      ffmpeg = popen("md capture", "wb");
+      pclose(ffmpeg); 
       #endif
       gSavedCnt = 0;
     }
