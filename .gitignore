@@ -1,2 +1,15 @@
 *.DS_Store
 *.vdb
+
+**/*.cmake
+.cache
+
+CMakeCache.txt
+*.in
+CMakeFiles
+Makefile
+tpSph
+
+*.exe
+
+*.json
