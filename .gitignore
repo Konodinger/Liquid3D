@@ -7,9 +7,22 @@
 CMakeCache.txt
 *.in
 CMakeFiles
-Makefile
+**/Makefile
 tpSph
 
 *.exe
 
 *.json
+
+./dep/glfw/tests
+
+*.make
+*.css
+*.xml
+*.less
+*.html
+*.a
+
+docs
+tests
+examples
