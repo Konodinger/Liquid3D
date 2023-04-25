@@ -1,21 +1,35 @@
-*.DS_Store
-*.vdb
+# Prerequisites
+*.d
 
-**/*.cmake
-.cache
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
 
-CMakeCache.txt
-CMakeFiles
-**/Makefile
-tpSph
+# Precompiled Headers
+*.gch
+*.pch
 
-*.exe
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
 
-*.json
+# Fortran module files
+*.mod
+*.smod
 
-*.make
-*.css
-*.xml
-*.less
-*.html
+# Compiled Static libraries
+*.lai
+*.la
 *.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+html
+.cache
