@@ -1,1 +1,0 @@
-/usr/bin/cc -rdynamic CMakeFiles/tearing.dir/tearing.c.o CMakeFiles/tearing.dir/__/deps/glad_gl.c.o -o tearing  -Wl,-rpath,/home/barth/Documents/GitHub/Liquid3D/ressources/IISPH_IGR202_Jonas/dep/glfw/src ../src/libglfw.so.3.3 -lm 

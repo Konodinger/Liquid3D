@@ -1,1 +1,0 @@
-/usr/bin/cc -rdynamic CMakeFiles/empty.dir/empty.c.o CMakeFiles/empty.dir/__/deps/tinycthread.c.o CMakeFiles/empty.dir/__/deps/glad_gl.c.o -o empty  -Wl,-rpath,/home/barth/Documents/GitHub/Liquid3D/ressources/IISPH_IGR202_Jonas/dep/glfw/src ../src/libglfw.so.3.3 -lm -Wl,-Bstatic -lrt -Wl,-Bdynamic 

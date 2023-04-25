@@ -1,1 +1,0 @@
-/usr/bin/cc -rdynamic CMakeFiles/particles.dir/particles.c.o CMakeFiles/particles.dir/__/deps/tinycthread.c.o CMakeFiles/particles.dir/__/deps/getopt.c.o CMakeFiles/particles.dir/__/deps/glad_gl.c.o -o particles  -Wl,-rpath,/home/barth/Documents/GitHub/Liquid3D/ressources/IISPH_IGR202_Jonas/dep/glfw/src ../src/libglfw.so.3.3 -lm -Wl,-Bstatic -lrt -Wl,-Bdynamic 

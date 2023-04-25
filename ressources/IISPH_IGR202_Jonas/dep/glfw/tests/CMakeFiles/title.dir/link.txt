@@ -1,1 +1,0 @@
-/usr/bin/cc -rdynamic CMakeFiles/title.dir/title.c.o CMakeFiles/title.dir/__/deps/glad_gl.c.o -o title  -Wl,-rpath,/home/barth/Documents/GitHub/Liquid3D/ressources/IISPH_IGR202_Jonas/dep/glfw/src ../src/libglfw.so.3.3 -lm 
