@@ -16,22 +16,21 @@
 # have been supplied.
 # ----------------------------------------------------------------------------
 
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.18)
 
 SET(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-SET(CMAKE_CXX_STANDARD 11)
+SET(CMAKE_CXX_STANDARD 17)
 SET(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
 project(tpSph)
 
-add_executable(
-  ${PROJECT_NAME}
-  src/main.cpp)
+add_executable(${PROJECT_NAME}  src/main.cpp)
 
-# set(OpenGL_GL_PREFERENCE GLVND)
-# find_package(OpenGL REQUIRED)
-# target_link_libraries(${PROJECT_NAME} PRIVATE ${OPENGL_LIBRARIES})
+# add openvdb library
+list(APPEND CMAKE_MODULE_PATH $ENV{HOME}/openvdb/cmake/)
+find_package(OpenVDB REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE OpenVDB::openvdb)
 
 target_sources(${PROJECT_NAME} PRIVATE dep/glad/src/glad.c)
 target_include_directories(${PROJECT_NAME} PRIVATE dep/glad/include/)
@@ -44,6 +43,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE OpenMP::OpenMP_CXX)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE ${CMAKE_DL_LIBS})
 
+# copy the executable to the source directory
 add_custom_command(TARGET ${PROJECT_NAME}
   POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${PROJECT_NAME}> ${CMAKE_CURRENT_SOURCE_DIR})
