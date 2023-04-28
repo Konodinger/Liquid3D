@@ -1,1 +1,1 @@
-docker run -it --rm pyopenvdb_img bash
+docker run -it --rm -v `pwd`:/scripts pyopenvdb_img bash
