@@ -28,5 +28,5 @@ The python scripts will be located at `/scripts` inside the docker container. Yo
 
 ```bash
 cd /scripts
-python3 main.py
+python3.7 main.py
 ```
