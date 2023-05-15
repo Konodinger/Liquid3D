@@ -27,11 +27,6 @@ project(tpSph)
 
 add_executable(${PROJECT_NAME}  src/main.cpp)
 
-# add openvdb library
-list(APPEND CMAKE_MODULE_PATH $ENV{HOME}/openvdb/cmake/)
-find_package(OpenVDB REQUIRED)
-target_link_libraries(${PROJECT_NAME} PRIVATE OpenVDB::openvdb)
-
 target_sources(${PROJECT_NAME} PRIVATE dep/glad/src/glad.c)
 target_include_directories(${PROJECT_NAME} PRIVATE dep/glad/include/)
 
