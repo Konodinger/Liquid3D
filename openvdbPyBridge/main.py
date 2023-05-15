@@ -1,5 +1,6 @@
 import pyopenvdb as vdb
 import numpy as np
+import os
 
 # this file code uses code from https://www.openvdb.org/documentation/doxygen/python.html to mesh a point cloud
 
@@ -53,10 +54,14 @@ grid.name = 'grid'
 points, triangles, quads = grid.convertToPolygons(adaptivity=0.5)
 mesh = grid.convertToPolygons(adaptivity=0.8)
 
-writeObjFile('result.obj', *mesh)
+# if not results folder exists, create it
+if not os.path.exists('./results'):
+    os.makedirs('./results')
+
+writeObjFile('./results/result.obj', *mesh)
 
 # Write to VDB file
-vdb.write('grid.vdb', grids=[grid])
+vdb.write('./results/grid.vdb', grids=[grid])
 
 # write the mesh to a VDB file
 # according to the documentation https://web.archive.org/web/20190102171432/http://www.openvdb.org:80/documentation/doxygen/python/index.html
