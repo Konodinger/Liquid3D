@@ -30,3 +30,7 @@ The python scripts will be located at `/scripts` inside the docker container. Yo
 cd /scripts
 python3.7 main.py
 ```
+
+The pyopenvdb doc is no longer online, but you can view its backed up version here: https://web.archive.org/web/20190102171432/http://www.openvdb.org:80/documentation/doxygen/python/index.html
+
+Some examples can be found here: https://www.openvdb.org/documentation/doxygen/python.html
