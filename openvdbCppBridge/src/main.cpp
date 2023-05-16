@@ -11,8 +11,26 @@ int main() {
     // once per program and may safely be called multiple times.
     initialize();
 
+    std::vector<openvdb::Vec3R> particles;
+
+    // read particles from file particles.txt
+    // each line contains 3 float numbers separated by space
+    std::ifstream infile("../particles.txt");
+    if (!infile) {
+        std::cout << "Error opening particles file" << std::endl;
+        return 1;
+    }
+
+    float x, y, z;
+    while (infile >> x >> y >> z) {
+        particles.emplace_back(x, y, z);
+    }
+
+    std::cout << "Number of particles: " << particles.size() << std::endl;
+    std::cout << "First particle: " << particles[0] << std::endl;
+
     // Create an empty floating-point grid with background value 0.
-    FloatGrid::Ptr grid = FloatGrid::create();
+    FloatGrid::Ptr grid = FloatGrid::create(0.0);
     std::cout << "Testing random access:" << std::endl;
     // Get an accessor for coordinate-based access to voxels.
     FloatGrid::Accessor accessor = grid->getAccessor();
@@ -36,10 +54,12 @@ int main() {
     accessor.setValue(Coord::max(), 4.0f);
     std::cout << "Testing sequential access:" << std::endl;
     // Print all active ("on") voxels by means of an iterator.
-    for (FloatGrid::ValueOnCIter iter = grid->cbeginValueOn(); iter; ++iter) {
-        std::cout << "Grid" << iter.getCoord() << " = " << *iter << std::endl;
-    }
 
+    /*for (FloatGrid::ValueOnCIter iter = grid->cbeginValueOn(); iter; ++iter) {
+        std::cout << "Grid" << iter.getCoord() << " = " << *iter << std::endl;
+    }*/
+
+    // multiple grids structure
     GridPtrVecPtr grids(new GridPtrVec);
     grids->push_back(grid);
 
