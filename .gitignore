@@ -50,3 +50,5 @@ CTestTestfile.cmake
 _deps
 
 .vscode
+.idea
+cmake-build-debug
