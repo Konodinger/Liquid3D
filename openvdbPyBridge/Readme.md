@@ -2,33 +2,50 @@
 
 We use the `pyopenvdb` package to read and write OpenVDB files. This package has very restrictive installation requirements such as a very specific version of libc therefore we use a docker container to run the code.
 
-The docker is based on this repository: https://github.com/surf-visualization/pyopenvdb-docker-image
-
 To build the docker image run:
 
-```bash
-./buildDocker.sh
-
-# or
-
-docker build -t pyopenvdb_img .
+```sh
+docker build -t fluid_simu .
 ```
+
+> - `-t`: we tag the builded image with `fluid_simu`
 
 Then to run the docker container:
 
-```bash
-./runDocker.sh
-
-# or
-
-docker run -it --rm -v `pwd`:/scripts pyopenvdb_img bash
+```sh
+docker run -it --rm -v $(pwd):/scripts fluid_simu bash
 ```
 
-The python scripts will be located at `/scripts` inside the docker container. You can run them with:
+> - `-it`: interactive with terminal
+> - `-rm`: delete at the end
+> - `-v`: to bind the volume on `$(pwd):/scripts`
+> - `bash`: run a bash after starting the container
 
-```bash
+## MacOs M1
+
+M1 is a different architecture
+
+```sh
+docker build . -t fluid_simu --platform=linux/amd64
+docker run --rm  -it -v $(pwd):/scripts --platform linux/amd64 fluid_simu bash
+```
+
+> - we need to add `--platform=linux/amd64` !
+
+## Test the installed `pyopenvdb` lib
+
+```sh
+python -c 'import pyopenvdb as vdb'
+```
+
+## Usage
+
+The python scripts will be located at `/scripts` inside the docker container (the volume on the computer is binded).
+You can run them with:
+
+```sh
 cd /scripts
-python3.7 main.py
+python main.py
 ```
 
 The pyopenvdb doc is no longer online, but you can view its backed up version here: https://web.archive.org/web/20190102171432/http://www.openvdb.org:80/documentation/doxygen/python/index.html
