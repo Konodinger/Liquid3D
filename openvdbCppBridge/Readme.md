@@ -17,3 +17,5 @@ You can use cmake to build the project. The executable will be in the `build` fo
 
 Point grids can be exported to `.vdb` files. However, they are not compatible with Blender which only supports voxel
 grids.
+
+Next: investigate this file: https://www.openvdb.org/documentation/doxygen/ParticlesToLevelSet_8h.html to convert to level set then to .vdb file.
