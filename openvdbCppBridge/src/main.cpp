@@ -3,9 +3,14 @@
 #include <openvdb/points/PointConversion.h>
 #include <openvdb/points/PointCount.h>
 #include <openvdb/tools/ParticlesToLevelSet.h>
+#include <openvdb/tools/PointScatter.h>
+#include <openvdb/tools/PointsToMask.h>
+#include <openvdb/tools/VolumeToMesh.h>
 
 #include <iostream>
 #include <fstream>
+
+#include "particleList.h"
 
 using namespace openvdb;
 
@@ -15,8 +20,6 @@ int main() {
     // Initialize the OpenVDB library.  This must be called at least
     // once per program and may safely be called multiple times.
     initialize();
-
-    // PART 1
 
     std::vector<openvdb::Vec3R> particlesPositions;
 
@@ -33,6 +36,8 @@ int main() {
 
     std::cout << "Number of particlesPositions: " << particlesPositions.size() << std::endl;
     std::cout << "First particle: " << particlesPositions[0] << std::endl;
+
+    auto particleList = new ParticleList(particlesPositions);
 
     // The VDB Point-Partioner is used when bucketing points and requires a
     // specific interface. For convenience, we use the PointAttributeVector
@@ -58,8 +63,15 @@ int main() {
     // to use for storing the position, (2) the grid we want to create
     // (ie a PointDataGrid).
     // We use no compression here for the positions.
-    openvdb::points::PointDataGrid::Ptr grid = openvdb::points::createPointDataGrid<openvdb::points::NullCodec,
+    auto grid = openvdb::points::createPointDataGrid<openvdb::points::NullCodec,
             openvdb::points::PointDataGrid>(particlesPositions, *transform);
+
+    // create a level set from the particles
+    auto levelSet = openvdb::createLevelSet<openvdb::FloatGrid>(voxelSize, 0.5);
+
+    auto grid2 = openvdb::createGrid<openvdb::FloatGrid>()->create();
+    grid2->setGridClass(openvdb::GRID_LEVEL_SET);
+    openvdb::tools::particlesToSdf<openvdb::FloatGrid>(*particleList, *grid2);
 
     //TODO: convert the point data grid to a level set to export it to Blender
     //openvdb::FloatGrid::Ptr grid2 = openvdb::FloatGrid::create();

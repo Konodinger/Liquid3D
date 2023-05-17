@@ -7,15 +7,15 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 
 project(OpenVdbBridge)
 
-add_executable(${PROJECT_NAME}  src/main.cpp)
+add_executable(${PROJECT_NAME}  src/main.cpp src/particleList.h)
 
 # add openvdb library
 list(APPEND CMAKE_MODULE_PATH $ENV{HOME}/openvdb/cmake/)
 find_package(OpenVDB REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE OpenVDB::openvdb)
 
-find_package(OpenMP)
-target_link_libraries(${PROJECT_NAME} PRIVATE OpenMP::OpenMP_CXX)
+#find_package(OpenMP)
+#target_link_libraries(${PROJECT_NAME} PRIVATE OpenMP::OpenMP_CXX)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE ${CMAKE_DL_LIBS})
 
