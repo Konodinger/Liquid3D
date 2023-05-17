@@ -15,6 +15,7 @@
 #include "utils.hpp"
 
 // this in inspired on https://github.com/dneg/openvdb/blob/587c9ae84c2822bbc03d0d7eceb52898582841b9/openvdb/openvdb/unittest/TestParticlesToLevelSet.cc#L470
+// see this doc: https://www.openvdb.org/documentation/doxygen/classopenvdb_1_1v10__0_1_1tools_1_1ParticlesToLevelSet.html
 
 /**
  * Rasterize a list of particles into a level set then write it to a file
@@ -46,7 +47,7 @@ void rasterizeParticles(std::vector<openvdb::Vec3R> positions) {
     std::vector<openvdb::Vec3s> points;
     std::vector<openvdb::Vec4I> quads;
     std::vector<openvdb::Vec3I> triangles;
-    openvdb::tools::volumeToMesh(*ls, points, triangles, quads);
+    openvdb::tools::volumeToMesh(*ls, points, triangles, quads, 0.0, 0.5, true);
 
     std::cout << "points: " << points.size() << std::endl;
     std::cout << "quads: " << quads.size() << std::endl;

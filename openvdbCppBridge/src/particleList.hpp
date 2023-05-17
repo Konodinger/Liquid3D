@@ -11,7 +11,7 @@
 #include <cassert>
 
 /**
- * This class is required by openvdb::tools::ParticlesToLevelSet (see src file for details)
+ * This class is required by openvdb::tools::ParticlesToLevelSet (see https://www.openvdb.org/documentation/doxygen/ParticlesToLevelSet_8h.html)
  */
 class ParticleList {
 public:
@@ -19,7 +19,9 @@ public:
     using PosType = openvdb::Vec3R; // required by openvdb::tools::PointPartitioner
     using AttributeType = Real; // required by openvdb::tools::ParticlesToLevelSet
 
-    ParticleList(std::vector<openvdb::Vec3R> particlePositions) {
+    constexpr static float PARTICLE_RADIUS = 0.1;
+
+    explicit ParticleList(std::vector<openvdb::Vec3R> particlePositions) {
         this->_particlePositions = std::move(particlePositions);
     }
 
@@ -41,7 +43,7 @@ public:
     void getPosRad(size_t n, openvdb::Vec3R &xyz, openvdb::Real &radius) const {
         assert(n < this->_particlePositions.size());
         xyz = this->_particlePositions[n];
-        radius = 0.1; //FIXME: this will not always be the same
+        radius = PARTICLE_RADIUS;
     }
 
     // Get the world-space position, radius and velocity of the nth particle.
@@ -49,7 +51,7 @@ public:
     void getPosRadVel(size_t n, openvdb::Vec3R &xyz, openvdb::Real &radius, openvdb::Vec3R &velocity) const {
         assert(n < this->_particlePositions.size());
         xyz = this->_particlePositions[n];
-        radius = 0.1; //FIXME: this will not always be the same
+        radius = PARTICLE_RADIUS;
         velocity = {0.0, 0.0, 0.0}; //FIXME: this will not always be the same
     }
 

@@ -1,1 +1,1 @@
-docker build -t pyopenvdb_img .
+docker build -t fluid_simu .

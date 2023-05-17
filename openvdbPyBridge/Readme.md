@@ -6,6 +6,10 @@ To build the docker image run:
 
 ```sh
 docker build -t fluid_simu .
+
+#or 
+
+./buildDocker.sh
 ```
 
 > - `-t`: we tag the builded image with `fluid_simu`
@@ -14,6 +18,10 @@ Then to run the docker container:
 
 ```sh
 docker run -it --rm -v $(pwd):/scripts fluid_simu bash
+
+# or
+
+./runDockerUnix.sh
 ```
 
 > - `-it`: interactive with terminal
