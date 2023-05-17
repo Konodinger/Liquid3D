@@ -9,6 +9,12 @@
 #include <openvdb/openvdb.h>
 #include <openvdb/points/PointConversion.h>
 
+#include "utils.hpp"
+
+/**
+ * Create a point grid from a list of particles
+ * @param positions the list of particle positions
+ */
 void createPointGrid(std::vector<openvdb::Vec3R> positions) {
     openvdb::points::PointAttributeVector<openvdb::Vec3R> particlePositionsWrapper(positions);
 
@@ -38,7 +44,7 @@ void createPointGrid(std::vector<openvdb::Vec3R> positions) {
     grid->setName(gridName);
 
     // Create a VDB file object and write out the grid.
-    openvdb::io::File("particles.vdb").write({grid});
+    writeGrid(grid, "pointGrid");
 }
 
 #endif //OPENVDBBRIDGE_POINTGRID_HPP

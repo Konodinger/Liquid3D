@@ -13,6 +13,10 @@
 
 // this in inspired on https://github.com/dneg/openvdb/blob/587c9ae84c2822bbc03d0d7eceb52898582841b9/openvdb/openvdb/unittest/TestParticlesToLevelSet.cc#L470
 
+/**
+ * Rasterize a list of particles into a level set then write it to a file
+ * @param positions the list of particle positions
+ */
 void rasterizeParticles(std::vector<openvdb::Vec3R> positions) {
     auto particleList = new ParticleList(positions);
     std::cout << "Created OpenVDB compatible particle list" << std::endl;

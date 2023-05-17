@@ -10,6 +10,9 @@
 #include <vector>
 #include <cassert>
 
+/**
+ * This class is required by openvdb::tools::ParticlesToLevelSet (see src file for details)
+ */
 class ParticleList {
 public:
     using Real = openvdb::Real;
