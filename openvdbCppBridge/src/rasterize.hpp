@@ -14,7 +14,8 @@
 #include "particleList.hpp"
 #include "utils.hpp"
 
-// this in inspired on https://github.com/dneg/openvdb/blob/587c9ae84c2822bbc03d0d7eceb52898582841b9/openvdb/openvdb/unittest/TestParticlesToLevelSet.cc#L470
+// based on the slides: https://artifacts.aswf.io/io/aswf/openvdb/openvdb_toolset_2013/1.0.0/openvdb_toolset_2013-1.0.0.pdf
+// code inspired on https://github.com/dneg/openvdb/blob/587c9ae84c2822bbc03d0d7eceb52898582841b9/openvdb/openvdb/unittest/TestParticlesToLevelSet.cc#L470
 // see this doc: https://www.openvdb.org/documentation/doxygen/classopenvdb_1_1v10__0_1_1tools_1_1ParticlesToLevelSet.html
 
 /**
@@ -33,27 +34,37 @@ void rasterizeParticles(std::vector<openvdb::Vec3R> positions) {
     int pointsPerVoxel = 8;
     float voxelSize = openvdb::points::computeVoxelSize(particlePositionsWrapper, pointsPerVoxel);
 
+    // points to levelset (https://github.com/dneg/openvdb/blob/587c9ae84c2822bbc03d0d7eceb52898582841b9/openvdb/openvdb/unittest/TestParticlesToLevelSet.cc#L471)
+
     //const float voxelSize = 0.1f;
     const float halfWidth = 3.0f;
-    openvdb::FloatGrid::Ptr ls = openvdb::createLevelSet<openvdb::FloatGrid>(voxelSize, halfWidth);
-    openvdb::tools::ParticlesToLevelSet<openvdb::FloatGrid> raster(*ls);
+    openvdb::FloatGrid::Ptr levelSet = openvdb::createLevelSet<openvdb::FloatGrid>(voxelSize, halfWidth);
+    openvdb::tools::ParticlesToLevelSet<openvdb::FloatGrid> raster(*levelSet);
 
     //raster.setGrainSize(1); //a value of zero disables threading
     raster.rasterizeSpheres(*particleList);
     raster.finalize();
 
+    std::cout << "\n Particles have been converted to a level set:" << std::endl;
+    std::cout << "Memory usage: " << levelSet->tree().memUsage() << std::endl;
+    std::cout << "Active voxel count: " << levelSet->activeVoxelCount() << std::endl;
+    std::cout << "Bounding box: " << levelSet->evalActiveVoxelBoundingBox() << std::endl;
+
+
     // now we have to use https://github.com/AcademySoftwareFoundation/openvdb/blob/4a71881492520eb1323876becd0dad27eb0c2dcc/openvdb/openvdb/tools/VolumeToMesh.h to convert the level set to a mesh
+
+    std::cout << "\nMeshing the level set" << std::endl;
 
     std::vector<openvdb::Vec3s> points;
     std::vector<openvdb::Vec4I> quads;
     std::vector<openvdb::Vec3I> triangles;
-    openvdb::tools::volumeToMesh(*ls, points, triangles, quads, 0.0, 0.5, true);
+    openvdb::tools::volumeToMesh(*levelSet, points, triangles, quads, 0.0, 0.5, true);
 
     std::cout << "points: " << points.size() << std::endl;
     std::cout << "quads: " << quads.size() << std::endl;
     std::cout << "triangles: " << triangles.size() << std::endl;
 
-    writeGrid(ls, "testRaster");
+    writeGrid(levelSet, "testRaster");
 }
 
 #endif //OPENVDBBRIDGE_RASTERIZE_HPP
