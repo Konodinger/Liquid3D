@@ -1,25 +1,13 @@
 #include <openvdb/openvdb.h>
-#include <openvdb/io/Stream.h>
-#include <openvdb/tools/ParticlesToLevelSet.h>
 #include <openvdb/Types.h>
 
 #include <iostream>
 #include <fstream>
 
-#include "particleList.h"
+#include "rasterize.hpp"
+#include "pointGrid.hpp"
 
 // src: https://www.openvdb.org/documentation/doxygen/codeExamples.html#sPointsHelloWorld
-// based also on: https://github.com/dneg/openvdb/blob/587c9ae84c2822bbc03d0d7eceb52898582841b9/openvdb/openvdb/unittest/TestParticlesToLevelSet.cc#L470
-
-void writeGrid(const openvdb::GridBase::Ptr &grid, const std::string &fileName) {
-    std::cout << "\nWriting \"" << fileName << "\" to file\n";
-    grid->setName(fileName);
-    openvdb::GridPtrVec grids;
-    grids.push_back(grid);
-    openvdb::io::File file(fileName + ".vdb");
-    file.write(grids);
-    file.close();
-}
 
 int main() {
     // Initialize the OpenVDB library.  This must be called at least
@@ -42,19 +30,9 @@ int main() {
     std::cout << "Number of particlesPositions: " << particlesPositions.size() << std::endl;
     std::cout << "First particle: " << particlesPositions[0] << std::endl;
 
-    auto particleList = new ParticleList(particlesPositions);
-    std::cout << "Created OpenVDB compatible particle list" << std::endl;
+    rasterizeParticles(particlesPositions);
 
-    // create a level set from the particles
-    const float voxelSize = 1.0f, halfWidth = 2.0f;
-    openvdb::FloatGrid::Ptr ls = openvdb::createLevelSet<openvdb::FloatGrid>(voxelSize, halfWidth);
-    openvdb::tools::ParticlesToLevelSet<openvdb::FloatGrid> raster(*ls);
-
-    //raster.setGrainSize(1);//a value of zero disables threading
-    raster.rasterizeSpheres(*particleList);
-    raster.finalize();
-
-    writeGrid(ls, "testRaster");
+    createPointGrid(particlesPositions);
 
     return 0;
 }

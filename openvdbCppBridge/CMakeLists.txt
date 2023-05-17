@@ -9,7 +9,7 @@ set(CXX_WARNINGS "-Wall -Wextra -Wpointer-arith -Wcast-align -fstrict-aliasing -
 
 project(OpenVdbBridge)
 
-add_executable(${PROJECT_NAME} src/main.cpp src/particleList.h)
+add_executable(${PROJECT_NAME} src/main.cpp src/particleList.hpp src/rasterize.hpp src/utils.hpp src/pointGrid.hpp)
 
 # add openvdb library
 list(APPEND CMAKE_MODULE_PATH $ENV{HOME}/openvdb/cmake/)
