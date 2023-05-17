@@ -9,6 +9,8 @@
 #include <openvdb/openvdb.h>
 #include <openvdb/tools/ParticlesToLevelSet.h>
 #include <openvdb/tools/VolumeToMesh.h>
+#include <openvdb/points/PointConversion.h>
+#include <openvdb/points/PointCount.h>
 #include "particleList.hpp"
 #include "utils.hpp"
 
@@ -22,16 +24,22 @@ void rasterizeParticles(std::vector<openvdb::Vec3R> positions) {
     auto particleList = new ParticleList(positions);
     std::cout << "Created OpenVDB compatible particle list" << std::endl;
 
-    // create a level set from the particles
-    const float voxelSize = 1.0f, halfWidth = 2.0f;
+    openvdb::points::PointAttributeVector<openvdb::Vec3R> particlePositionsWrapper(positions);
+
+    // This method computes a voxel-size to match the number of
+    // points / voxel requested. Although it won't be exact, it typically offers
+    // a good balance of memory against performance.
+    int pointsPerVoxel = 8;
+    float voxelSize = openvdb::points::computeVoxelSize(particlePositionsWrapper, pointsPerVoxel);
+
+    //const float voxelSize = 0.1f;
+    const float halfWidth = 3.0f;
     openvdb::FloatGrid::Ptr ls = openvdb::createLevelSet<openvdb::FloatGrid>(voxelSize, halfWidth);
     openvdb::tools::ParticlesToLevelSet<openvdb::FloatGrid> raster(*ls);
 
-    raster.setGrainSize(1); //a value of zero disables threading
+    //raster.setGrainSize(1); //a value of zero disables threading
     raster.rasterizeSpheres(*particleList);
     raster.finalize();
-
-    writeGrid(ls, "testRaster");
 
     // now we have to use https://github.com/AcademySoftwareFoundation/openvdb/blob/4a71881492520eb1323876becd0dad27eb0c2dcc/openvdb/openvdb/tools/VolumeToMesh.h to convert the level set to a mesh
 
@@ -43,6 +51,8 @@ void rasterizeParticles(std::vector<openvdb::Vec3R> positions) {
     std::cout << "points: " << points.size() << std::endl;
     std::cout << "quads: " << quads.size() << std::endl;
     std::cout << "triangles: " << triangles.size() << std::endl;
+
+    writeGrid(ls, "testRaster");
 }
 
 #endif //OPENVDBBRIDGE_RASTERIZE_HPP
