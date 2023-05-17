@@ -43,7 +43,7 @@ mesh = grid.convertToPolygons(adaptivity=0.8)
 if not os.path.exists('./results'):
     os.makedirs('./results')
 
-writeObjFile('./results/sphere_level_set.obj', *mesh)
+writeObjFile('./results/sphere_levelset.obj', *mesh)
 
 # Write to VDB file
-vdb.write('./results/sphere_level_set.vdb', grids=[grid])
+vdb.write('./results/sphere_levelset.vdb', grids=[grid])
