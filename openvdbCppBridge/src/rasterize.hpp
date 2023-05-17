@@ -31,13 +31,13 @@ void rasterizeParticles(std::vector<openvdb::Vec3R> positions) {
     // This method computes a voxel-size to match the number of
     // points / voxel requested. Although it won't be exact, it typically offers
     // a good balance of memory against performance.
-    int pointsPerVoxel = 8;
-    float voxelSize = openvdb::points::computeVoxelSize(particlePositionsWrapper, pointsPerVoxel);
+    //int pointsPerVoxel = 8;
+    //float voxelSize = openvdb::points::computeVoxelSize(particlePositionsWrapper, pointsPerVoxel);
 
     // points to levelset (https://github.com/dneg/openvdb/blob/587c9ae84c2822bbc03d0d7eceb52898582841b9/openvdb/openvdb/unittest/TestParticlesToLevelSet.cc#L471)
 
-    //const float voxelSize = 0.1f;
-    const float halfWidth = 3.0f;
+    const float voxelSize = 0.5f;
+    const float halfWidth = 4.0f;
     openvdb::FloatGrid::Ptr levelSet = openvdb::createLevelSet<openvdb::FloatGrid>(voxelSize, halfWidth);
     openvdb::tools::ParticlesToLevelSet<openvdb::FloatGrid> raster(*levelSet);
 
@@ -45,10 +45,13 @@ void rasterizeParticles(std::vector<openvdb::Vec3R> positions) {
     raster.rasterizeSpheres(*particleList);
     raster.finalize();
 
+    //openvdb::FloatGrid::Ptr ls = raster.getSdfGrid();
+
     std::cout << "\n Particles have been converted to a level set:" << std::endl;
     std::cout << "Memory usage: " << levelSet->tree().memUsage() << std::endl;
     std::cout << "Active voxel count: " << levelSet->activeVoxelCount() << std::endl;
     std::cout << "Bounding box: " << levelSet->evalActiveVoxelBoundingBox() << std::endl;
+    levelSet->tree().print(std::cout, 4);
 
 
     // now we have to use https://github.com/AcademySoftwareFoundation/openvdb/blob/4a71881492520eb1323876becd0dad27eb0c2dcc/openvdb/openvdb/tools/VolumeToMesh.h to convert the level set to a mesh
