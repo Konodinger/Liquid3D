@@ -56,8 +56,13 @@ cd /scripts
 python main.py
 ```
 
-The pyopenvdb doc is no longer online, but you can view its backed up version here: https://web.archive.org/web/20190102171432/http://www.openvdb.org:80/documentation/doxygen/python/index.html
+The pyopenvdb is online again: https://academysoftwarefoundation.github.io/openvdb/python/index.html
 
 Some examples can be found here: https://www.openvdb.org/documentation/doxygen/python.html
 
 More documentation: https://artifacts.aswf.io/io/aswf/openvdb/openvdb_toolset_2013/1.0.0/openvdb_toolset_2013-1.0.0.pdf
+
+As far as we understand it, the python API does not exposes low-level features required to create level sets from points, but it can create meshes out of level sets.
+
+Either we find a way to create the level set from the points ourselves, or we use the C++ API.
+The C++ version of this project is available in the folder openvdbCppBridge.
