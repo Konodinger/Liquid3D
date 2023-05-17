@@ -8,6 +8,7 @@
 #include <vector>
 #include <openvdb/openvdb.h>
 #include <openvdb/tools/ParticlesToLevelSet.h>
+#include <openvdb/tools/VolumeToMesh.h>
 #include "particleList.hpp"
 #include "utils.hpp"
 
@@ -31,6 +32,17 @@ void rasterizeParticles(std::vector<openvdb::Vec3R> positions) {
     raster.finalize();
 
     writeGrid(ls, "testRaster");
+
+    // now we have to use https://github.com/AcademySoftwareFoundation/openvdb/blob/4a71881492520eb1323876becd0dad27eb0c2dcc/openvdb/openvdb/tools/VolumeToMesh.h to convert the level set to a mesh
+
+    std::vector<openvdb::Vec3s> points;
+    std::vector<openvdb::Vec4I> quads;
+    std::vector<openvdb::Vec3I> triangles;
+    openvdb::tools::volumeToMesh(*ls, points, triangles, quads);
+
+    std::cout << "points: " << points.size() << std::endl;
+    std::cout << "quads: " << quads.size() << std::endl;
+    std::cout << "triangles: " << triangles.size() << std::endl;
 }
 
 #endif //OPENVDBBRIDGE_RASTERIZE_HPP
