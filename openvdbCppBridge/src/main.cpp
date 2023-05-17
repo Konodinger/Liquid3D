@@ -8,14 +8,12 @@
 
 #include "particleList.h"
 
-using namespace openvdb;
-
 // src: https://www.openvdb.org/documentation/doxygen/codeExamples.html#sPointsHelloWorld
 // based also on: https://github.com/dneg/openvdb/blob/587c9ae84c2822bbc03d0d7eceb52898582841b9/openvdb/openvdb/unittest/TestParticlesToLevelSet.cc#L470
 
-void writeGrid(const openvdb::GridBase::Ptr& grid, const std::string& fileName) {
+void writeGrid(const openvdb::GridBase::Ptr &grid, const std::string &fileName) {
     std::cout << "\nWriting \"" << fileName << "\" to file\n";
-    grid->setName("TestParticlesToLevelSet");
+    grid->setName(fileName);
     openvdb::GridPtrVec grids;
     grids.push_back(grid);
     openvdb::io::File file(fileName + ".vdb");
@@ -26,7 +24,7 @@ void writeGrid(const openvdb::GridBase::Ptr& grid, const std::string& fileName) 
 int main() {
     // Initialize the OpenVDB library.  This must be called at least
     // once per program and may safely be called multiple times.
-    initialize();
+    openvdb::initialize();
 
     std::vector<openvdb::Vec3R> particlesPositions;
 
