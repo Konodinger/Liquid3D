@@ -18,7 +18,7 @@ int main() {
 
     // read particlesPositions from file particlesPositions.txt
     // each line contains 3 float numbers separated by space
-    std::ifstream infile("../particles.txt");
+    std::ifstream infile("./particles.txt");
     if (!infile) {
         std::cout << "Error opening particlesPositions file" << std::endl;
         return 1;
