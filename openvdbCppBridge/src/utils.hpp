@@ -7,15 +7,32 @@
 
 #include <openvdb/openvdb.h>
 #include <string>
+#include <fstream>
 
 void writeGrid(const openvdb::GridBase::Ptr &grid, const std::string &fileName) {
     std::cout << "\nWriting \"" << fileName << "\" to file\n";
     grid->setName(fileName);
     openvdb::GridPtrVec grids;
     grids.push_back(grid);
-    openvdb::io::File file(fileName + ".vdb");
+    openvdb::io::File file("./results/" + fileName + ".vdb");
     file.write(grids);
     file.close();
+}
+
+void exportToObj(std::vector<openvdb::Vec3s> &points, std::vector<openvdb::Vec4I> &quads,
+                 std::vector<openvdb::Vec3I> &triangles) {
+    std::ofstream objFile;
+    objFile.open("./results/output.obj");
+    for (auto &p: points) {
+        objFile << "v " << p.x() << " " << p.y() << " " << p.z() << "\n";
+    }
+    for (auto &q: quads) {
+        objFile << "f " << q.x() << " " << q.y() << " " << q.z() << " " << q.w() << "\n";
+    }
+    for (auto &t: triangles) {
+        objFile << "f " << t.x() << " " << t.y() << " " << t.z() << "\n";
+    }
+    objFile.close();
 }
 
 #endif //OPENVDBBRIDGE_UTILS_HPP

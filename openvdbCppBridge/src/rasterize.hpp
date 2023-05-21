@@ -13,7 +13,6 @@
 #include <openvdb/points/PointCount.h>
 #include "particleList.hpp"
 #include "utils.hpp"
-#include "exportToObj.h"
 
 // based on the slides: https://artifacts.aswf.io/io/aswf/openvdb/openvdb_toolset_2013/1.0.0/openvdb_toolset_2013-1.0.0.pdf
 // code inspired on https://github.com/dneg/openvdb/blob/587c9ae84c2822bbc03d0d7eceb52898582841b9/openvdb/openvdb/unittest/TestParticlesToLevelSet.cc#L470
