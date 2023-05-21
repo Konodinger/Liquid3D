@@ -14,14 +14,14 @@
 #include "particleList.hpp"
 #include "utils.hpp"
 
-// based on the slides: https://artifacts.aswf.io/io/aswf/openvdb/openvdb_toolset_2013/1.0.0/openvdb_toolset_2013-1.0.0.pdf
-// code inspired on https://github.com/dneg/openvdb/blob/587c9ae84c2822bbc03d0d7eceb52898582841b9/openvdb/openvdb/unittest/TestParticlesToLevelSet.cc#L470
-// see this doc: https://www.openvdb.org/documentation/doxygen/classopenvdb_1_1v10__0_1_1tools_1_1ParticlesToLevelSet.html
-
 /**
  * Rasterize a list of particles into a level set then makes a mesh out of it.
  * The mesh and the level sets are output in the results directory.
  * @param positions the list of particle positions
+ *
+ * @see openvdb slides https://artifacts.aswf.io/io/aswf/openvdb/openvdb_toolset_2013/1.0.0/openvdb_toolset_2013-1.0.0.pdf
+ * @see unit test https://github.com/dneg/openvdb/blob/587c9ae84c2822bbc03d0d7eceb52898582841b9/openvdb/openvdb/unittest/TestParticlesToLevelSet.cc#L470
+ * @see openvdb doc https://www.openvdb.org/documentation/doxygen/classopenvdb_1_1v10__0_1_1tools_1_1ParticlesToLevelSet.html
  */
 void rasterizeParticles(std::vector<openvdb::Vec3R> &positions) {
     auto particleList = new ParticleList(positions);

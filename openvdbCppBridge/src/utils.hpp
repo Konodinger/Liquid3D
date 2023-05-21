@@ -10,6 +10,11 @@
 #include <fstream>
 #include <iostream>
 
+/**
+ * Write an openvdb grid to a file in the results folder
+ * @param grid the grid to write
+ * @param fileName the name of the file
+ */
 void writeGrid(const openvdb::GridBase::Ptr &grid, const std::string &fileName) {
     // if results folder does not exist, create it
     if (!std::ifstream("./results")) {
@@ -26,6 +31,13 @@ void writeGrid(const openvdb::GridBase::Ptr &grid, const std::string &fileName) 
     file.close();
 }
 
+/**
+ * Export a list of points and quads to an obj file in the results folder
+ * @param points the list of points/vertices of the mesh
+ * @param quads the list of quads of the mesh
+ * @param triangles the list of triangles of the mesh
+ * @param fileName the name of the file
+ */
 void exportToObj(std::vector<openvdb::Vec3s> &points, std::vector<openvdb::Vec4I> &quads,
                  std::vector<openvdb::Vec3I> &triangles, const std::string &fileName) {
     // if results folder does not exist, create it
