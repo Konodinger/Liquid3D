@@ -13,6 +13,7 @@
 #include <openvdb/points/PointCount.h>
 #include "particleList.hpp"
 #include "utils.hpp"
+#include "exportToObj.h"
 
 // based on the slides: https://artifacts.aswf.io/io/aswf/openvdb/openvdb_toolset_2013/1.0.0/openvdb_toolset_2013-1.0.0.pdf
 // code inspired on https://github.com/dneg/openvdb/blob/587c9ae84c2822bbc03d0d7eceb52898582841b9/openvdb/openvdb/unittest/TestParticlesToLevelSet.cc#L470
@@ -44,11 +45,9 @@ void rasterizeParticles(std::vector<openvdb::Vec3R> positions) {
 
     raster.setGrainSize(1); //a value of zero disables threading
     raster.rasterizeSpheres(*particleList, 1);
-    //raster.finalize();
+    raster.finalize();
 
-    //openvdb::FloatGrid::Ptr ls = raster.getSdfGrid();
-
-    std::cout << "\n Particles have been converted to a level set:" << std::endl;
+    std::cout << "\nParticles have been converted to a level set:" << std::endl;
     std::cout << "Memory usage: " << levelSet->tree().memUsage() << std::endl;
     std::cout << "Active voxel count: " << levelSet->activeVoxelCount() << std::endl;
     std::cout << "Bounding box: " << levelSet->evalActiveVoxelBoundingBox() << std::endl;
@@ -67,6 +66,8 @@ void rasterizeParticles(std::vector<openvdb::Vec3R> positions) {
     std::cout << "points: " << points.size() << std::endl;
     std::cout << "quads: " << quads.size() << std::endl;
     std::cout << "triangles: " << triangles.size() << std::endl;
+
+    exportToObj(points, quads, triangles);
 
     writeGrid(levelSet, "testRaster");
 }

@@ -66,3 +66,5 @@ As far as we understand it, the python API does not exposes low-level features r
 
 Either we find a way to create the level set from the points ourselves, or we use the C++ API.
 The C++ version of this project is available in the folder openvdbCppBridge.
+
+It is possible to perform the conversion using python according to this stackoverflow page: https://stackoverflow.com/questions/56965268/how-do-i-convert-a-3d-point-cloud-ply-into-a-mesh-with-faces-and-vertices
