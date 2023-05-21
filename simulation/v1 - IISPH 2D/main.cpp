@@ -29,7 +29,7 @@ int main(int argc, char **argv)
   ofstream file;
   file.open("./" + fileOutput + ".txt");
   file << res_x << " " << res_y << " 1\n";
-  file << dt << " " << timesteps << "\n";
+  file << dt * nbConsecutiveSteps << " " << timesteps << "\n";
 
 
   gSolver.initScene(res_x, res_y, f_height, f_width);
