@@ -27,7 +27,7 @@ public:
 
     constexpr static float PARTICLE_RADIUS = 0.1;
 
-    explicit ParticleList(std::vector<openvdb::Vec3R> particlePositions) {
+    explicit ParticleList(std::vector<openvdb::Vec3R> &particlePositions) {
         for (auto &p: particlePositions) {
             add(p);
         }

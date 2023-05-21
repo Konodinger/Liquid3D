@@ -19,14 +19,15 @@
 // see this doc: https://www.openvdb.org/documentation/doxygen/classopenvdb_1_1v10__0_1_1tools_1_1ParticlesToLevelSet.html
 
 /**
- * Rasterize a list of particles into a level set then write it to a file
+ * Rasterize a list of particles into a level set then makes a mesh out of it.
+ * The mesh and the level sets are output in the results directory.
  * @param positions the list of particle positions
  */
-void rasterizeParticles(std::vector<openvdb::Vec3R> positions) {
+void rasterizeParticles(std::vector<openvdb::Vec3R> &positions) {
     auto particleList = new ParticleList(positions);
     std::cout << "Created OpenVDB compatible particle list" << std::endl;
 
-    openvdb::points::PointAttributeVector<openvdb::Vec3R> particlePositionsWrapper(positions);
+    //openvdb::points::PointAttributeVector<openvdb::Vec3R> particlePositionsWrapper(positions);
 
     // This method computes a voxel-size to match the number of
     // points / voxel requested. Although it won't be exact, it typically offers
@@ -50,8 +51,6 @@ void rasterizeParticles(std::vector<openvdb::Vec3R> positions) {
     std::cout << "Memory usage: " << levelSet->tree().memUsage() << std::endl;
     std::cout << "Active voxel count: " << levelSet->activeVoxelCount() << std::endl;
     std::cout << "Bounding box: " << levelSet->evalActiveVoxelBoundingBox() << std::endl;
-    levelSet->tree().print(std::cout, 4);
-
 
     // now we have to use https://github.com/AcademySoftwareFoundation/openvdb/blob/4a71881492520eb1323876becd0dad27eb0c2dcc/openvdb/openvdb/tools/VolumeToMesh.h to convert the level set to a mesh
 
@@ -66,9 +65,9 @@ void rasterizeParticles(std::vector<openvdb::Vec3R> positions) {
     std::cout << "quads: " << quads.size() << std::endl;
     std::cout << "triangles: " << triangles.size() << std::endl;
 
-    exportToObj(points, quads, triangles);
+    exportToObj(points, quads, triangles, "rasterizedFluid");
 
-    writeGrid(levelSet, "testRaster");
+    writeGrid(levelSet, "fluidSDF");
 }
 
 #endif //OPENVDBBRIDGE_RASTERIZE_HPP

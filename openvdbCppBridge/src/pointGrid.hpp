@@ -15,7 +15,7 @@
  * Create a point grid from a list of particles
  * @param positions the list of particle positions
  */
-void createPointGrid(std::vector<openvdb::Vec3R> positions) {
+void createPointGrid(std::vector<openvdb::Vec3R> &positions) {
     openvdb::points::PointAttributeVector<openvdb::Vec3R> particlePositionsWrapper(positions);
 
     // This method computes a voxel-size to match the number of
