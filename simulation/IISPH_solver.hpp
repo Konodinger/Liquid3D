@@ -252,23 +252,21 @@ public:
     updateColor();
   }
 
+  const CubicSpline &getKernel() const {return _kernel;}
   tIndex particleCount() const { return _pos.size(); }
-  const Vec2f& position(const tIndex i) const { return _pos[i]; }
-  const Vec2f& velocity(const tIndex i) const { return _vel[i]; }
-  const float& color(const tIndex i) const { return _col[i]; }
-  const float& vline(const tIndex i) const { return _vln[i]; }
+  const tIndex &wallParticleCount() { return _nbWallParticles; }
+  tIndex fluidParticleCount() { return _pos.size() - _nbWallParticles; }
+  const vector<tIndex> &gridParticles(const tIndex i, const tIndex j) {return _pidxInGrid[idx1d(i, j)];};
+  const Vec2f &position(const tIndex i) const { return _pos[i]; }
+  const Vec2f &velocity(const tIndex i) const { return _vel[i]; }
+  const Vec2f &acceleration(const tIndex i) const { return _acc[i]; }
+  const Real &pressure(const tIndex i) const { return _p[i]; }
+  const Real &density(const tIndex i) const { return _d[i]; }
+  const float &color(const tIndex i) const { return _col[i]; }
+  const float &vline(const tIndex i) const { return _vln[i]; }
 
   int resX() const { return _resX; }
   int resY() const { return _resY; }
-
-  Real equationOfState(
-    const Real d, const Real d0,
-    const Real k,               // NOTE: You can use _k for k here.
-    const Real gamma=7.0)
-  {
-    // TODO: pressure calculation 
-    return k * (pow((d/d0), gamma) - 1);
-  }
 
 private:
   void buildNeighbor()
@@ -629,7 +627,7 @@ private:
 
   // wall
   Real _l, _r, _b, _t;          // wall (boundary)
-  int _nbWallParticles;          // number of particles that belong to the wall
+  tIndex _nbWallParticles;          // number of particles that belong to the wall
 
   // SPH coefficients
   Real _nu;                     // viscosity coefficient
