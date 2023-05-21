@@ -11,12 +11,13 @@ bool gSolverStop = false;
 
 //Simulation parameters
 
-float dt = 0.1f;
-long unsigned int timesteps = 10;
+int nbConsecutiveSteps = 5;
+float dt = 0.2f;
+long unsigned int timesteps = 100;
 const int res_x = 48;
 const int res_y = 32;
-const int f_height = 16;
-const int f_width = 16;
+const int f_height = 8;
+const int f_width = 8;
 
 SphSolver gSolver(0.08, 0.5, 1e3, Vec2f(0, -9.8), 0.01, 7.0, 0.5, 0.5, 1.);
 
@@ -44,8 +45,8 @@ int main(int argc, char **argv)
   long unsigned int t = 0;
   while(t < timesteps) {
     if (!gSolverStop){
-      for(int i=0; i<10; ++i) gSolver.update();
-      
+      for(int i=0; i<nbConsecutiveSteps; ++i) gSolver.update();
+
       for (int i = nbWallPart; i < nbPart; ++i) {
         file << gSolver.position(i).x << " " << gSolver.position(i).y << " 0.\n";
       }
