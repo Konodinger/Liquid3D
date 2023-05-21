@@ -35,15 +35,16 @@ void rasterizeParticles(std::vector<openvdb::Vec3R> positions) {
     //float voxelSize = openvdb::points::computeVoxelSize(particlePositionsWrapper, pointsPerVoxel);
 
     // points to levelset (https://github.com/dneg/openvdb/blob/587c9ae84c2822bbc03d0d7eceb52898582841b9/openvdb/openvdb/unittest/TestParticlesToLevelSet.cc#L471)
+    // see also https://stackoverflow.com/questions/68405603/i-am-trying-to-convert-point-cloud-to-mesh-using-openvdb
 
     const float voxelSize = 0.5f;
-    const float halfWidth = 4.0f;
+    const float halfWidth = 2.0f;
     openvdb::FloatGrid::Ptr levelSet = openvdb::createLevelSet<openvdb::FloatGrid>(voxelSize, halfWidth);
     openvdb::tools::ParticlesToLevelSet<openvdb::FloatGrid> raster(*levelSet);
 
-    //raster.setGrainSize(1); //a value of zero disables threading
-    raster.rasterizeSpheres(*particleList);
-    raster.finalize();
+    raster.setGrainSize(1); //a value of zero disables threading
+    raster.rasterizeSpheres(*particleList, 1);
+    //raster.finalize();
 
     //openvdb::FloatGrid::Ptr ls = raster.getSdfGrid();
 
@@ -61,7 +62,7 @@ void rasterizeParticles(std::vector<openvdb::Vec3R> positions) {
     std::vector<openvdb::Vec3s> points;
     std::vector<openvdb::Vec4I> quads;
     std::vector<openvdb::Vec3I> triangles;
-    openvdb::tools::volumeToMesh(*levelSet, points, triangles, quads, 0.0, 0.5, true);
+    openvdb::tools::volumeToMesh(*levelSet, points, triangles, quads, 1, 0);
 
     std::cout << "points: " << points.size() << std::endl;
     std::cout << "quads: " << quads.size() << std::endl;
