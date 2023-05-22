@@ -59,7 +59,7 @@ void rasterizeParticles(std::vector<openvdb::Vec3R> &positions) {
     std::vector<openvdb::Vec3s> points;
     std::vector<openvdb::Vec4I> quads;
     std::vector<openvdb::Vec3I> triangles;
-    openvdb::tools::volumeToMesh(*levelSet, points, triangles, quads, 1, 0);
+    openvdb::tools::volumeToMesh(*levelSet, points, triangles, quads, 0, 0);
 
     std::cout << "points: " << points.size() << std::endl;
     std::cout << "quads: " << quads.size() << std::endl;
