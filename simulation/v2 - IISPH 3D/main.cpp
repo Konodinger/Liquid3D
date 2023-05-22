@@ -19,7 +19,7 @@ bool gSolverStop = false;
 
 int nbConsecutiveSteps = 5;
 float dt = 0.2f;
-long unsigned int timesteps = 1000;
+long unsigned int timesteps = 20;
 const int res_x = 48;
 const int res_y = 32;
 const int res_z = 48;
@@ -27,7 +27,7 @@ const int f_length = 8;
 const int f_height = 8;
 const int f_width = 8;
 
-SphSolver gSolver(0.08, 0.5, 1e3, Vec3f(0, -9.8, 0), 0.01, 7.0, 0.5, 0.5, 0.99);
+SphSolver gSolver(0.08, 0.5, 2.5e3, Vec3f(0, -9.8, 0), 0.01, 7.0, 0.5, 0.5, 0.99);
 
 
 int main(int argc, char **argv)
@@ -39,7 +39,7 @@ int main(int argc, char **argv)
   ofstream file;
   file.open("./" + fileOutput + ".txt");
   file << res_x << " " << res_y << " " << res_z << "\n";
-  file << dt * nbConsecutiveSteps << " " << timesteps << "\n";
+  file << dt * nbConsecutiveSteps << " " << timesteps + 1 << "\n";
 
 
   gSolver.initScene(res_x, res_y, res_z, f_length, f_height, f_width);
@@ -52,7 +52,12 @@ int main(int argc, char **argv)
   int nbPart = gSolver.particleCount();
   file << nbPart - nbWallPart << "\n";
 
+
   long unsigned int t = 0;
+  for (int i = nbWallPart; i < nbPart; ++i) {
+    file << gSolver.position(i).x << " " << gSolver.position(i).y << " " << gSolver.position(i).z << "\n";
+  }
+
   while(t < timesteps) {
     if (!gSolverStop){
       for(int i=0; i<nbConsecutiveSteps; ++i) gSolver.update();
