@@ -1,4 +1,7 @@
 //#define __OPEN_MP__
+#define __DEBUG1__
+//#define __DEBUG2__
+//#define __DEBUG3__
 
 #include <stdio.h>
 #include <iostream>
@@ -17,8 +20,8 @@ bool gSolverStop = false;
 
 //Simulation parameters
 
-int nbConsecutiveSteps = 5;
-float dt = 0.2f;
+int nbConsecutiveSteps = 50;
+float dt = 0.02f;
 long unsigned int timesteps = 20;
 const int res_x = 48;
 const int res_y = 32;
@@ -44,10 +47,12 @@ int main(int argc, char **argv)
 
   gSolver.initScene(res_x, res_y, res_z, f_length, f_height, f_width);
   int nbWallPart = gSolver.wallParticleCount();
-  file << nbWallPart << "\n";
+
+  // Next part print wall particles. It is currently removed because unused.
+  /*file << nbWallPart << "\n";
   for (int i = 0; i < nbWallPart; ++i) {
   file << gSolver.position(i).x << " " << gSolver.position(i).y << " " << gSolver.position(i).z << "\n";
-  }
+  }*/ 
 
   int nbPart = gSolver.particleCount();
   file << nbPart - nbWallPart << "\n";
@@ -59,6 +64,9 @@ int main(int argc, char **argv)
   }
 
   while(t < timesteps) {
+    #ifdef __DEBUG1__
+    cout << "Step number " << t + 1 << "\n";
+    #endif
     if (!gSolverStop){
       for(int i=0; i<nbConsecutiveSteps; ++i) gSolver.update();
 
