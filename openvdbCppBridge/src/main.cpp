@@ -40,24 +40,25 @@ int main(int argc, char **argv) {
     std::cout << "Reading number of boundary particles: " << nbBoundaryParticles << std::endl;
 
     float x, y, z;
-    for(int i = 0; i < nbBoundaryParticles; i++) {
+    for (int i = 0; i < nbBoundaryParticles; i++) {
         infile >> x >> y >> z;
         // do nothing with boundary particles
-        //particlesPositions.emplace_back(x, y, z);
     }
 
     int nbParticles;
     infile >> nbParticles;
     std::cout << "Reading number of particles: " << nbParticles << std::endl;
 
-    for(int i = 0; i < nbParticles; i++) {
+    for (int i = 0; i < nbParticles; i++) {
         infile >> x >> y >> z;
         particlesPositions.emplace_back(x, y, z);
     }
 
     infile.close();
 
-    std::cout << "Number of particlesPositions: " << particlesPositions.size() << std::endl;
+    assert(particlesPositions.size() == nbParticles &&
+           "Number of particlesPositions read is not the same as the number of particlesPositions");
+
     std::cout << "First particle: " << particlesPositions[0] << std::endl;
 
     // Initialize the OpenVDB library.  This must be called at least
