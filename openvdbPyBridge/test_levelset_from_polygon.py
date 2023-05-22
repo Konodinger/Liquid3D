@@ -7,9 +7,18 @@ import numpy as np
 # we must make a triangular mesh out of the points
 
 points = np.loadtxt('points_float.txt')
-
+print(points)
+print(points.shape)
 grid = vdb.FloatGrid()
-grid = grid.createLevelSetFromPolygons(points)
+
+
+#grid = grid.createLevelSetFromPolygons(points)
+points = np.random.rand(200, 200, 200)
+print(points.shape)
+print(points)
+grid.copyFromArray(points)
+"""At this point we have a problem of dimensions, 
+we have to figure out what shape the array has to have"""
 
 print(grid.evalActiveVoxelBoundingBox())
 grid.name = 'grid'
@@ -17,6 +26,16 @@ grid.name = 'grid'
 # those are the same
 points, triangles, quads = grid.convertToPolygons(adaptivity=0.5)
 mesh = grid.convertToPolygons(adaptivity=0.8)
+
+
+
+
+
+
+
+
+
+
 
 # if not results folder exists, create it
 if not os.path.exists('./results'):
