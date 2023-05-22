@@ -30,7 +30,8 @@ def writeObjFile(filename, points, triangles=[], quads=[]):
 
 # we must make a triangular mesh out of the points
 
-grid = vdb.createLevelSetSphere(1.0, (0, 0, 0), 0.5, 3.0)
+# Dimensions in meter
+grid = vdb.createLevelSetSphere(radius=50,center=(1.5, 2, 3))
 
 print(grid.evalActiveVoxelBoundingBox())
 grid.name = 'grid'
