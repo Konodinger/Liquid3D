@@ -44,7 +44,7 @@ void rasterizeParticles(std::vector<openvdb::Vec3R> &positions) {
     openvdb::tools::ParticlesToLevelSet<openvdb::FloatGrid> raster(*levelSet);
 
     raster.setGrainSize(1); //a value of zero disables threading
-    raster.rasterizeSpheres(*particleList, 1);
+    raster.rasterizeSpheres(*particleList, 0.75);
     raster.finalize();
 
     std::cout << "\nParticles have been converted to a level set:" << std::endl;

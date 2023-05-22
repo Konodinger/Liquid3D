@@ -24,10 +24,37 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+    int sizeX, sizeY, sizeZ;
     std::vector<openvdb::Vec3R> particlesPositions;
+    infile >> sizeX >> sizeY >> sizeZ;
+    std::cout << "Reading grid size: " << sizeX << " " << sizeY << " " << sizeZ << std::endl;
+
+    float dt;
+    int nbTimeSteps;
+    infile >> dt >> nbTimeSteps;
+    std::cout << "Reading time step: " << dt << std::endl;
+    std::cout << "Reading number of time steps: " << nbTimeSteps << std::endl;
+
+    int nbBoundaryParticles;
+    infile >> nbBoundaryParticles;
+    std::cout << "Reading number of boundary particles: " << nbBoundaryParticles << std::endl;
 
     float x, y, z;
-    while (infile >> x >> y >> z) { particlesPositions.emplace_back(x, y, z); }
+    for(int i = 0; i < nbBoundaryParticles; i++) {
+        infile >> x >> y >> z;
+        // do nothing with boundary particles
+        //particlesPositions.emplace_back(x, y, z);
+    }
+
+    int nbParticles;
+    infile >> nbParticles;
+    std::cout << "Reading number of particles: " << nbParticles << std::endl;
+
+    for(int i = 0; i < nbParticles; i++) {
+        infile >> x >> y >> z;
+        particlesPositions.emplace_back(x, y, z);
+    }
+
     infile.close();
 
     std::cout << "Number of particlesPositions: " << particlesPositions.size() << std::endl;
