@@ -147,9 +147,11 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p >Rasterize a list of particles into a level set then makes a mesh out of it. The mesh and the level sets are output in the results directory. </p><dl class="params"><dt>Parameters</dt><dd>
+<p >Rasterize a list of particles into a level set then makes a mesh out of it. The mesh and the level sets are output in the <code>results</code> directory with the given name and iteration number. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">positions</td><td>the list of particle positions</td></tr>
+    <tr><td class="paramname">positions</td><td>the list of particle positions for one iteration </td></tr>
+    <tr><td class="paramname">fileName</td><td>the name of the file to output (without extension) (fluid by default) </td></tr>
+    <tr><td class="paramname">iteration</td><td>the iteration number (0 by default) to append to the file name</td></tr>
   </table>
   </dd>
 </dl>

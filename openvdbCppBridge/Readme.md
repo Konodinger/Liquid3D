@@ -10,7 +10,9 @@ installation guide.
 
 The bridge assumes OpenVDB is installed in your home folder. If this is not the case, edit `CMakeLists.txt` and change
 the path to the OpenVDB library to match your installation.
-
+nbBoundaryParticles
+xb1 yb1 zb1
+xb2 yb2 zb2
 If you have any issue with this step, please refer to the official documentation of
 OpenVDB: https://www.openvdb.org/documentation/doxygen/build.html (Building with OpenVDB)
 

@@ -16,8 +16,10 @@
 
 /**
  * Rasterize a list of particles into a level set then makes a mesh out of it.
- * The mesh and the level sets are output in the results directory.
- * @param positions the list of particle positions
+ * The mesh and the level sets are output in the `results` directory with the given name and iteration number.
+ * @param positions the list of particle positions for one iteration
+ * @param fileName the name of the file to output (without extension) (fluid by default)
+ * @param iteration the iteration number (0 by default) to append to the file name
  *
  * @see openvdb slides https://artifacts.aswf.io/io/aswf/openvdb/openvdb_toolset_2013/1.0.0/openvdb_toolset_2013-1.0.0.pdf
  * @see unit test https://github.com/dneg/openvdb/blob/587c9ae84c2822bbc03d0d7eceb52898582841b9/openvdb/openvdb/unittest/TestParticlesToLevelSet.cc#L470
@@ -45,7 +47,7 @@ void rasterizeParticles(std::vector<openvdb::Vec3R> &positions, const std::strin
     openvdb::tools::ParticlesToLevelSet<openvdb::FloatGrid> raster(*levelSet);
 
     raster.setGrainSize(1); //a value of zero disables threading
-    raster.rasterizeSpheres(*particleList, 0.75);
+    raster.rasterizeSpheres(*particleList, 0.75); // the 0.75 is purely arbitrary, it seems we can't decrease it further without losing the meshing
     raster.finalize();
 
     std::cout << "\nParticles have been converted to a level set:" << std::endl;

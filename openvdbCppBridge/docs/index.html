@@ -91,8 +91,7 @@ $(document).ready(function(){initNavTree('index.html',''); initResizable(); });
 <h1><a class="anchor" id="autotoc_md1"></a>
 Installation</h1>
 <p >Visit <a href="https://github.com/AcademySoftwareFoundation/openvdb">the official repository of OpenVDB</a> and follow the installation guide.</p>
-<p >The bridge assumes OpenVDB is installed in your home folder. If this is not the case, edit <code>CMakeLists.txt</code> and change the path to the OpenVDB library to match your installation.</p>
-<p >If you have any issue with this step, please refer to the official documentation of OpenVDB: <a href="https://www.openvdb.org/documentation/doxygen/build.html">https://www.openvdb.org/documentation/doxygen/build.html</a> (Building with OpenVDB)</p>
+<p >The bridge assumes OpenVDB is installed in your home folder. If this is not the case, edit <code>CMakeLists.txt</code> and change the path to the OpenVDB library to match your installation. nbBoundaryParticles xb1 yb1 zb1 xb2 yb2 zb2 If you have any issue with this step, please refer to the official documentation of OpenVDB: <a href="https://www.openvdb.org/documentation/doxygen/build.html">https://www.openvdb.org/documentation/doxygen/build.html</a> (Building with OpenVDB)</p>
 <h1><a class="anchor" id="autotoc_md2"></a>
 Build</h1>
 <p >You can use cmake to build the project.</p>
@@ -112,9 +111,6 @@ Usage</h1>
 </div><!-- fragment --><p >The file must be formatted as follows:</p>
 <div class="fragment"><div class="line">gridSizeX gridSizeY gridSizeZ</div>
 <div class="line">dt nbTimeSteps</div>
-<div class="line">nbBoundaryParticles</div>
-<div class="line">xb1 yb1 zb1</div>
-<div class="line">xb2 yb2 zb2</div>
 <div class="line">nbParticles</div>
 <div class="line">x1 y1 z1</div>
 <div class="line">x2 y2 z2</div>

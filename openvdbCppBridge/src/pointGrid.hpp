@@ -14,6 +14,8 @@
 /**
  * Create a point grid from a list of particles
  * @param positions the list of particle positions
+ * @param fileName the name of the file (default: "fluid")
+ * @param iteration the iteration number (default: 0)
  */
 void createPointGrid(std::vector<openvdb::Vec3R> &positions, const std::string &fileName = "fluid",
                      const int iteration = 0) {
