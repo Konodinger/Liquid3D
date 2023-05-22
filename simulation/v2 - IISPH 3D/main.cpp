@@ -1,7 +1,13 @@
+//#define __OPEN_MP__
+
 #include <stdio.h>
 #include <iostream>
 #include <fstream>
 #include "IISPH_solver.hpp"
+
+#ifdef __OPEN_MP__
+#include <omp.h>
+#endif
 
 using namespace std;
 
@@ -13,7 +19,7 @@ bool gSolverStop = false;
 
 int nbConsecutiveSteps = 5;
 float dt = 0.2f;
-long unsigned int timesteps = 50;
+long unsigned int timesteps = 1000;
 const int res_x = 48;
 const int res_y = 32;
 const int res_z = 48;
@@ -26,8 +32,10 @@ SphSolver gSolver(0.08, 0.5, 1e3, Vec3f(0, -9.8, 0), 0.01, 7.0, 0.5, 0.5, 0.99);
 
 int main(int argc, char **argv)
 {
+#ifdef __OPEN_MP__
+  omp_set_num_threads(6);
+#endif
 
-  //omp_set_num_threads( 12 );
   ofstream file;
   file.open("./" + fileOutput + ".txt");
   file << res_x << " " << res_y << " " << res_z << "\n";

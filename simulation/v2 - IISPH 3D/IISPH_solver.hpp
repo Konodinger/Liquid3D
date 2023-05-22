@@ -6,7 +6,9 @@
 #include <vector>
 #include <cmath>
 #include <math.h>
+#ifdef __OPEN_MP__
 #include <omp.h>
+#endif
 
 #ifndef M_PI
 #define M_PI 3.141592
@@ -270,11 +272,12 @@ private:
 
   void computeDensity()
   {
-    // TODO:
     Real rad = _kernel.supportRadius();
     int nb;
 
-    //#pragma omp parallel for 
+#ifdef __OPEN_MP__
+    #pragma omp parallel for 
+#endif
     for (tIndex i = 0; i < particleCount(); ++i) {
       Real rho = 0.f;
       nb = 0;
@@ -300,8 +303,9 @@ private:
 
   void applyBodyForce()
   {
-    // TODO:
-    //#pragma omp parallel for 
+    #ifdef __OPEN_MP__
+    #pragma omp parallel for
+    #endif 
     for(tIndex i=_nbWallParticles; i<particleCount(); ++i) {
       _acc[i] += _g;
     }
@@ -309,10 +313,11 @@ private:
 
   void applyViscousForce()
   {
-    // TODO:
     Real rad = _kernel.supportRadius();
 
-    //#pragma omp parallel for 
+    #ifdef __OPEN_MP__
+    #pragma omp parallel for 
+    #endif
     for (tIndex i = _nbWallParticles; i < particleCount(); ++i) {
       Vec3f dist = Vec3f();
       Vec3f viscousAcc = Vec3f();
@@ -334,7 +339,9 @@ private:
 
   void computeIntermediateVelocity()
   {
-    //#pragma omp parallel for 
+    #ifdef __OPEN_MP__
+    #pragma omp parallel for 
+    #endif
     for (tIndex i = _nbWallParticles; i < particleCount(); ++i) {
       _interVel[i] = _vel[i] + _dt * _acc[i];
     }
@@ -344,7 +351,9 @@ private:
   {
     Real rad = _kernel.supportRadius();
 
-    //#pragma omp parallel for 
+    #ifdef __OPEN_MP__
+    #pragma omp parallel for 
+    #endif
     for (tIndex i = _nbWallParticles; i < particleCount(); ++i) {
       _d_ii[i] = Vec3f(0, 0, 0);
 
@@ -368,7 +377,9 @@ private:
   {
     Real rad = _kernel.supportRadius();
 
-    //#pragma omp parallel for 
+    #ifdef __OPEN_MP__
+    #pragma omp parallel for 
+    #endif
     for (tIndex i = _nbWallParticles; i < particleCount(); ++i) {
       _a_ii[i] = 0;
 
@@ -391,7 +402,9 @@ private:
   {
     Real rad = _kernel.supportRadius();
 
-    //#pragma omp parallel for 
+    #ifdef __OPEN_MP__
+    #pragma omp parallel for 
+    #endif
     for (tIndex i = _nbWallParticles; i < particleCount(); ++i) {
       _interD[i] = _d[i];
 
@@ -413,7 +426,9 @@ private:
   {
     Real rad = _kernel.supportRadius();
 
-    //#pragma omp parallel for 
+    #ifdef __OPEN_MP__
+    #pragma omp parallel for 
+    #endif
     for (tIndex i = _nbWallParticles; i < particleCount(); ++i) {
       _p[i] *= _initP;
       
@@ -426,7 +441,9 @@ private:
 
       convCriteria = false;
 
-      //#pragma omp parallel for
+      #ifdef __OPEN_MP__
+      #pragma omp parallel for
+      #endif
       for (tIndex i = _nbWallParticles; i < particleCount(); ++i) {
         _c_i[i] = Vec3f(0, 0, 0);
 
@@ -444,7 +461,9 @@ private:
         _c_i[i] *= -_dt * _dt * _m0;
       }
 
-      //#pragma omp parallel for
+      #ifdef __OPEN_MP__
+      #pragma omp parallel for
+      #endif
       for (tIndex i = _nbWallParticles; i < particleCount(); ++i) {
         Real newP;
         if (_a_ii[i] == 0.f) {
@@ -490,7 +509,9 @@ private:
     // TODO:
     Real rad = _kernel.supportRadius();
 
-    //#pragma omp parallel for 
+    #ifdef __OPEN_MP__
+    #pragma omp parallel for
+    #endif 
     for (tIndex i = _nbWallParticles; i < particleCount(); ++i) {
       Vec3f f = Vec3f(0);
       for (tIndex _kernelX = max(0, (int) floor(position(i).x - rad)); _kernelX < min(resX(), (int) floor(position(i).x + rad + 1)); ++_kernelX) {
@@ -512,8 +533,9 @@ private:
 
   void updateVelocity()
   {
-    // TODO:
-    //#pragma omp parallel for 
+    #ifdef __OPEN_MP__
+    #pragma omp parallel for 
+    #endif
     for(tIndex i=_nbWallParticles; i<particleCount(); ++i) {
       _vel[i] += _dt * _acc[i];
     }
@@ -521,7 +543,9 @@ private:
 
   void updatePosition()
   {
-    //#pragma omp parallel for 
+    #ifdef __OPEN_MP__
+    #pragma omp parallel for 
+    #endif
     for(tIndex i=_nbWallParticles; i<particleCount(); ++i) {
       _pos[i] += _dt * _vel[i];
     }
@@ -531,13 +555,17 @@ private:
   void resolveCollision()
   {
     vector<tIndex> need_res;
-    //#pragma omp parallel for 
+    #ifdef __OPEN_MP__
+    #pragma omp parallel for
+    #endif 
     for(tIndex i=_nbWallParticles; i<particleCount(); ++i) {
       if(_pos[i].x<_left || _pos[i].y<_bottom || _pos[i].z<_back|| _pos[i].x>_right || _pos[i].y>_top || _pos[i].z>_front)
         need_res.push_back(i);
     }
 
-    //#pragma omp parallel for
+    #ifdef __OPEN_MP__
+    #pragma omp parallel for
+    #endif
     for(
       vector<tIndex>::const_iterator it=need_res.begin();
       it<need_res.end();
@@ -552,14 +580,18 @@ private:
 
   void initColor()
   {
-    //#pragma omp parallel for 
+    #ifdef __OPEN_MP__
+    #pragma omp parallel for 
+    #endif
     for(tIndex i=0; i<_nbWallParticles; ++i) {
       _col[i*4+0] = 0.8;
       _col[i*4+1] = 0.3;
       _col[i*4+2] = _d[i]/_d0;
     }
 
-    //#pragma omp parallel for 
+    #ifdef __OPEN_MP__
+    #pragma omp parallel for 
+    #endif
     for(tIndex i=_nbWallParticles; i<particleCount(); ++i) {
       _col[i*4+0] = 0.6;
       _col[i*4+1] = 0.6;
@@ -569,12 +601,16 @@ private:
 
   void updateColor()
   {
-    //#pragma omp parallel for 
+    #ifdef __OPEN_MP__
+    #pragma omp parallel for 
+    #endif
     for(tIndex i=0; i<_nbWallParticles; ++i) {
       _col[i*4+2] = _d[i]/_d0;
     }
 
-    //#pragma omp parallel for 
+    #ifdef __OPEN_MP__
+    #pragma omp parallel for 
+    #endif
     for(tIndex i=_nbWallParticles; i<particleCount(); ++i) {
       _col[i*4+2] = _d[i]/_d0;
     }
@@ -582,7 +618,9 @@ private:
 
   void updateVelLine()
   {
-    //#pragma omp parallel for 
+    #ifdef __OPEN_MP__
+    #pragma omp parallel for 
+    #endif
     for(tIndex i=_nbWallParticles; i<particleCount(); ++i) {
       _vln[i*6+0] = _pos[i].x;
       _vln[i*6+1] = _pos[i].y;
