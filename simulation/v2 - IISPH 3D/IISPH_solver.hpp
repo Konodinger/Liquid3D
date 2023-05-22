@@ -198,8 +198,6 @@ public:
     _c_i = vector<Vec3f>(_pos.size(), Vec3f(0, 0, 0));
     _predP = vector<Real>(_pos.size(), 0);
 
-    _col = vector<float>(_pos.size()*4, 1.0); // RGBA
-    _vln = vector<float>(_pos.size()*6, 0.0); // GL_LINES
 
     for (int i = 0; i < res_x * res_y * res_z; i++) {
       _pidxInGrid.push_back(vector<tIndex>{});
@@ -207,12 +205,13 @@ public:
     
     buildNeighbor();
     computeDensity();
-    initColor();
   }
 
   void update()
   {
+    #ifdef __DEBUG1__
     cout << '.' << flush;
+    #endif
 
     buildNeighbor();
     computeDensity();
@@ -237,7 +236,6 @@ public:
 
     resolveCollision();
 
-    updateColor();
   }
 
   const CubicSpline &getKernel() const {return _kernel;}
@@ -250,8 +248,6 @@ public:
   const Vec3f &acceleration(const tIndex i) const { return _acc[i]; }
   const Real &pressure(const tIndex i) const { return _p[i]; }
   const Real &density(const tIndex i) const { return _d[i]; }
-  const float &color(const tIndex i) const { return _col[i]; }
-  const float &vline(const tIndex i) const { return _vln[i]; }
 
   int resX() const { return _resX; }
   int resY() const { return _resY; }
@@ -295,10 +291,14 @@ private:
           }
         }
       }
-      //cout << rho << "   " << nb << "    " << test << endl;
+      #ifdef __DEBUG3__
+      cout << rho << "   " << nb << "    " << test << endl;
+      #endif
       _d[i] = rho;
     }
-    //cout << " " << nb << "    " << _d[particleCount() - 1] << "   ";
+    #ifdef __DEBUG3__
+    cout << " " << nb << "    " << _d[particleCount() - 1] << "   ";
+    #endif
   }
 
   void applyBodyForce()
@@ -333,8 +333,10 @@ private:
       }
       _acc[i] += 2 * _nu * viscousAcc;
     }
-    //cout << 2 * _nu * viscousAcc << "    ";
-    //cout << "D " << _d[100] << " A " << _acc[100] << " V " << velocity(100) <<" P " << position(100) << endl;
+    #ifdef __DEBUG3__
+    cout << 2 * _nu * viscousAcc << "    ";
+    cout << "D " << _d[100] << " A " << _acc[100] << " V " << velocity(100) <<" P " << position(100) << endl;
+    #endif
   }
 
   void computeIntermediateVelocity()
@@ -496,10 +498,13 @@ private:
       }
 
       l++;
+      #ifdef __DEBUG3__
       cout << "InterVel " << _interVel[obsPart] << " d_ii " << _d_ii[obsPart] << " a_ii " << _a_ii[obsPart] << " InterDen " << _interD[obsPart] << " c_i " << _c_i[obsPart] << " PredP " << _predP[obsPart] <<" Pr " << _p[obsPart] << endl;
+      #endif
     }
-
+    #ifdef __DEBUG2__
     cout << "Iterations : " << l << endl;
+    #endif
 
   }
 
@@ -526,9 +531,11 @@ private:
       }
       _acc[i] += f;
     }
-    
+
+    #ifdef __DEBUG2__
     cout << "Den " << _d[obsPart] << " Pr " << _p[obsPart] << " Acc " << _acc[obsPart] << " Vit " << velocity(obsPart) <<" Pos " << position(obsPart) << endl;
-    
+    #endif
+
   }
 
   void updateVelocity()
@@ -578,59 +585,6 @@ private:
     }
   }
 
-  void initColor()
-  {
-    #ifdef __OPEN_MP__
-    #pragma omp parallel for 
-    #endif
-    for(tIndex i=0; i<_nbWallParticles; ++i) {
-      _col[i*4+0] = 0.8;
-      _col[i*4+1] = 0.3;
-      _col[i*4+2] = _d[i]/_d0;
-    }
-
-    #ifdef __OPEN_MP__
-    #pragma omp parallel for 
-    #endif
-    for(tIndex i=_nbWallParticles; i<particleCount(); ++i) {
-      _col[i*4+0] = 0.6;
-      _col[i*4+1] = 0.6;
-      _col[i*4+2] = _d[i]/_d0;
-    }
-  }
-
-  void updateColor()
-  {
-    #ifdef __OPEN_MP__
-    #pragma omp parallel for 
-    #endif
-    for(tIndex i=0; i<_nbWallParticles; ++i) {
-      _col[i*4+2] = _d[i]/_d0;
-    }
-
-    #ifdef __OPEN_MP__
-    #pragma omp parallel for 
-    #endif
-    for(tIndex i=_nbWallParticles; i<particleCount(); ++i) {
-      _col[i*4+2] = _d[i]/_d0;
-    }
-  }
-
-  void updateVelLine()
-  {
-    #ifdef __OPEN_MP__
-    #pragma omp parallel for 
-    #endif
-    for(tIndex i=_nbWallParticles; i<particleCount(); ++i) {
-      _vln[i*6+0] = _pos[i].x;
-      _vln[i*6+1] = _pos[i].y;
-      _vln[i*6+2] = _pos[i].z;
-      _vln[i*6+3] = _pos[i].x + _vel[i].x;
-      _vln[i*6+4] = _pos[i].y + _vel[i].y;
-      _vln[i*6+5] = _pos[i].z + _vel[i].z;
-    }
-  }
-
   inline tIndex idx1d(const int i, const int j, const int k) { return i + j*resX() + k*resX()*resY(); }
 
   const CubicSpline _kernel;
@@ -655,9 +609,6 @@ private:
 
 
   vector< vector<tIndex> > _pidxInGrid; // will help you find neighbor particles
-
-  vector<float> _col;    // particle color; just for visualization
-  vector<float> _vln;    // particle velocity lines; just for visualization
 
   // simulation
   Real _dt;                     // time step
