@@ -1,25 +1,48 @@
 # OpenVDB C++ Bridge
 
-As the python module is not capable of handling a set of particles, we developped a new version using the C++ API of
-OpenVDB
+This is the C++ bridge for OpenVDB. It takes as input a file containing the positions of particles for different time
+steps and outputs `.vdb` SDF and point data grids files as well as `.obj` mesh files in the `results` folder.
 
 ## Installation
 
-Go to the git repository of OpenVDB and follow the instructions to install it.
+Visit [the official repository of OpenVDB](https://github.com/AcademySoftwareFoundation/openvdb) and follow the
+installation guide.
 
-When it is done, go to `CmakeLists.txt` and change the path to the OpenVDB library to match your installation.
+The bridge assumes OpenVDB is installed in your home folder. If this is not the case, edit `CMakeLists.txt` and change
+the path to the OpenVDB library to match your installation.
+
+If you have any issue with this step, please refer to the official documentation of
+OpenVDB: https://www.openvdb.org/documentation/doxygen/build.html (Building with OpenVDB)
 
 ## Build
 
-You can use cmake to build the project. The executable will be in the `build` folder.
+You can use cmake to build the project.
+
+```
+mkdir build
+cd build
+cmake ..
+make
+```
 
 ## Usage
 
-The executable takes 0 or 1 argument.
+The program can be used with the following command:
 
-When no arguments are given, the program uses a debug file to lookup the particles.
+```
+./OpenVdbBridge -f <fileName>
+```
 
-You can however give a path to a file containing the particle data. The file must be formatted as follow:
+The options are:
+
+```
+Options:
+	-f <fileName>	Specify the file to read
+	-h		Print this help message
+	-pointGrids	Generate point grids as well
+```
+
+The file must be formatted as follows:
 
 ```
 gridSizeX gridSizeY gridSizeZ
@@ -33,8 +56,11 @@ x2 y2 z2
 ...
 ```
 
-The program will then create 2 `.vdb` files in the `results` folder containing the point data grid and its SDF
-representation.
-Moreover, a `.obj` file will be created in the `results` folder containing the mesh generated from the SDF.
+## Output
+
+The program will generate one `.vdb` file and one `.obj` file per time step. The `.vdb` file contains the SDF and the
+`.obj` file contains the mesh.
+
+You can also generate a `.vdb` containing a point data grid by adding the `-p` flag.
 
 Point data grids are not compatible with Blender but the SDF and the mesh can be directly imported.

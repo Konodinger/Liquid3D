@@ -9,12 +9,27 @@
 
 int main(int argc, char **argv) {
     // usage: ./openvdbBridge <particlesPositions.txt>
-    std::string fileName;
-    if (argc > 1) {
-        fileName = argv[1];
-    } else {
-        fileName = "./particles.txt";
+
+    if (cmdOptionExists(argv, argv + argc, "-h")) {
+        std::cout << "Usage: " << argv[0] << " -f <fileName>\n" << std::endl;
+
+        std::cout << "Options:" << std::endl;
+        std::cout << "\t-f <fileName>\tSpecify the file to read" << std::endl;
+        std::cout << "\t-h\t\tPrint this help message" << std::endl;
+        std::cout << "\t-pointGrids\tGenerate point grids as well" << std::endl;
+        std::cout << std::endl;
+
+        return 0;
     }
+
+    char *fileName = getCmdOption(argv, argv + argc, "-f");
+
+    if (fileName == nullptr) {
+        std::cout << "Usage: " << argv[0] << " -f <fileName>\n";
+        return 1;
+    }
+
+    bool shouldGenerateGrids = cmdOptionExists(argv, argv + argc, "-p");
 
     // read particlesPositions from file particlesPositions.txt
     // each line contains 3 float numbers separated by space
@@ -78,7 +93,7 @@ int main(int argc, char **argv) {
         rasterizeParticles(particlesPositions[i], "fluid", i);
 
         // creates a point grid from the particles (output in the results folder) not compatible with Blender
-        createPointGrid(particlesPositions[i], "fluid", i);
+        if (shouldGenerateGrids) createPointGrid(particlesPositions[i], "fluid", i);
     }
 
     std::cout << "\n----------- Done -----------\n" << std::endl;
