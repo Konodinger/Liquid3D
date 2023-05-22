@@ -1,5 +1,5 @@
 //#define __OPEN_MP__
-#define __DEBUG1__
+//#define __DEBUG1__
 //#define __DEBUG2__
 //#define __DEBUG3__
 
@@ -20,8 +20,8 @@ bool gSolverStop = false;
 
 //Simulation parameters
 
-int nbConsecutiveSteps = 50;
-float dt = 0.02f;
+int nbConsecutiveSteps = 5;
+float dt = 0.2f;
 long unsigned int timesteps = 20;
 const int res_x = 48;
 const int res_y = 32;
@@ -30,7 +30,7 @@ const int f_length = 8;
 const int f_height = 8;
 const int f_width = 8;
 
-SphSolver gSolver(0.08, 0.5, 2.5e3, Vec3f(0, -9.8, 0), 0.01, 7.0, 0.5, 0.5, 0.99);
+SphSolver gSolver(0.08, 0.5, 3e3, Vec3f(0, -9.8, 0), 0.01, 7.0, 0.5, 0.5, 0.99);
 
 
 int main(int argc, char **argv)
@@ -40,7 +40,17 @@ int main(int argc, char **argv)
 #endif
 
   ofstream file;
-  file.open("./" + fileOutput + ".txt");
+  std::stringstream fpath;
+  int fileNum = 1;
+  while(true) {
+    fpath.str(string());
+    fpath << "./" << fileOutput << "_" << std::setw(3) << std::setfill('0') << fileNum++ << ".txt";
+    if (!ifstream(fpath.str()).is_open()) {
+      break;
+    }
+  }
+
+  file.open(fpath.str());
   file << res_x << " " << res_y << " " << res_z << "\n";
   file << dt * nbConsecutiveSteps << " " << timesteps + 1 << "\n";
 
