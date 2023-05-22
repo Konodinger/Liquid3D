@@ -25,7 +25,6 @@ int main(int argc, char **argv) {
     }
 
     int sizeX, sizeY, sizeZ;
-    std::vector<openvdb::Vec3R> particlesPositions;
     infile >> sizeX >> sizeY >> sizeZ;
     std::cout << "Reading grid size: " << sizeX << " " << sizeY << " " << sizeZ << std::endl;
 
@@ -49,27 +48,40 @@ int main(int argc, char **argv) {
     infile >> nbParticles;
     std::cout << "Reading number of particles: " << nbParticles << std::endl;
 
-    for (int i = 0; i < nbParticles; i++) {
-        infile >> x >> y >> z;
-        particlesPositions.emplace_back(x, y, z);
+    std::vector<std::vector<openvdb::Vec3R>> particlesPositions;
+    for (int i = 0; i < nbTimeSteps; i++) {
+        particlesPositions.emplace_back();
+        for (int j = 0; j < nbParticles; j++) {
+            infile >> x >> y >> z;
+            particlesPositions[i].emplace_back(x, y, z);
+        }
+        assert(particlesPositions[i].size() == nbParticles &&
+               "Number of particlesPositions read is not the same as the number of particlesPositions");
+
     }
 
     infile.close();
 
-    assert(particlesPositions.size() == nbParticles &&
+    assert(particlesPositions.size() == nbTimeSteps &&
            "Number of particlesPositions read is not the same as the number of particlesPositions");
 
-    std::cout << "First particle: " << particlesPositions[0] << std::endl;
+    std::cout << "First particle of first step: " << particlesPositions[0][0] << std::endl;
 
     // Initialize the OpenVDB library.  This must be called at least
     // once per program and may safely be called multiple times.
     openvdb::initialize();
 
-    // creates a SDF and a mesh from the particles (output in the results folder)
-    rasterizeParticles(particlesPositions);
+    for (int i = 0; i < nbTimeSteps; i++) {
+        std::cout << "\n----------- Time step " << i << " -----------\n" << std::endl;
 
-    // creates a point grid from the particles (output in the results folder) not compatible with Blender
-    createPointGrid(particlesPositions);
+        // creates a SDF and a mesh from the particles (output in the results folder)
+        rasterizeParticles(particlesPositions[i], "fluid", i);
+
+        // creates a point grid from the particles (output in the results folder) not compatible with Blender
+        createPointGrid(particlesPositions[i], "fluid", i);
+    }
+
+    std::cout << "\n----------- Done -----------\n" << std::endl;
 
     return 0;
 }

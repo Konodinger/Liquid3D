@@ -23,7 +23,8 @@
  * @see unit test https://github.com/dneg/openvdb/blob/587c9ae84c2822bbc03d0d7eceb52898582841b9/openvdb/openvdb/unittest/TestParticlesToLevelSet.cc#L470
  * @see openvdb doc https://www.openvdb.org/documentation/doxygen/classopenvdb_1_1v10__0_1_1tools_1_1ParticlesToLevelSet.html
  */
-void rasterizeParticles(std::vector<openvdb::Vec3R> &positions) {
+void rasterizeParticles(std::vector<openvdb::Vec3R> &positions, const std::string &fileName = "fluid",
+                        const int iteration = 0) {
     auto particleList = new ParticleList(positions);
     std::cout << "Created OpenVDB compatible particle list" << std::endl;
 
@@ -65,9 +66,8 @@ void rasterizeParticles(std::vector<openvdb::Vec3R> &positions) {
     std::cout << "quads: " << quads.size() << std::endl;
     std::cout << "triangles: " << triangles.size() << std::endl;
 
-    exportToObj(points, quads, triangles, "rasterizedFluid");
-
-    writeGrid(levelSet, "fluidSDF");
+    exportToObj(points, quads, triangles, fileName + "Mesh" + std::to_string(iteration));
+    writeGrid(levelSet, fileName + "SDF" + std::to_string(iteration));
 }
 
 #endif //OPENVDBBRIDGE_RASTERIZE_HPP
