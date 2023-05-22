@@ -10,6 +10,16 @@
 #include <fstream>
 #include <iostream>
 
+bool cmdOptionExists(char **begin, char **end, const std::string &option) {
+    return std::find(begin, end, option) != end;
+}
+
+char *getCmdOption(char **begin, char **end, const std::string &option) {
+    char **itr = std::find(begin, end, option);
+    if (itr != end && ++itr != end) return *itr;
+    return nullptr;
+}
+
 /**
  * Write an openvdb grid to a file in the results folder
  * @param grid the grid to write
