@@ -47,9 +47,6 @@ The file must be formatted as follows:
 ```
 gridSizeX gridSizeY gridSizeZ
 dt nbTimeSteps
-nbBoundaryParticles
-xb1 yb1 zb1
-xb2 yb2 zb2
 nbParticles
 x1 y1 z1
 x2 y2 z2
