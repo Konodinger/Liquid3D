@@ -15,7 +15,8 @@
  * Create a point grid from a list of particles
  * @param positions the list of particle positions
  */
-void createPointGrid(std::vector<openvdb::Vec3R> &positions) {
+void createPointGrid(std::vector<openvdb::Vec3R> &positions, const std::string &fileName = "fluid",
+                     const int iteration = 0) {
     openvdb::points::PointAttributeVector<openvdb::Vec3R> particlePositionsWrapper(positions);
 
     // This method computes a voxel-size to match the number of
@@ -44,7 +45,7 @@ void createPointGrid(std::vector<openvdb::Vec3R> &positions) {
     grid->setName(gridName);
 
     // Create a VDB file object and write out the grid.
-    writeGrid(grid, "pointGrid");
+    writeGrid(grid, fileName + "PointGrid" + std::to_string(iteration));
 }
 
 #endif //OPENVDBBRIDGE_POINTGRID_HPP
