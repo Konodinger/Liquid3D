@@ -47,18 +47,23 @@ void exportToObj(std::vector<openvdb::Vec3s> &points, std::vector<openvdb::Vec4I
     }
 
     std::ofstream objFile;
-    std::cout << "\nWriting \"" << fileName << "\" to file\n";
     objFile.open("./results/" + fileName + ".obj");
-    for (auto &p: points) {
-        objFile << "v " << p.x() << " " << p.y() << " " << p.z() << "\n";
+
+    // write vertices
+    for (auto &point: points) {
+        objFile << "v " << point.x() << " " << point.y() << " " << point.z() << std::endl;
     }
-    for (auto &q: quads) {
-        objFile << "f " << q.x() << " " << q.y() << " " << q.z() << " " << q.w() << "\n";
+
+    // write quads
+    for (auto &quad: quads) {
+        objFile << "f " << quad.x() + 1 << " " << quad.y() + 1 << " " << quad.z() + 1 << " " << quad.w() + 1
+                << std::endl;
     }
-    for (auto &t: triangles) {
-        objFile << "f " << t.x() << " " << t.y() << " " << t.z() << "\n";
+
+    // write triangles
+    for (auto &triangle: triangles) {
+        objFile << "f " << triangle.x() + 1 << " " << triangle.y() + 1 << " " << triangle.z() + 1 << std::endl;
     }
-    objFile.close();
 }
 
 #endif //OPENVDBBRIDGE_UTILS_HPP
