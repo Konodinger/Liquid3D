@@ -49,21 +49,12 @@ int main(int argc, char **argv) {
     std::cout << "Reading time step: " << dt << std::endl;
     std::cout << "Reading number of time steps: " << nbTimeSteps << std::endl;
 
-    int nbBoundaryParticles;
-    infile >> nbBoundaryParticles;
-    std::cout << "Reading number of boundary particles: " << nbBoundaryParticles << std::endl;
-
-    float x, y, z;
-    for (int i = 0; i < nbBoundaryParticles; i++) {
-        infile >> x >> y >> z;
-        // do nothing with boundary particles
-    }
-
     int nbParticles;
     infile >> nbParticles;
     std::cout << "Reading number of particles: " << nbParticles << std::endl;
 
     std::vector<std::vector<openvdb::Vec3R>> particlesPositions;
+    float x, y, z;
     for (int i = 0; i < nbTimeSteps; i++) {
         particlesPositions.emplace_back();
         for (int j = 0; j < nbParticles; j++) {
