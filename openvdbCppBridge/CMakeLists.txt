@@ -7,6 +7,9 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 
 set(CXX_WARNINGS "-Wall -Wextra -Wpointer-arith -Wcast-align -fstrict-aliasing -Wno-unused-local-typedefs -Wno-misleading-indentation -Wno-maybe-uninitialized -Wno-int-in-bool-context -Wno-implicit-fallthrough -Wno-class-memaccess")
 
+# Set the optimization flags
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
+
 project(OpenVdbBridge)
 
 add_executable(${PROJECT_NAME} src/main.cpp src/particleList.hpp src/rasterize.hpp src/utils.hpp src/pointGrid.hpp)

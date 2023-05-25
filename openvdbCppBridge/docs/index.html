@@ -107,7 +107,8 @@ Usage</h1>
 <div class="fragment"><div class="line">Options:</div>
 <div class="line">    -f &lt;fileName&gt;   Specify the file to read</div>
 <div class="line">    -h      Print this help message</div>
-<div class="line">    -pointGrids Generate point grids as well</div>
+<div class="line">    -p      Generate point grids as well</div>
+<div class="line">    --obj   Generate obj files as well</div>
 </div><!-- fragment --><p >The file must be formatted as follows:</p>
 <div class="fragment"><div class="line">gridSizeX gridSizeY gridSizeZ</div>
 <div class="line">dt nbTimeSteps</div>
@@ -115,7 +116,8 @@ Usage</h1>
 <div class="line">x1 y1 z1</div>
 <div class="line">x2 y2 z2</div>
 <div class="line">...</div>
-</div><!-- fragment --><h1><a class="anchor" id="autotoc_md4"></a>
+</div><!-- fragment --><p >You can see an example in the <code>particles_example.txt</code> file.</p>
+<h1><a class="anchor" id="autotoc_md4"></a>
 Output</h1>
 <p >The program will generate one <code>.vdb</code> file and one <code>.obj</code> file per time step. The <code>.vdb</code> file contains the SDF and the <code>.obj</code> file contains the mesh.</p>
 <p >You can also generate a <code>.vdb</code> containing a point data grid by adding the <code>-p</code> flag.</p>

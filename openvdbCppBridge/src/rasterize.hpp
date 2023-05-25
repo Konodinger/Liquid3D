@@ -15,18 +15,19 @@
 #include "utils.hpp"
 
 /**
- * Rasterize a list of particles into a level set then makes a mesh out of it.
- * The mesh and the level sets are output in the `results` directory with the given name and iteration number.
+ * Rasterize a list of particles into a level set and write it to a `.vdb` file.
+ * The files are output in the `results` directory with the given name and iteration number.
  * @param positions the list of particle positions for one iteration
  * @param fileName the name of the file to output (without extension) (fluid by default)
  * @param iteration the iteration number (0 by default) to append to the file name
+ * @param shouldGenerateObjFiles whether or not to generate `.obj` files (false by default)
  *
  * @see openvdb slides https://artifacts.aswf.io/io/aswf/openvdb/openvdb_toolset_2013/1.0.0/openvdb_toolset_2013-1.0.0.pdf
  * @see unit test https://github.com/dneg/openvdb/blob/587c9ae84c2822bbc03d0d7eceb52898582841b9/openvdb/openvdb/unittest/TestParticlesToLevelSet.cc#L470
  * @see openvdb doc https://www.openvdb.org/documentation/doxygen/classopenvdb_1_1v10__0_1_1tools_1_1ParticlesToLevelSet.html
  */
 void rasterizeParticles(std::vector<openvdb::Vec3R> &positions, const std::string &fileName = "fluid",
-                        const int iteration = 0) {
+                        const int iteration = 0, const bool shouldGenerateObjFiles = false) {
     auto particleList = new ParticleList(positions);
     std::cout << "Created OpenVDB compatible particle list" << std::endl;
 
@@ -47,7 +48,8 @@ void rasterizeParticles(std::vector<openvdb::Vec3R> &positions, const std::strin
     openvdb::tools::ParticlesToLevelSet<openvdb::FloatGrid> raster(*levelSet);
 
     raster.setGrainSize(1); //a value of zero disables threading
-    raster.rasterizeSpheres(*particleList, 0.75); // the 0.75 is purely arbitrary, it seems we can't decrease it further without losing the meshing
+    raster.rasterizeSpheres(*particleList,
+                            0.75); // the 0.75 is purely arbitrary, it seems we can't decrease it further without losing the meshing
     raster.finalize();
 
     std::cout << "\nParticles have been converted to a level set:" << std::endl;
@@ -55,8 +57,11 @@ void rasterizeParticles(std::vector<openvdb::Vec3R> &positions, const std::strin
     std::cout << "Active voxel count: " << levelSet->activeVoxelCount() << std::endl;
     std::cout << "Bounding box: " << levelSet->evalActiveVoxelBoundingBox() << std::endl;
 
-    // now we have to use https://github.com/AcademySoftwareFoundation/openvdb/blob/4a71881492520eb1323876becd0dad27eb0c2dcc/openvdb/openvdb/tools/VolumeToMesh.h to convert the level set to a mesh
+    writeGrid(levelSet, fileName + "SDF" + std::to_string(iteration));
 
+    if (!shouldGenerateObjFiles) return;
+
+    // now we have to use https://github.com/AcademySoftwareFoundation/openvdb/blob/4a71881492520eb1323876becd0dad27eb0c2dcc/openvdb/openvdb/tools/VolumeToMesh.h to convert the level set to a mesh
     std::cout << "\nMeshing the level set" << std::endl;
 
     std::vector<openvdb::Vec3s> points;
@@ -69,7 +74,6 @@ void rasterizeParticles(std::vector<openvdb::Vec3R> &positions, const std::strin
     std::cout << "triangles: " << triangles.size() << std::endl;
 
     exportToObj(points, quads, triangles, fileName + "Mesh" + std::to_string(iteration));
-    writeGrid(levelSet, fileName + "SDF" + std::to_string(iteration));
 }
 
 #endif //OPENVDBBRIDGE_RASTERIZE_HPP

@@ -41,7 +41,8 @@ The options are:
 Options:
 	-f <fileName>	Specify the file to read
 	-h		Print this help message
-	-pointGrids	Generate point grids as well
+	-p	    Generate point grids as well
+	--obj	Generate obj files as well
 ```
 
 The file must be formatted as follows:
@@ -54,6 +55,8 @@ x1 y1 z1
 x2 y2 z2
 ...
 ```
+
+You can see an example in the `particles_example.txt` file.
 
 ## Output
 

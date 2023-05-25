@@ -15,8 +15,9 @@ int main(int argc, char **argv) {
 
         std::cout << "Options:" << std::endl;
         std::cout << "\t-f <fileName>\tSpecify the file to read" << std::endl;
-        std::cout << "\t-h\t\tPrint this help message" << std::endl;
-        std::cout << "\t-pointGrids\tGenerate point grids as well" << std::endl;
+        std::cout << "\t-h\tPrint this help message" << std::endl;
+        std::cout << "\t-p\tGenerate point grids as well" << std::endl;
+        std::cout << "\t--obj\tGenerate .obj files as well" << std::endl;
         std::cout << std::endl;
 
         return 0;
@@ -30,6 +31,8 @@ int main(int argc, char **argv) {
     }
 
     bool shouldGenerateGrids = cmdOptionExists(argv, argv + argc, "-p");
+
+    bool shouldGenerateObjFiles = cmdOptionExists(argv, argv + argc, "--obj");
 
     // read particlesPositions from file particlesPositions.txt
     // each line contains 3 float numbers separated by space
@@ -81,7 +84,7 @@ int main(int argc, char **argv) {
         std::cout << "\n----------- Time step " << i << " -----------\n" << std::endl;
 
         // creates a SDF and a mesh from the particles (output in the results folder)
-        rasterizeParticles(particlesPositions[i], "fluid", i);
+        rasterizeParticles(particlesPositions[i], "fluid", i, shouldGenerateObjFiles);
 
         // creates a point grid from the particles (output in the results folder) not compatible with Blender
         if (shouldGenerateGrids) createPointGrid(particlesPositions[i], "fluid", i);
