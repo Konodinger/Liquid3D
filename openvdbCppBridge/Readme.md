@@ -66,3 +66,7 @@ The program will generate one `.vdb` file and one `.obj` file per time step. The
 You can also generate a `.vdb` containing a point data grid by adding the `-p` flag.
 
 Point data grids are not compatible with Blender but the SDF and the mesh can be directly imported.
+
+https://docs.blender.org/manual/en/latest/modeling/volumes/introduction.html
+
+![image](https://github.com/Konodinger/Liquid3D/assets/31370477/70bf1565-6bd1-4577-8520-5b444dda864d)
