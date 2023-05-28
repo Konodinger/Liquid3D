@@ -5,6 +5,7 @@ steps and outputs `.vdb` SDF and point data grids files as well as `.obj` mesh f
 
 ## Installation
 
+This program needs OpenVDB to be installed to work.
 Visit [the official repository of OpenVDB](https://github.com/AcademySoftwareFoundation/openvdb) and follow the
 installation guide.
 
@@ -16,14 +17,31 @@ xb2 yb2 zb2
 If you have any issue with this step, please refer to the official documentation of
 OpenVDB: https://www.openvdb.org/documentation/doxygen/build.html (Building with OpenVDB)
 
+### Docker
+
+If you can't install OpenVDB on your machine, you can use Docker to run the program.
+
+You can pull the docker image from Docker Hub with the following command:
+
+```
+docker pull barthpaleologue/openvdb_bridge
+```
+
+You can also build the image with the script `buildDocker.sh` since the Dockerfile is included.
+The docker image is based on Ubuntu 22.04 and contains OpenVDB and all the dependencies needed to run the program.
+
+You can then run it with `runDocker.sh`.
+You will need to build the bridge inside the container. The C++ project is mounted at
+`/openvdb_bridge`. See the next section for more information.
+
 ## Build
 
 You can use cmake to build the project.
 
 ```
 mkdir build
+cmake -B build
 cd build
-cmake ..
 make
 ```
 

@@ -28,8 +28,9 @@ RUN apt update && \
 ##################################
 
 # clone git repo in home folder
-RUN git clone https://github.com/AcademySoftwareFoundation/openvdb.git /openvdb && \
-    cd /openvdb && \
+RUN cd /root && \
+    git clone https://github.com/AcademySoftwareFoundation/openvdb.git && \
+    cd /root/openvdb && \
     mkdir build && \
     cd build && \
     cmake .. && \
