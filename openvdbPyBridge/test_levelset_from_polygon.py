@@ -3,8 +3,11 @@
 import pyopenvdb as vdb
 import os
 import numpy as np
+from time import time
 
-DEBUG = False
+DEBUG = True
+print("\nStart\n")
+t0 = time()
 
 def from_points_to_voxel(array, resolution=10):
     """
@@ -37,14 +40,18 @@ def from_points_to_voxel(array, resolution=10):
 
     particle_count = 0
     for x in np.arange(min_x, max_x + voxel_size, voxel_size):
-        if DEBUG: print("x:", x)
+        #if DEBUG: print("x:", x)
         for y in np.arange(min_y, max_y + voxel_size, voxel_size):
+            #if DEBUG: print("y:", y)
             for z in np.arange(min_z, max_z + voxel_size, voxel_size):
+                #if DEBUG: print("z:", z)
                 for point in array:
                     if ((x <= point[0] < x + voxel_size) and (y <= point[1] < y + voxel_size) and (z <= point[2] < z + voxel_size)):
                         x_ind, y_ind, z_ind = int(x/voxel_size), int(y/voxel_size), int(z/voxel_size)
                         array_grid[x_ind][y_ind][z_ind] += 1
                         particle_count += 1
+                        delta_t = time() - t0
+                        if DEBUG: print("Progress:", int(particle_count*10000/particle_number)/100, "% in", int(delta_t*100)/100, "s")
     if DEBUG: 
         if (particle_count==particle_number):
             print("All particles have been added in point_grid")
@@ -52,8 +59,6 @@ def from_points_to_voxel(array, resolution=10):
             print("There are missing particles in point_grid...")
     return array_grid
 
-
-print("\nStart\n")
 
 # Load the point cloud
 points = np.loadtxt('points_float.txt')
@@ -64,7 +69,7 @@ grid = vdb.FloatGrid()
 grid.name = "density" # to use it in blender shaders
 
 # Create voxel grid
-point_grid = from_points_to_voxel(points, resolution=10)
+point_grid = from_points_to_voxel(points, resolution=50)
 
 if DEBUG:
     for i in range(point_grid.shape[0]):
@@ -89,5 +94,5 @@ if not os.path.exists('./results'):
 # Write to VDB file
 vdb.write('./results/polygon_levelset.vdb', grids=[grid])
 
-print("\nDone\n")
+print("\nDone in", int((time()-t0)*100)/100, "s\n")
 
