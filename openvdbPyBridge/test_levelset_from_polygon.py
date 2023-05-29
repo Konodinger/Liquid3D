@@ -1,12 +1,11 @@
+# this file code uses code from https://www.openvdb.org/documentation/doxygen/python.html to mesh a point cloud
+
 import pyopenvdb as vdb
 import os
 import numpy as np
 
-# this file code uses code from https://www.openvdb.org/documentation/doxygen/python.html to mesh a point cloud
-
 DEBUG = False
 
-# Write to OBJ file
 def writeObjFile(filename, points, triangles=[], quads=[]):
     """Write out a triangulated or quad mesh OBJ file.
     points is an array of (x,y,z) coordinates.
@@ -31,13 +30,6 @@ def writeObjFile(filename, points, triangles=[], quads=[]):
             (ijkl[0]+1, ijkl[1]+1, ijkl[2]+1, ijkl[3]+1))
     f.close()
 
-
-print("Start\n")
-
-points = np.loadtxt('points_float.txt')
-if DEBUG : print("points.shape:", points.shape)
-grid = vdb.FloatGrid()
-grid.name = "density"
 
 def from_points_to_voxel(array, resolution=10):
     """
@@ -88,6 +80,18 @@ def from_points_to_voxel(array, resolution=10):
             print("There are missing particles in point_grid...")
     return array_grid
 
+
+print("\nStart\n")
+
+# Load the point cloud
+points = np.loadtxt('points_float.txt')
+if DEBUG : print("points.shape:", points.shape)
+
+# Create the vdb grid
+grid = vdb.FloatGrid()
+grid.name = "density"
+
+# Create voxel grid
 point_grid = from_points_to_voxel(points, resolution=10)
 
 if DEBUG:
@@ -99,23 +103,19 @@ if DEBUG:
 
 # Convert the numpy array into vdb grid
 
+# Convert the numpy voxel grid into vdb grid
 grid.copyFromArray(point_grid)
 print("There are",grid.activeVoxelCount(), "active voxels in the grid")
 
-
-
-# those are the same
-#points, triangles, quads = grid.convertToPolygons(adaptivity=0.5)
+# Convert the vdb grid into a polygon mesh
 mesh = grid.convertToPolygons(adaptivity=0.8)
 
 # if not results folder exists, create it
 if not os.path.exists('./results'):
     os.makedirs('./results')
 
-writeObjFile('./results/polygon_levelset.obj', *mesh)
-
 # Write to VDB file
 vdb.write('./results/polygon_levelset.vdb', grids=[grid])
 
-print("\nDone")
+print("\nDone\n")
 
