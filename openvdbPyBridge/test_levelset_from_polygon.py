@@ -6,31 +6,6 @@ import numpy as np
 
 DEBUG = False
 
-def writeObjFile(filename, points, triangles=[], quads=[]):
-    """Write out a triangulated or quad mesh OBJ file.
-    points is an array of (x,y,z) coordinates.
-    triangles is an array of (i,j,k) tuples, where i,j,k are the
-    indices into points of the three vertices that make up a triangle.
-    quads is an array of (i,j,k,l) tuples, where i,j,k,l are the
-    indices into points of the four vertices that make up a quad.
-
-    src: https://www.openvdb.org/documentation/doxygen/python.html
-    """
-    f = open(filename, 'w')
-    # Output vertices.
-    for xyz in points:
-        f.write('v %g %g %g\n' % tuple(xyz))
-    f.write('\n')
-    # Output faces.
-    for ijk in triangles:
-        f.write('f %d %d %d\n' %
-            (ijk[0]+1, ijk[1]+1, ijk[2]+1)) # offset vertex indices by one
-    for ijkl in quads:
-        f.write('f %d %d %d %d\n' %
-            (ijkl[0]+1, ijkl[1]+1, ijkl[2]+1, ijkl[3]+1))
-    f.close()
-
-
 def from_points_to_voxel(array, resolution=10):
     """
     resolution is an arbitrary value
@@ -39,7 +14,6 @@ def from_points_to_voxel(array, resolution=10):
     max_x = np.max(array[:, 0])
     max_y = np.max(array[:, 1])
     max_z = np.max(array[:, 2])
-
     min_x = np.min(array[:, 0])
     min_y = np.min(array[:, 1])
     min_z = np.min(array[:, 2])
@@ -47,7 +21,6 @@ def from_points_to_voxel(array, resolution=10):
     voxel_size = min(max_x-min_x,max_y-min_y,max_z-min_z)/resolution
 
     # create empty grid
-
     resolution_x = int(np.ceil((max_x-min_x)/voxel_size))
     resolution_y = int(np.ceil((max_y-min_y)/voxel_size))
     resolution_z = int(np.ceil((max_z-min_z)/voxel_size))
@@ -59,7 +32,6 @@ def from_points_to_voxel(array, resolution=10):
         print("resolution_z:", resolution_z)
 
     # fill the grid with the number of particles in each voxel
-
     particle_number = len(array[:,0])
     print("There are", particle_number, "particles")
 
@@ -89,7 +61,7 @@ if DEBUG : print("points.shape:", points.shape)
 
 # Create the vdb grid
 grid = vdb.FloatGrid()
-grid.name = "density"
+grid.name = "density" # to use it in blender shaders
 
 # Create voxel grid
 point_grid = from_points_to_voxel(points, resolution=10)
