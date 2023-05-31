@@ -84,7 +84,7 @@ int main(int argc, char **argv) {
         std::cout << "\n----------- Time step " << i << " -----------\n" << std::endl;
 
         // creates a SDF and a mesh from the particles (output in the results folder)
-        rasterizeParticles(particlesPositions[i], "fluid", i, shouldGenerateObjFiles);
+        rasterizeParticles(particlesPositions[i], "fluid", i, dt, shouldGenerateObjFiles);
 
         // creates a point grid from the particles (output in the results folder) not compatible with Blender
         if (shouldGenerateGrids) createPointGrid(particlesPositions[i], "fluid", i);
