@@ -96,27 +96,30 @@ public:
   // assume an arbitrary grid with the size of res_x*res_y; a fluid mass fill up
   // the size of f_width, f_height; each cell is sampled with 2x2 particles.
   void initScene(
-    const int res_x, const int res_y, const int res_z, const int f_length, const int f_height, const int f_width)
+    const Vec3f gridRes, const Vec3f initShift, const Vec3f initBlock)
   {
+    if ((initShift.x + initBlock.x + 2 >= gridRes.x) | (initShift.y + initBlock.y + 2 >= gridRes.y) | (initShift.z + initBlock.z + 2 >= gridRes.z)) {
+      throw length_error("Issue with the size and position of the initial particles.");
+    }
     _pos.clear();
 
-    _resX = res_x;
-    _resY = res_y;
-    _resZ = res_z;
+    _resX = gridRes.x;
+    _resY = gridRes.y;
+    _resZ = gridRes.z;
 
     // set wall for boundary
     _left = 0.5*_h;
-    _right = static_cast<Real>(res_x) - 0.5*_h;
+    _right = static_cast<Real>(_resX) - 0.5*_h;
     _bottom = 0.5*_h;
-    _top = static_cast<Real>(res_y) - 0.5*_h;
+    _top = static_cast<Real>(_resY) - 0.5*_h;
     _back = 0.5*_h;
-    _front = static_cast<Real>(res_z) - 0.5*_h;
+    _front = static_cast<Real>(_resZ) - 0.5*_h;
 
 
     _nbWallParticles = 0;
-    for (int i : {0, res_x - 1}) {
-      for (int j = 0; j<res_y; ++j) {
-        for (int k = 0; k<res_z; ++k) {
+    for (int i : {0, _resX - 1}) {
+      for (int j = 0; j<_resY; ++j) {
+        for (int k = 0; k<_resZ; ++k) {
           _pos.push_back(Vec3f(i+0.25, j+0.25, k+0.25));
           _pos.push_back(Vec3f(i+0.75, j+0.25, k+0.25));
           _pos.push_back(Vec3f(i+0.25, j+0.75, k+0.25));
@@ -131,9 +134,9 @@ public:
     }
 
     
-    for (int i = 1; i<res_x - 1; ++i) {
-      for (int j : {0, res_y - 1}) {
-        for (int k = 0; k<res_z; ++k) {
+    for (int i = 1; i<_resX - 1; ++i) {
+      for (int j : {0, _resY - 1}) {
+        for (int k = 0; k<_resZ; ++k) {
           _pos.push_back(Vec3f(i+0.25, j+0.25, k+0.25));
           _pos.push_back(Vec3f(i+0.75, j+0.25, k+0.25));
           _pos.push_back(Vec3f(i+0.25, j+0.75, k+0.25));
@@ -147,9 +150,9 @@ public:
       }
     }
 
-    for (int i = 1; i<res_x - 1; ++i) {
-      for (int j = 1; j<res_y - 1; ++j) {
-        for (int k : {0, res_z - 1}) {
+    for (int i = 1; i<_resX - 1; ++i) {
+      for (int j = 1; j<_resY - 1; ++j) {
+        for (int k : {0, _resZ - 1}) {
           _pos.push_back(Vec3f(i+0.25, j+0.25, k+0.25));
           _pos.push_back(Vec3f(i+0.75, j+0.25, k+0.25));
           _pos.push_back(Vec3f(i+0.25, j+0.75, k+0.25));
@@ -166,9 +169,9 @@ public:
     obsPart += _nbWallParticles;
 
     // sample a fluid mass
-    for(int i=0; i<f_length; ++i) {
-      for(int j=0; j<f_height; ++j) {
-        for(int k=0; k<f_width; ++k) {
+    for(int i=initShift.x; i<initBlock.x + initShift.x; ++i) {
+      for(int j=initShift.y; j<initBlock.y + initShift.y; ++j) {
+        for(int k=initShift.z; k<initBlock.z + initShift.z; ++k) {
           _pos.push_back(Vec3f(i+1.25, j+1.25, k+1.25));
           _pos.push_back(Vec3f(i+1.75, j+1.25, k+1.25));
           _pos.push_back(Vec3f(i+1.25, j+1.75, k+1.25));
@@ -199,7 +202,7 @@ public:
     _predP = vector<Real>(_pos.size(), 0);
 
 
-    for (int i = 0; i < res_x * res_y * res_z; i++) {
+    for (int i = 0; i < _resX * _resY * _resZ; i++) {
       _pidxInGrid.push_back(vector<tIndex>{});
     }
     
