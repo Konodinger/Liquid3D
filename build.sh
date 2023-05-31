@@ -36,4 +36,4 @@ cmake -B build -S .
 cmake --build build
 echo -e "${BOLDGREEN}OpenVDB Bridge built successfuly${NC}"
 
-cd ../../
+cd ../
