@@ -1,7 +1,7 @@
 # 3D IISPH
 
 This is an implementation of the Implicit Incompressible SPH method for 3D fluids, as described in the
-paper [Implicit Incompressible SPH]().
+paper [Implicit Incompressible SPH](https://cg.informatik.uni-freiburg.de/publications/2013_TVCG_IISPH.pdf).
 
 ## Build
 
