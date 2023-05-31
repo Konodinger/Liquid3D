@@ -19,7 +19,7 @@
 using namespace std;
 
 // debug index
-int obsPart = 82000;
+int obsPart = 2000;
 
 // for recording videos
 FILE* ffmpeg;
@@ -79,20 +79,18 @@ private:
 
 
 
-class SphSolver {
+class IisphSolver {
 public:
-  explicit SphSolver(
-    const Real nu=0.08, const Real h=0.5, const Real density=1e3,
-    const Vec3f g=Vec3f(0, -9.8, 0), const Real eta=0.01, const Real gamma=7.0,
-    const Real initP = 0.5, const Real omega = 0.5, const Real pressureError = 1.) :
-    _kernel(h), _nu(nu), _h(h), _d0(density),
-    _g(g), _eta(eta), _gamma(gamma),
+  explicit IisphSolver(
+    const Real dt = 0.0005, const Real nu=0.08,
+    const Real h=0.5, const Real density=1e3,
+    const Vec3f g=Vec3f(0, -9.8, 0), const Real initP = 0.5,
+    const Real omega = 0.5, const Real pressureError = 1.) :
+    _kernel(h), _dt(dt), _nu(nu),
+    _h(h), _d0(density), _g(g),
     _initP(initP), _omega(omega), _pressureError(pressureError)
   {
-    _dt = 0.0005;
-    _m0 = _d0*_h*_h;
-    _c = fabs(_g.y)/_eta;
-    _k = _d0*_c*_c/_gamma;
+    _m0 = _d0*_h*_h*_h/8.*M_PI*4./3.;
   }
 
   // assume an arbitrary grid with the size of res_x*res_y; a fluid mass fill up
@@ -164,6 +162,8 @@ public:
         }
       }
     }
+
+    obsPart += _nbWallParticles;
 
     // sample a fluid mass
     for(int i=0; i<f_length; ++i) {
@@ -269,7 +269,7 @@ private:
   void computeDensity()
   {
     Real rad = _kernel.supportRadius();
-    int nb;
+    int nb = 0;
 
 #ifdef __OPEN_MP__
     #pragma omp parallel for 
@@ -277,7 +277,6 @@ private:
     for (tIndex i = 0; i < particleCount(); ++i) {
       Real rho = 0.f;
       nb = 0;
-      Real test = 0.f;
 
       for (tIndex _kernelX = max(0, (int) floor(position(i).x - rad)); _kernelX < min(resX(), (int) floor(position(i).x + rad + 1)); ++_kernelX) {
         for (tIndex _kernelY = max(0, (int) floor(position(i).y - rad)); _kernelY < min(resY(), (int) floor(position(i).y + rad + 1)); ++_kernelY) {
@@ -285,19 +284,15 @@ private:
           
             for (tIndex j : _pidxInGrid[idx1d(_kernelX, _kernelY, _kernelZ)]) {
               nb++;
-              test += _kernel.w(position(i) - position(j));
               rho += _m0 * _kernel.w(position(i) - position(j));
             }
           }
         }
       }
-      #ifdef __DEBUG3__
-      cout << rho << "   " << nb << "    " << test << endl;
-      #endif
       _d[i] = rho;
     }
     #ifdef __DEBUG3__
-    cout << " " << nb << "    " << _d[particleCount() - 1] << "   ";
+    cout << "Density: " << _d[obsPart] << endl;
     #endif
   }
 
@@ -332,10 +327,12 @@ private:
         }
       }
       _acc[i] += 2 * _nu * viscousAcc;
+      #ifdef __DEBUG4__
+      cout << 2 * _nu * viscousAcc << "    ";
+      #endif
     }
     #ifdef __DEBUG3__
-    cout << 2 * _nu * viscousAcc << "    ";
-    cout << "D " << _d[100] << " A " << _acc[100] << " V " << velocity(100) <<" P " << position(100) << endl;
+    cout << "D " << _d[obsPart] << " A " << _acc[obsPart] << " V " << velocity(obsPart) <<" P " << position(obsPart) << endl;
     #endif
   }
 
@@ -442,6 +439,7 @@ private:
     while ((convCriteria) | (l < 2)) {
 
       convCriteria = false;
+      int nbIssue = 0;
 
       #ifdef __OPEN_MP__
       #pragma omp parallel for
@@ -467,10 +465,8 @@ private:
       #pragma omp parallel for
       #endif
       for (tIndex i = _nbWallParticles; i < particleCount(); ++i) {
-        Real newP;
-        if (_a_ii[i] == 0.f) {
-          newP == 0.f;
-        } else {
+        Real newP = 0.f;
+        if (_a_ii[i] != 0.f) {
           _predP[i] = _d0 - _interD[i];
 
           for (tIndex _kernelX = max(0, (int) floor(position(i).x - rad)); _kernelX < min(resX(), (int) floor(position(i).x + rad + 1)); ++_kernelX) {
@@ -490,16 +486,16 @@ private:
         }
 
         if (abs(_p[i] - newP) > _p[i] * _pressureError) {
+          nbIssue++;
           convCriteria = true;
         }
 
         _p[i] = newP;
-        
       }
 
       l++;
       #ifdef __DEBUG3__
-      cout << "InterVel " << _interVel[obsPart] << " d_ii " << _d_ii[obsPart] << " a_ii " << _a_ii[obsPart] << " InterDen " << _interD[obsPart] << " c_i " << _c_i[obsPart] << " PredP " << _predP[obsPart] <<" Pr " << _p[obsPart] << endl;
+      cout << "NbIssue " << nbIssue << " InterVel " << _interVel[obsPart] << " d_ii " << _d_ii[obsPart] << " a_ii " << _a_ii[obsPart] << " InterDen " << _interD[obsPart] << " c_i " << _c_i[obsPart] << " PredP " << _predP[obsPart] <<" Pr " << _p[obsPart] << endl;
       #endif
     }
     #ifdef __DEBUG2__
@@ -587,28 +583,9 @@ private:
 
   inline tIndex idx1d(const int i, const int j, const int k) { return i + j*resX() + k*resX()*resY(); }
 
-  const CubicSpline _kernel;
-
-  // particle data
-  vector<Vec3f> _pos;      // position
-  vector<Vec3f> _vel;      // velocity
-  vector<Vec3f> _acc;      // acceleration
-  vector<Real>  _p;        // pressure
-  vector<Real>  _d;        // density
-  //IISPH specific data
-  vector<Vec3f> _interVel; // intermediate velocity (without pressure force)
-  vector<Real> _interD;    // intermediate density (with _predVel)
-  vector<Real> _a_ii;      // diagonal coef of the SOE
-  vector<Vec3f> _d_ii;     // first level coef of the SOE
-  vector<Vec3f> _c_i;      // second level coef of the SOE
-  vector<Real> _predP;     // predicted pressure
-  Real _initP;                  // initial pressure for Jacobi method. Must be between 0 and 1
-  Real _omega;                  // relaxation coefficient. Must be between 0 and 1
-  Real _pressureError;           // maximum pressure variation rate serving as a limit of the Jacobi method
-
-
-
   vector< vector<tIndex> > _pidxInGrid; // will help you find neighbor particles
+
+  const CubicSpline _kernel;
 
   // simulation
   Real _dt;                     // time step
@@ -621,14 +598,28 @@ private:
 
   // SPH coefficients
   Real _nu;                     // viscosity coefficient
-  Real _d0;                     // rest density
   Real _h;                      // particle spacing (i.e., diameter)
+  Real _d0;                     // rest density
   Vec3f _g;                     // gravity
-
   Real _m0;                     // rest mass
-  Real _k;                      // EOS coefficient
 
-  Real _eta;
-  Real _c;                      // speed of sound
-  Real _gamma;                  // EOS power factor
+  // particle data
+  vector<Vec3f> _pos;      // position
+  vector<Vec3f> _vel;      // velocity
+  vector<Vec3f> _acc;      // acceleration
+  vector<Real>  _p;        // pressure
+  vector<Real>  _d;        // density
+  
+  //IISPH specific data
+  vector<Vec3f> _interVel; // intermediate velocity (without pressure force)
+  vector<Real> _interD;    // intermediate density (with _predVel)
+  vector<Real> _a_ii;      // diagonal coef of the SOE
+  vector<Vec3f> _d_ii;     // first level coef of the SOE
+  vector<Vec3f> _c_i;      // second level coef of the SOE
+  vector<Real> _predP;     // predicted pressure
+  Real _initP;                  // initial pressure for Jacobi method. Must be between 0 and 1
+  Real _omega;                  // relaxation coefficient. Must be between 0 and 1
+  Real _pressureError;           // maximum pressure variation rate serving as a limit of the Jacobi method
+
+
 };

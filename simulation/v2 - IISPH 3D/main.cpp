@@ -1,7 +1,8 @@
 //#define __OPEN_MP__
-//#define __DEBUG1__
-//#define __DEBUG2__
-//#define __DEBUG3__
+#define __DEBUG1__
+#define __DEBUG2__
+#define __DEBUG3__
+//#define __DEBUG4__
 
 #include <stdio.h>
 #include <iostream>
@@ -15,14 +16,21 @@
 using namespace std;
 
 string fileOutput = "liquidPointCloud";
-bool gSolverStop = false;
+bool solverStop = false;
 
 
 //Simulation parameters
+const Real solvNu = 0.08;
+const Real solvH = 0.5;
+const Real solvDensity = 3e3;
+const Vec3f solvG = Vec3f(0, -9.8, 0);
+const Real solvInitP = 0.5  ;
+const Real solvOmega = 0.3;
+const Real solvPressureError = 0.99;
 
 int nbConsecutiveSteps = 5;
-float dt = 0.2f;
-long unsigned int timesteps = 20;
+const Real dt = 0.005f;
+long unsigned int timesteps = 200;
 const int res_x = 48;
 const int res_y = 32;
 const int res_z = 48;
@@ -30,7 +38,7 @@ const int f_length = 8;
 const int f_height = 8;
 const int f_width = 8;
 
-SphSolver gSolver(0.08, 0.5, 3e3, Vec3f(0, -9.8, 0), 0.01, 7.0, 0.5, 0.5, 0.99);
+IisphSolver solver(dt, solvNu, solvH, solvDensity, solvG, solvInitP, solvOmega, solvPressureError);
 
 
 int main(int argc, char **argv)
@@ -55,33 +63,33 @@ int main(int argc, char **argv)
   file << dt * nbConsecutiveSteps << " " << timesteps + 1 << "\n";
 
 
-  gSolver.initScene(res_x, res_y, res_z, f_length, f_height, f_width);
-  int nbWallPart = gSolver.wallParticleCount();
+  solver.initScene(res_x, res_y, res_z, f_length, f_height, f_width);
+  int nbWallPart = solver.wallParticleCount();
 
   // Next part print wall particles. It is currently removed because unused.
   /*file << nbWallPart << "\n";
   for (int i = 0; i < nbWallPart; ++i) {
-  file << gSolver.position(i).x << " " << gSolver.position(i).y << " " << gSolver.position(i).z << "\n";
+  file << solver.position(i).x << " " << solver.position(i).y << " " << solver.position(i).z << "\n";
   }*/ 
 
-  int nbPart = gSolver.particleCount();
+  int nbPart = solver.particleCount();
   file << nbPart - nbWallPart << "\n";
 
 
   long unsigned int t = 0;
   for (int i = nbWallPart; i < nbPart; ++i) {
-    file << gSolver.position(i).x << " " << gSolver.position(i).y << " " << gSolver.position(i).z << "\n";
+    file << solver.position(i).x << " " << solver.position(i).y << " " << solver.position(i).z << "\n";
   }
 
   while(t < timesteps) {
     #ifdef __DEBUG1__
     cout << "Step number " << t + 1 << "\n";
     #endif
-    if (!gSolverStop){
-      for(int i=0; i<nbConsecutiveSteps; ++i) gSolver.update();
+    if (!solverStop){
+      for(int i=0; i<nbConsecutiveSteps; ++i) solver.update();
 
       for (int i = nbWallPart; i < nbPart; ++i) {
-        file << gSolver.position(i).x << " " << gSolver.position(i).y << " " << gSolver.position(i).z << "\n";
+        file << solver.position(i).x << " " << solver.position(i).y << " " << solver.position(i).z << "\n";
       }
 
       t++;
