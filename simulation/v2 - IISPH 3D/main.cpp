@@ -12,18 +12,14 @@
 #include <omp.h>
 #endif
 
-using namespace std;
-
 string fileOutput = "liquidPointCloud";
-bool solverStop = false;
-
 
 //Simulation parameters
 const Real solvNu = 0.08;
 const Real solvH = 0.5;
 const Real solvDensity = 3e3;
 const Vec3f solvG = Vec3f(0, 0, -9.8);
-const Real solvInitP = 0.5  ;
+const Real solvInitP = 0.5;
 const Real solvOmega = 0.3;
 const Real solvPressureError = 0.99;
 
@@ -37,10 +33,9 @@ const Vec3f initBlock = Vec3f(16, 8, 8);
 IisphSolver solver(dt, solvNu, solvH, solvDensity, solvG, solvInitP, solvOmega, solvPressureError);
 
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
 #ifdef __OPEN_MP__
-  omp_set_num_threads(6);
+    omp_set_num_threads(6);
 #endif
 
   try {
@@ -59,7 +54,6 @@ int main(int argc, char **argv)
     if (!ifstream(fpath.str()).is_open()) {
       break;
     }
-  }
 
   file.open(fpath.str());
   file << gridRes.x << " " << gridRes.y << " " << gridRes.z << "\n";
@@ -79,22 +73,33 @@ int main(int argc, char **argv)
 
   for (int i = nbWallPart; i < nbPart; ++i) {
     file << solver.position(i).x << " " << solver.position(i).y << " " << solver.position(i).z << "\n";
-  }
+    }
 
   for (long unsigned int t = 0; t < timesteps; ++t) {
     #ifdef __DEBUG1__
     cout << "Step number " << t + 1 << "\n";
     #endif
-    if (!solverStop){
       for(int i=0; i<nbConsecutiveSteps; ++i) solver.update();
 
-      for (int i = nbWallPart; i < nbPart; ++i) {
+
+    for (int i = nbWallPart; i < nbPart; ++i) {
         file << solver.position(i).x << " " << solver.position(i).y << " " << solver.position(i).z << "\n";
       }
 
     }
-  }
-  cout << " > Quit" << endl;
-  file.close();
-  return 0;
+
+    for (long unsigned int t = 0; t < timesteps; ++t) {
+#ifdef __DEBUG1__
+        cout << "Step number " << t + 1 << "\n";
+#endif
+        for (int i = 0; i < nbConsecutiveSteps; ++i) solver.update();
+
+        for (int i = nbWallPart; i < nbPart; ++i) {
+            file << solver.position(i).x << " " << solver.position(i).y << " " << solver.position(i).z << "\n";
+        }
+    }
+    cout << " > Quit" << endl;
+    file.close();
+
+    return 0;
 }
