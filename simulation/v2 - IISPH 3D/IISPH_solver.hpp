@@ -270,7 +270,8 @@ public:
 
 private:
     void buildNeighbor() {
-        // TODO:
+
+#pragma omp parallel for
         for (auto &pix: _pidxInGrid) {
             pix.clear();
         }
@@ -284,9 +285,7 @@ private:
         Real rad = _kernel.supportRadius();
         int nb = 0;
 
-#ifdef __OPEN_MP__
 #pragma omp parallel for
-#endif
         for (tIndex i = 0; i < particleCount(); ++i) {
             Real rho = 0.f;
             nb = 0;
@@ -313,9 +312,7 @@ private:
     }
 
     void applyBodyForce() {
-#ifdef __OPEN_MP__
 #pragma omp parallel for
-#endif
         for (tIndex i = _nbWallParticles; i < particleCount(); ++i) {
             _acc[i] += _g;
         }
@@ -324,9 +321,7 @@ private:
     void applyViscousForce() {
         Real rad = _kernel.supportRadius();
 
-#ifdef __OPEN_MP__
 #pragma omp parallel for
-#endif
         for (tIndex i = _nbWallParticles; i < particleCount(); ++i) {
             Vec3f dist = Vec3f();
             Vec3f viscousAcc = Vec3f();
@@ -355,9 +350,7 @@ private:
     }
 
     void computeIntermediateVelocity() {
-#ifdef __OPEN_MP__
 #pragma omp parallel for
-#endif
         for (tIndex i = _nbWallParticles; i < particleCount(); ++i) {
             _interVel[i] = _vel[i] + _dt * _acc[i];
         }
@@ -366,9 +359,7 @@ private:
     void computeDiiCoeff() {
         Real rad = _kernel.supportRadius();
 
-#ifdef __OPEN_MP__
 #pragma omp parallel for
-#endif
         for (tIndex i = _nbWallParticles; i < particleCount(); ++i) {
             _d_ii[i] = Vec3f(0, 0, 0);
 
@@ -394,9 +385,7 @@ private:
     void computeAiiCoeff() {
         Real rad = _kernel.supportRadius();
 
-#ifdef __OPEN_MP__
 #pragma omp parallel for
-#endif
         for (tIndex i = _nbWallParticles; i < particleCount(); ++i) {
             _a_ii[i] = 0;
 
@@ -423,9 +412,7 @@ private:
     void computeIntermediateDensity() {
         Real rad = _kernel.supportRadius();
 
-#ifdef __OPEN_MP__
 #pragma omp parallel for
-#endif
         for (tIndex i = _nbWallParticles; i < particleCount(); ++i) {
             _interD[i] = _d[i];
 
@@ -450,9 +437,7 @@ private:
     void computePressure() {
         Real rad = _kernel.supportRadius();
 
-#ifdef __OPEN_MP__
 #pragma omp parallel for
-#endif
         for (tIndex i = _nbWallParticles; i < particleCount(); ++i) {
             _p[i] *= _initP;
 
@@ -466,9 +451,7 @@ private:
             convCriteria = false;
             int nbIssue = 0;
 
-#ifdef __OPEN_MP__
 #pragma omp parallel for
-#endif
             for (tIndex i = _nbWallParticles; i < particleCount(); ++i) {
                 _c_i[i] = Vec3f(0, 0, 0);
 
@@ -489,9 +472,7 @@ private:
                 _c_i[i] *= -_dt * _dt * _m0;
             }
 
-#ifdef __OPEN_MP__
 #pragma omp parallel for
-#endif
             for (tIndex i = _nbWallParticles; i < particleCount(); ++i) {
                 Real newP = 0.f;
                 if (_a_ii[i] != 0.f) {
@@ -545,9 +526,7 @@ private:
         // TODO:
         Real rad = _kernel.supportRadius();
 
-#ifdef __OPEN_MP__
 #pragma omp parallel for
-#endif
         for (tIndex i = _nbWallParticles; i < particleCount(); ++i) {
             Vec3f f = Vec3f(0);
             for (tIndex _kernelX = max(0, (int) floor(position(i).x - rad));
@@ -574,18 +553,14 @@ private:
     }
 
     void updateVelocity() {
-#ifdef __OPEN_MP__
 #pragma omp parallel for
-#endif
         for (tIndex i = _nbWallParticles; i < particleCount(); ++i) {
             _vel[i] += _dt * _acc[i];
         }
     }
 
     void updatePosition() {
-#ifdef __OPEN_MP__
 #pragma omp parallel for
-#endif
         for (tIndex i = _nbWallParticles; i < particleCount(); ++i) {
             _pos[i] += _dt * _vel[i];
         }
@@ -594,18 +569,14 @@ private:
     // simple collision detection/resolution for each particle
     void resolveCollision() {
         vector <tIndex> need_res;
-#ifdef __OPEN_MP__
 #pragma omp parallel for
-#endif
         for (tIndex i = _nbWallParticles; i < particleCount(); ++i) {
             if (_pos[i].x < _left || _pos[i].y < _bottom || _pos[i].z < _back || _pos[i].x > _right ||
                 _pos[i].y > _top || _pos[i].z > _front)
                 need_res.push_back(i);
         }
 
-#ifdef __OPEN_MP__
 #pragma omp parallel for
-#endif
         for (
                 vector<tIndex>::const_iterator it = need_res.begin();
                 it < need_res.end();
