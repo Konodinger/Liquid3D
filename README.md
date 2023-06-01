@@ -1,6 +1,7 @@
 # Liquid3D
 
 [![3D IISPH Makefile CI](https://github.com/Konodinger/Liquid3D/actions/workflows/makefile.yml/badge.svg)](https://github.com/Konodinger/Liquid3D/actions/workflows/makefile.yml)
+[![3D IISPH CMake](https://github.com/Konodinger/Liquid3D/actions/workflows/cmake.yml/badge.svg)](https://github.com/Konodinger/Liquid3D/actions/workflows/cmake.yml)
 
 IGR205 project
 
