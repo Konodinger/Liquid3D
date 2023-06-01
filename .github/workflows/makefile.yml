@@ -1,0 +1,21 @@
+name: 3D IISPH Makefile CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: configure
+      run: cd simulation/v2\ -\ IISPH\ 3D 
+
+    - name: Build
+      run: make
