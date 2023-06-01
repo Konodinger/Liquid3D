@@ -24,11 +24,11 @@ const Real solvOmega = 0.3;
 const Real solvPressureError = 0.99;
 
 int nbConsecutiveSteps = 5;
-const Real dt = 0.005f;
+const Real dt = 0.01f;
 long unsigned int timesteps = 500;
-const Vec3f gridRes = Vec3f(32, 32, 32);
+const Vec3f gridRes = Vec3f(20, 20, 25);
 const Vec3f initShift = Vec3f(0, 0, 10);
-const Vec3f initBlock = Vec3f(16, 8, 8);
+const Vec3f initBlock = Vec3f(16, 16, 8);
 
 IisphSolver solver(dt, solvNu, solvH, solvDensity, solvG, solvInitP, solvOmega, solvPressureError);
 
@@ -54,12 +54,32 @@ int main(int argc, char **argv) {
     if (!ifstream(fpath.str()).is_open()) {
       break;
     }
+  }
+
+  const int nbFluidPart = initBlock.x*initBlock.y*initBlock.z*8;
+  const int nbWallPart = solver.wallParticleCount();
+  vector<Vec3f> partPos((timesteps + 1)*nbFluidPart, Vec3f(0));
+
+  for (int i = 0; i < nbFluidPart; ++i) {
+    partPos[i] = solver.position(i + nbWallPart);
+    }
+
+  for (long unsigned int t = 1; t <= timesteps; ++t) {
+    #ifdef __DEBUG1__
+    cout << "Step number " << t << "\n";
+    #endif
+    for(int i=0; i<nbConsecutiveSteps; ++i) solver.update();
+
+    for (int i = 0; i < nbFluidPart; ++i) {
+      partPos[t*nbFluidPart + i] = solver.position(i + nbWallPart);
+    }
+  }
+
+  cout << "End of the simulation, saving data..." << endl;
 
   file.open(fpath.str());
   file << gridRes.x << " " << gridRes.y << " " << gridRes.z << "\n";
   file << dt * nbConsecutiveSteps << " " << timesteps + 1 << "\n";
-  
-  int nbWallPart = solver.wallParticleCount();
 
   // Next part print wall particles. It is currently removed because unused.
   /*file << nbWallPart << "\n";
@@ -67,39 +87,14 @@ int main(int argc, char **argv) {
   file << solver.position(i).x << " " << solver.position(i).y << " " << solver.position(i).z << "\n";
   }*/ 
 
-  int nbPart = solver.particleCount();
-  file << nbPart - nbWallPart << "\n";
+  file << nbFluidPart << "\n";
 
+  for (auto part : partPos) {
+    file << part.x << " " << part.y << " " << part.z << "\n";
+  }
 
-  for (int i = nbWallPart; i < nbPart; ++i) {
-    file << solver.position(i).x << " " << solver.position(i).y << " " << solver.position(i).z << "\n";
-    }
+  cout << " > Quit" << endl;
+  file.close();
 
-  for (long unsigned int t = 0; t < timesteps; ++t) {
-    #ifdef __DEBUG1__
-    cout << "Step number " << t + 1 << "\n";
-    #endif
-      for(int i=0; i<nbConsecutiveSteps; ++i) solver.update();
-
-
-    for (int i = nbWallPart; i < nbPart; ++i) {
-        file << solver.position(i).x << " " << solver.position(i).y << " " << solver.position(i).z << "\n";
-      }
-
-    }
-
-    for (long unsigned int t = 0; t < timesteps; ++t) {
-#ifdef __DEBUG1__
-        cout << "Step number " << t + 1 << "\n";
-#endif
-        for (int i = 0; i < nbConsecutiveSteps; ++i) solver.update();
-
-        for (int i = nbWallPart; i < nbPart; ++i) {
-            file << solver.position(i).x << " " << solver.position(i).y << " " << solver.position(i).z << "\n";
-        }
-    }
-    cout << " > Quit" << endl;
-    file.close();
-
-    return 0;
+  return 0;
 }
