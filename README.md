@@ -1,5 +1,7 @@
 # Liquid3D
 
+[![3D IISPH Makefile CI](https://github.com/Konodinger/Liquid3D/actions/workflows/makefile.yml/badge.svg)](https://github.com/Konodinger/Liquid3D/actions/workflows/makefile.yml)
+
 IGR205 project
 
 The goal of this project is to simulate fluids using the IISPH technique in order to use the OpenVDB library to create a mesh out of the fluid particles. The result can then be imported inside Blender.
