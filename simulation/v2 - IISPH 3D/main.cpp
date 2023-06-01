@@ -7,14 +7,13 @@
 
 #include <iostream>
 #include <fstream>
-#include <string>
 #include "IISPH_solver.hpp"
 
-#ifdef __OPEN_MP__
+#ifdef _OPENMP
 #include <omp.h>
 #endif
 
-const std::string fileOutput = "liquidPointCloud";
+std::string fileOutput = "liquidPointCloud";
 
 //Simulation parameters
 const Real solvNu = 0.08;
@@ -36,8 +35,12 @@ IisphSolver solver(dt, solvNu, solvH, solvDensity, solvG, solvInitP, solvOmega, 
 
 
 int main(int argc, char **argv) {
-#ifdef __OPEN_MP__
-    omp_set_num_threads(6);
+
+    // if openmp is enabled, we print the number of threads used
+#ifdef _OPENMP
+    std::cout << "OpenMP enabled, using " << omp_get_max_threads() << " threads" << std::endl;
+#else
+    std::cout << "OpenMP not enabled, using only 1 thread" << std::endl;
 #endif
 
     try {
@@ -47,43 +50,41 @@ int main(int argc, char **argv) {
         return 0;
     }
 
-    const int nbFluidPart = initBlock.x * initBlock.y * initBlock.z * 8;
-    const int nbWallPart = solver.wallParticleCount();
-    vector <Vec3f> partPos((timesteps + 1) * nbFluidPart, Vec3f(0));
-
-    for (int i = 0; i < nbFluidPart; ++i) {
-        partPos[i] = solver.position(i + nbWallPart);
-    }
-
-    for (long unsigned int t = 1; t <= timesteps; ++t) {
-#ifdef __DEBUG1__
-        cout << "Step number " << t << "\n";
-#endif
-        for (int i = 0; i < nbConsecutiveSteps; ++i) solver.update();
-
-        for (int i = 0; i < nbFluidPart; ++i) {
-            partPos[t * nbFluidPart + i] = solver.position(i + nbWallPart);
-        }
-    }
-
-    cout << "End of the simulation, saving data..." << endl;
-
     ofstream file;
     std::stringstream fpath;
     int fileNum = 1;
     while (true) {
-        fpath.str(string());
+        fpath.str(std::string());
         fpath << "./" << fileOutput << "_" << std::setw(3) << std::setfill('0') << fileNum++ << ".txt";
         if (!ifstream(fpath.str()).is_open()) {
             break;
         }
     }
 
+    const unsigned long int nbFluidPart = initBlock.x * initBlock.y * initBlock.z * 8;
+    const int nbWallPart = solver.wallParticleCount();
+    vector <Vec3f> partPos((timesteps + 1) * nbFluidPart, Vec3f(0));
+
+    for (unsigned long int i = 0; i < nbFluidPart; ++i) {
+        partPos[i] = solver.position(i + nbWallPart);
+    }
+
+    for (long unsigned int t = 1; t <= timesteps; ++t) {
+#ifdef __DEBUG1__
+        std::cout << "Step number " << t << std::endl;
+#endif
+        for (unsigned int i = 0; i < nbConsecutiveSteps; ++i) solver.update();
+
+        for (unsigned long int i = 0; i < nbFluidPart; ++i) {
+            partPos[t * nbFluidPart + i] = solver.position(i + nbWallPart);
+        }
+    }
+
+    std::cout << "End of the simulation, saving data..." << std::endl;
+
     file.open(fpath.str());
     file << gridRes.x << " " << gridRes.y << " " << gridRes.z << "\n";
     file << dt * nbConsecutiveSteps << " " << timesteps + 1 << "\n";
-
-    int nbWallPart = solver.wallParticleCount();
 
     // Next part print wall particles. It is currently removed because unused.
     /*file << nbWallPart << "\n";
@@ -91,41 +92,13 @@ int main(int argc, char **argv) {
     file << solver.position(i).x << " " << solver.position(i).y << " " << solver.position(i).z << "\n";
     }*/
 
-    int nbPart = solver.particleCount();
-    file << nbPart - nbWallPart << "\n";
-
-
-    for (int i = nbWallPart; i < nbPart; ++i) {
-        file << solver.position(i).x << " " << solver.position(i).y << " " << solver.position(i).z << "\n";
-    }
-
-    for (long unsigned int t = 0; t < timesteps; ++t) {
-#ifdef __DEBUG1__
-        std::cout << "Step number " << t + 1 << std::endl;
-#endif
-        for (int i = 0; i < nbConsecutiveSteps; ++i) solver.update();
-
-
-        for (int i = nbWallPart; i < nbPart; ++i) {
-            file << solver.position(i).x << " " << solver.position(i).y << " " << solver.position(i).z << "\n";
-        }
-
-    }
-
-    for (long unsigned int t = 0; t < timesteps; ++t) {
-#ifdef __DEBUG1__
-        std::cout << "Step number " << t + 1 << std::endl;
-#endif
-        for (int i = 0; i < nbConsecutiveSteps; ++i) solver.update();
-    }
-
     file << nbFluidPart << "\n";
 
     for (auto part: partPos) {
         file << part.x << " " << part.y << " " << part.z << "\n";
     }
 
-    cout << " > Quit" << endl;
+    std::cout << " > Quit" << std::endl;
     file.close();
 
     return 0;
