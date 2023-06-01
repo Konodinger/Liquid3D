@@ -26,11 +26,11 @@ const Real solvOmega = 0.3;
 const Real solvPressureError = 0.99;
 
 const int nbConsecutiveSteps = 5;
-const Real dt = 0.005f;
-const long unsigned int timesteps = 500;
-const Vec3f gridRes = Vec3f(32, 32, 32);
+const Real dt = 0.01f;
+long unsigned int timesteps = 500;
+const Vec3f gridRes = Vec3f(20, 20, 25);
 const Vec3f initShift = Vec3f(0, 0, 10);
-const Vec3f initBlock = Vec3f(16, 8, 8);
+const Vec3f initBlock = Vec3f(16, 16, 8);
 
 IisphSolver solver(dt, solvNu, solvH, solvDensity, solvG, solvInitP, solvOmega, solvPressureError);
 
@@ -46,6 +46,27 @@ int main(int argc, char **argv) {
         std::cout << e.what() << std::endl;
         return 0;
     }
+
+    const int nbFluidPart = initBlock.x * initBlock.y * initBlock.z * 8;
+    const int nbWallPart = solver.wallParticleCount();
+    vector <Vec3f> partPos((timesteps + 1) * nbFluidPart, Vec3f(0));
+
+    for (int i = 0; i < nbFluidPart; ++i) {
+        partPos[i] = solver.position(i + nbWallPart);
+    }
+
+    for (long unsigned int t = 1; t <= timesteps; ++t) {
+#ifdef __DEBUG1__
+        cout << "Step number " << t << "\n";
+#endif
+        for (int i = 0; i < nbConsecutiveSteps; ++i) solver.update();
+
+        for (int i = 0; i < nbFluidPart; ++i) {
+            partPos[t * nbFluidPart + i] = solver.position(i + nbWallPart);
+        }
+    }
+
+    cout << "End of the simulation, saving data..." << endl;
 
     ofstream file;
     std::stringstream fpath;
@@ -96,12 +117,15 @@ int main(int argc, char **argv) {
         std::cout << "Step number " << t + 1 << std::endl;
 #endif
         for (int i = 0; i < nbConsecutiveSteps; ++i) solver.update();
-
-        for (int i = nbWallPart; i < nbPart; ++i) {
-            file << solver.position(i).x << " " << solver.position(i).y << " " << solver.position(i).z << "\n";
-        }
     }
-    std::cout << " > Quit" << std::endl;
+
+    file << nbFluidPart << "\n";
+
+    for (auto part: partPos) {
+        file << part.x << " " << part.y << " " << part.z << "\n";
+    }
+
+    cout << " > Quit" << endl;
     file.close();
 
     return 0;

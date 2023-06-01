@@ -98,7 +98,7 @@ public:
   void initScene(
     const Vec3f gridRes, const Vec3f initShift, const Vec3f initBlock)
   {
-    if ((initShift.x + initBlock.x + 2 >= gridRes.x) | (initShift.y + initBlock.y + 2 >= gridRes.y) | (initShift.z + initBlock.z + 2 >= gridRes.z)) {
+    if ((initShift.x + initBlock.x + 1 >= gridRes.x) | (initShift.y + initBlock.y + 1 >= gridRes.y) | (initShift.z + initBlock.z + 1 >= gridRes.z)) {
       throw length_error("Issue with the size and position of the initial particles.");
     }
     _pos.clear();
