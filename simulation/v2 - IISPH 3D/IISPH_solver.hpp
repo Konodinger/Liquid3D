@@ -569,7 +569,7 @@ private:
     // simple collision detection/resolution for each particle
     void resolveCollision() {
         vector <tIndex> need_res;
-#pragma omp parallel for
+
         for (tIndex i = _nbWallParticles; i < particleCount(); ++i) {
             if (_pos[i].x < _left || _pos[i].y < _bottom || _pos[i].z < _back || _pos[i].x > _right ||
                 _pos[i].y > _top || _pos[i].z > _front)
