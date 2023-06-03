@@ -40,8 +40,9 @@ You can use CMake to build the project.
 
 ```
 mkdir build
-cmake -B build -S .
-cmake --build build
+cd build
+cmake ..
+make
 ```
 
 ## Usage
