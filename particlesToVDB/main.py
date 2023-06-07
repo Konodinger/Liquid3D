@@ -21,20 +21,19 @@ volume_config = {
 }
 
 
-def convert_to_vdb():
-    COMMANDS = [
-        "/root/Liquid3D/openvdbCppBridge/build/OpenVdbBridge -f /root/Liquid3D/openvdbCppBridge/liquidPointCloud_002.txt",
-        f'ls /results',
-        f"cp -r /results {CONTAINER_DIRECTORY}/",
-    ]
-
+def execute_commands(commands: list[str]):
     container = client.containers.run(image=DOCKER_IMAGE_NAME, command='/bin/sh', tty=True, detach=True,
                                     # mounts current directory to /root/Liquid3D/openvdbCppBridge/build/ in container
                                     volumes=volume_config)
 
-    for COMMAND in COMMANDS:
-        result = container.exec_run(wrapCommand(COMMAND), stream=True, privileged=True)
-        for line in result.output:
+    for COMMAND in commands:
+        exit_code, result = container.exec_run(wrapCommand(COMMAND), stream=True, privileged=True, stdout=True, stderr=True)
+        if exit_code:
+            print("Error running command: " + COMMAND)
+            print("Exit code: ", exit_code)
+            break
+
+        for line in result:
             print(line.decode('utf-8'))
 
     print("Stopping container")
@@ -44,4 +43,18 @@ def convert_to_vdb():
     container.remove()
     print("Container removed")
 
-convert_to_vdb()
+
+def convert_to_vdb(file_name):
+    # check if file exists
+    if not os.path.isfile(file_name):
+        print("File does not exist:", file_name)
+        return
+
+    file_path_in_container = os.path.join(CONTAINER_DIRECTORY, file_name)
+    execute_commands([
+        f"/root/Liquid3D/openvdbCppBridge/build/OpenVdbBridge -f {file_path_in_container}",
+        f'ls /results',
+        f"cp -r /results {CONTAINER_DIRECTORY}/",
+    ])
+
+convert_to_vdb("./liquidPointCloud.txt")
