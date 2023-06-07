@@ -11,8 +11,9 @@ The project can be built using CMake. The following commands can be used to buil
 
 ```bash
 mkdir build
-cmake -B build -S .
-cmake --build build
+cd build
+cmake ..
+make
 ```
 
 ### Using Make

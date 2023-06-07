@@ -246,7 +246,7 @@ public:
 
     tIndex particleCount() const { return _pos.size(); }
 
-    const tIndex &wallParticleCount() { return _nbWallParticles; }
+    const tIndex &wallParticleCount() const { return _nbWallParticles; }
 
     tIndex fluidParticleCount() { return _pos.size() - _nbWallParticles; }
 
@@ -273,11 +273,12 @@ public:
 private:
     void buildNeighbor() {
 
-#pragma omp parallel for
+#pragma omp parallel for default(none)
         for (auto &pix: _pidxInGrid) {
             pix.clear();
         }
 
+#pragma omp parallel for default(none)
         for (tIndex i = 0; i < particleCount(); ++i) {
             _pidxInGrid[idx1d(floor(position(i).x), floor(position(i).y), floor(position(i).z))].push_back(i);
         }
@@ -287,7 +288,7 @@ private:
         Real rad = _kernel.supportRadius();
         int nb = 0;
 
-#pragma omp parallel for
+#pragma omp parallel for default(none) shared(nb, rad)
         for (tIndex i = 0; i < particleCount(); ++i) {
             Real rho = 0.f;
             nb = 0;
@@ -314,7 +315,7 @@ private:
     }
 
     void applyBodyForce() {
-#pragma omp parallel for
+#pragma omp parallel for default(none)
         for (tIndex i = _nbWallParticles; i < particleCount(); ++i) {
             _acc[i] += _g;
         }
@@ -323,7 +324,7 @@ private:
     void applyViscousForce() {
         Real rad = _kernel.supportRadius();
 
-#pragma omp parallel for
+#pragma omp parallel for default(none) shared(rad)
         for (tIndex i = _nbWallParticles; i < particleCount(); ++i) {
             Vec3f dist = Vec3f();
             Vec3f viscousAcc = Vec3f();
@@ -352,7 +353,7 @@ private:
     }
 
     void computeIntermediateVelocity() {
-#pragma omp parallel for
+#pragma omp parallel for default(none)
         for (tIndex i = _nbWallParticles; i < particleCount(); ++i) {
             _interVel[i] = _vel[i] + _dt * _acc[i];
         }
@@ -361,7 +362,7 @@ private:
     void computeDiiCoeff() {
         Real rad = _kernel.supportRadius();
 
-#pragma omp parallel for
+#pragma omp parallel for default(none) shared(rad)
         for (tIndex i = _nbWallParticles; i < particleCount(); ++i) {
             _d_ii[i] = Vec3f(0, 0, 0);
 
@@ -387,7 +388,7 @@ private:
     void computeAiiCoeff() {
         Real rad = _kernel.supportRadius();
 
-#pragma omp parallel for
+#pragma omp parallel for default(none) shared(rad)
         for (tIndex i = _nbWallParticles; i < particleCount(); ++i) {
             _a_ii[i] = 0;
 
@@ -414,7 +415,7 @@ private:
     void computeIntermediateDensity() {
         Real rad = _kernel.supportRadius();
 
-#pragma omp parallel for
+#pragma omp parallel for default(none) shared(rad)
         for (tIndex i = _nbWallParticles; i < particleCount(); ++i) {
             _interD[i] = _d[i];
 
@@ -439,7 +440,7 @@ private:
     void computePressure() {
         Real rad = _kernel.supportRadius();
 
-#pragma omp parallel for
+#pragma omp parallel for default(none) shared(rad)
         for (tIndex i = _nbWallParticles; i < particleCount(); ++i) {
             _p[i] *= _initP;
 
@@ -453,7 +454,7 @@ private:
             convCriteria = false;
             int nbIssue = 0;
 
-#pragma omp parallel for
+#pragma omp parallel for default(none) shared(rad, convCriteria, nbIssue)
             for (tIndex i = _nbWallParticles; i < particleCount(); ++i) {
                 _c_i[i] = Vec3f(0, 0, 0);
 
@@ -474,7 +475,7 @@ private:
                 _c_i[i] *= -_dt * _dt * _m0;
             }
 
-#pragma omp parallel for
+#pragma omp parallel for default(none) shared(rad, convCriteria, nbIssue)
             for (tIndex i = _nbWallParticles; i < particleCount(); ++i) {
                 Real newP = 0.f;
                 if (_a_ii[i] != 0.f) {
