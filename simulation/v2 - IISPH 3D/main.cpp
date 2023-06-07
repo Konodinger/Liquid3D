@@ -10,7 +10,9 @@
 #include "IISPH_solver.hpp"
 
 #ifdef _OPENMP
+
 #include <omp.h>
+
 #endif
 
 std::string fileOutput = "liquidPointCloud";
@@ -63,7 +65,7 @@ int main(int argc, char **argv) {
 
     const unsigned long int nbFluidPart = initBlock.x * initBlock.y * initBlock.z * 8;
     const int nbWallPart = solver.wallParticleCount();
-    vector <Vec3f> partPos((timesteps + 1) * nbFluidPart, Vec3f(0));
+    vector<Vec3f> partPos((timesteps + 1) * nbFluidPart, Vec3f(0));
 
     for (unsigned long int i = 0; i < nbFluidPart; ++i) {
         partPos[i] = solver.position(i + nbWallPart);

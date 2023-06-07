@@ -8,7 +8,9 @@
 #include <math.h>
 
 #ifdef _OPENMP
+
 #include <omp.h>
+
 #endif
 
 #ifndef M_PI
@@ -203,7 +205,7 @@ public:
 
 
         for (int i = 0; i < _resX * _resY * _resZ; i++) {
-            _pidxInGrid.push_back(vector < tIndex > {});
+            _pidxInGrid.push_back(vector<tIndex>{});
         }
 
         buildNeighbor();
@@ -248,7 +250,7 @@ public:
 
     tIndex fluidParticleCount() { return _pos.size() - _nbWallParticles; }
 
-    const vector <tIndex> &gridParticles(const tIndex i, const tIndex j, const tIndex k) {
+    const vector<tIndex> &gridParticles(const tIndex i, const tIndex j, const tIndex k) {
         return _pidxInGrid[idx1d(i, j, k)];
     };
 
@@ -526,7 +528,7 @@ private:
         // TODO:
         Real rad = _kernel.supportRadius();
 
-#pragma omp parallel for
+#pragma omp parallel for default(none) shared(rad)
         for (tIndex i = _nbWallParticles; i < particleCount(); ++i) {
             Vec3f f = Vec3f(0);
             for (tIndex _kernelX = max(0, (int) floor(position(i).x - rad));
@@ -553,14 +555,14 @@ private:
     }
 
     void updateVelocity() {
-#pragma omp parallel for
+#pragma omp parallel for default(none)
         for (tIndex i = _nbWallParticles; i < particleCount(); ++i) {
             _vel[i] += _dt * _acc[i];
         }
     }
 
     void updatePosition() {
-#pragma omp parallel for
+#pragma omp parallel for default(none)
         for (tIndex i = _nbWallParticles; i < particleCount(); ++i) {
             _pos[i] += _dt * _vel[i];
         }
@@ -568,30 +570,22 @@ private:
 
     // simple collision detection/resolution for each particle
     void resolveCollision() {
-        vector <tIndex> need_res;
-
+#pragma omp parallel for default(none)
         for (tIndex i = _nbWallParticles; i < particleCount(); ++i) {
             if (_pos[i].x < _left || _pos[i].y < _bottom || _pos[i].z < _back || _pos[i].x > _right ||
-                _pos[i].y > _top || _pos[i].z > _front)
-                need_res.push_back(i);
-        }
-
-#pragma omp parallel for
-        for (
-                vector<tIndex>::const_iterator it = need_res.begin();
-                it < need_res.end();
-                ++it) {
-            const Vec3f p0 = _pos[*it];
-            _pos[*it].x = clamp(_pos[*it].x, _left, _right);
-            _pos[*it].y = clamp(_pos[*it].y, _bottom, _top);
-            _pos[*it].z = clamp(_pos[*it].z, _back, _front);
-            _vel[*it] = (_pos[*it] - p0) / _dt;
+                _pos[i].y > _top || _pos[i].z > _front) {
+                const Vec3f p0 = _pos[i];
+                _pos[i].x = clamp(_pos[i].x, _left, _right);
+                _pos[i].y = clamp(_pos[i].y, _bottom, _top);
+                _pos[i].z = clamp(_pos[i].z, _back, _front);
+                _vel[i] = (_pos[i] - p0) / _dt;
+            }
         }
     }
 
     inline tIndex idx1d(const int i, const int j, const int k) { return i + j * resX() + k * resX() * resY(); }
 
-    vector <vector<tIndex>> _pidxInGrid; // will help you find neighbor particles
+    vector<vector<tIndex>> _pidxInGrid; // will help you find neighbor particles
 
     const CubicSpline _kernel;
 
@@ -612,19 +606,19 @@ private:
     Real _m0;                     // rest mass
 
     // particle data
-    vector <Vec3f> _pos;      // position
-    vector <Vec3f> _vel;      // velocity
-    vector <Vec3f> _acc;      // acceleration
-    vector <Real> _p;        // pressure
-    vector <Real> _d;        // density
+    vector<Vec3f> _pos;      // position
+    vector<Vec3f> _vel;      // velocity
+    vector<Vec3f> _acc;      // acceleration
+    vector<Real> _p;        // pressure
+    vector<Real> _d;        // density
 
     //IISPH specific data
-    vector <Vec3f> _interVel; // intermediate velocity (without pressure force)
-    vector <Real> _interD;    // intermediate density (with _predVel)
-    vector <Real> _a_ii;      // diagonal coef of the SOE
-    vector <Vec3f> _d_ii;     // first level coef of the SOE
-    vector <Vec3f> _c_i;      // second level coef of the SOE
-    vector <Real> _predP;     // predicted pressure
+    vector<Vec3f> _interVel; // intermediate velocity (without pressure force)
+    vector<Real> _interD;    // intermediate density (with _predVel)
+    vector<Real> _a_ii;      // diagonal coef of the SOE
+    vector<Vec3f> _d_ii;     // first level coef of the SOE
+    vector<Vec3f> _c_i;      // second level coef of the SOE
+    vector<Real> _predP;     // predicted pressure
     Real _initP;                  // initial pressure for Jacobi method. Must be between 0 and 1
     Real _omega;                  // relaxation coefficient. Must be between 0 and 1
     Real _pressureError;           // maximum pressure variation rate serving as a limit of the Jacobi method
