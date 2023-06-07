@@ -67,11 +67,7 @@ int main(int argc, char **argv) {
     const int nbWallPart = solver.wallParticleCount();
     vector<Vec3f> partPos((timesteps + 1) * nbFluidPart, Vec3f(0));
 
-    for (unsigned long int i = 0; i < nbFluidPart; ++i) {
-        partPos[i] = solver.position(i + nbWallPart);
-    }
-
-    for (long unsigned int t = 1; t <= timesteps; ++t) {
+    for (unsigned int t = 0; t < timesteps; ++t) {
 #ifdef __DEBUG1__
         std::cout << "Step number " << t << std::endl;
 #endif
