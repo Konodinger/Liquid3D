@@ -369,14 +369,19 @@ private:
         for (tIndex i = _nbWallParticles; i < particleCount(); ++i) {
             _d_ii[i] = Vec3f(0, 0, 0);
 
-            for (tIndex _kernelX = max(0, (int) floor(position(i).x - rad));
-                 _kernelX < min(resX(), (int) floor(position(i).x + rad + 1)); ++_kernelX) {
-                for (tIndex _kernelY = max(0, (int) floor(position(i).y - rad));
-                     _kernelY < min(resY(), (int) floor(position(i).y + rad + 1)); ++_kernelY) {
-                    for (tIndex _kernelZ = max(0, (int) floor(position(i).z - rad));
-                         _kernelZ < min(resZ(), (int) floor(position(i).z + rad + 1)); ++_kernelZ) {
-                        for (tIndex j: _pidxInGrid[idx1d(_kernelX, _kernelY, _kernelZ)]) {
+            tIndex minX = max(0, (int) floor(position(i).x - rad));
+            tIndex maxX = min(resX(), (int) floor(position(i).x + rad + 1));
 
+            tIndex minY = max(0, (int) floor(position(i).y - rad));
+            tIndex maxY = min(resY(), (int) floor(position(i).y + rad + 1));
+
+            tIndex minZ = max(0, (int) floor(position(i).z - rad));
+            tIndex maxZ = min(resZ(), (int) floor(position(i).z + rad + 1));
+
+            for (tIndex _kernelX = minX; _kernelX < maxX; ++_kernelX) {
+                for (tIndex _kernelY = minY; _kernelY < maxY; ++_kernelY) {
+                    for (tIndex _kernelZ = minZ; _kernelZ < maxZ; ++_kernelZ) {
+                        for (tIndex j: _pidxInGrid[idx1d(_kernelX, _kernelY, _kernelZ)]) {
                             _d_ii[i] += _m0 * _kernel.grad_w(position(i) - position(j));
                         }
                     }
@@ -461,14 +466,19 @@ private:
             for (tIndex i = _nbWallParticles; i < particleCount(); ++i) {
                 _c_i[i] = Vec3f(0, 0, 0);
 
-                for (tIndex _kernelX = max(0, (int) floor(position(i).x - rad));
-                     _kernelX < min(resX(), (int) floor(position(i).x + rad + 1)); ++_kernelX) {
-                    for (tIndex _kernelY = max(0, (int) floor(position(i).y - rad));
-                         _kernelY < min(resY(), (int) floor(position(i).y + rad + 1)); ++_kernelY) {
-                        for (tIndex _kernelZ = max(0, (int) floor(position(i).z - rad));
-                             _kernelZ < min(resZ(), (int) floor(position(i).z + rad + 1)); ++_kernelZ) {
-                            for (tIndex j: _pidxInGrid[idx1d(_kernelX, _kernelY, _kernelZ)]) {
+                tIndex minX = max(0, (int) floor(position(i).x - rad));
+                tIndex maxX = min(resX(), (int) floor(position(i).x + rad + 1));
 
+                tIndex minY = max(0, (int) floor(position(i).y - rad));
+                tIndex maxY = min(resY(), (int) floor(position(i).y + rad + 1));
+
+                tIndex minZ = max(0, (int) floor(position(i).z - rad));
+                tIndex maxZ = min(resZ(), (int) floor(position(i).z + rad + 1));
+
+                for (tIndex _kernelX = minX; _kernelX < maxX; ++_kernelX) {
+                    for (tIndex _kernelY = minY; _kernelY < maxY; ++_kernelY) {
+                        for (tIndex _kernelZ = minZ; _kernelZ < maxZ; ++_kernelZ) {
+                            for (tIndex j: _pidxInGrid[idx1d(_kernelX, _kernelY, _kernelZ)]) {
                                 _c_i[i] += _p[j] / (_d[j] * _d[j]) * _kernel.grad_w(position(i) - position(j));
                             }
                         }
@@ -484,12 +494,18 @@ private:
                 if (_a_ii[i] != 0.f) {
                     _predP[i] = _d0 - _interD[i];
 
-                    for (tIndex _kernelX = max(0, (int) floor(position(i).x - rad));
-                         _kernelX < min(resX(), (int) floor(position(i).x + rad + 1)); ++_kernelX) {
-                        for (tIndex _kernelY = max(0, (int) floor(position(i).y - rad));
-                             _kernelY < min(resY(), (int) floor(position(i).y + rad + 1)); ++_kernelY) {
-                            for (tIndex _kernelZ = max(0, (int) floor(position(i).z - rad));
-                                 _kernelZ < min(resZ(), (int) floor(position(i).z + rad + 1)); ++_kernelZ) {
+                    tIndex minX = max(0, (int) floor(position(i).x - rad));
+                    tIndex maxX = min(resX(), (int) floor(position(i).x + rad + 1));
+
+                    tIndex minY = max(0, (int) floor(position(i).y - rad));
+                    tIndex maxY = min(resY(), (int) floor(position(i).y + rad + 1));
+
+                    tIndex minZ = max(0, (int) floor(position(i).z - rad));
+                    tIndex maxZ = min(resZ(), (int) floor(position(i).z + rad + 1));
+
+                    for (tIndex _kernelX = minX; _kernelX < maxX; ++_kernelX) {
+                        for (tIndex _kernelY = minY; _kernelY < maxY; ++_kernelY) {
+                            for (tIndex _kernelZ = minZ; _kernelZ < maxZ; ++_kernelZ) {
                                 for (tIndex j: _pidxInGrid[idx1d(_kernelX, _kernelY, _kernelZ)]) {
                                     if (j < _nbWallParticles) { //Boundary
                                         _predP[i] -=
@@ -535,14 +551,20 @@ private:
 #pragma omp parallel for default(none) shared(rad)
         for (tIndex i = _nbWallParticles; i < particleCount(); ++i) {
             Vec3f f = Vec3f(0);
-            for (tIndex _kernelX = max(0, (int) floor(position(i).x - rad));
-                 _kernelX < min(resX(), (int) floor(position(i).x + rad + 1)); ++_kernelX) {
-                for (tIndex _kernelY = max(0, (int) floor(position(i).y - rad));
-                     _kernelY < min(resY(), (int) floor(position(i).y + rad + 1)); ++_kernelY) {
-                    for (tIndex _kernelZ = max(0, (int) floor(position(i).z - rad));
-                         _kernelZ < min(resZ(), (int) floor(position(i).z + rad + 1)); ++_kernelZ) {
-                        for (tIndex j: _pidxInGrid[idx1d(_kernelX, _kernelY, _kernelZ)]) {
 
+            tIndex minX = max(0, (int) floor(position(i).x - rad));
+            tIndex maxX = min(resX(), (int) floor(position(i).x + rad + 1));
+
+            tIndex minY = max(0, (int) floor(position(i).y - rad));
+            tIndex maxY = min(resY(), (int) floor(position(i).y + rad + 1));
+
+            tIndex minZ = max(0, (int) floor(position(i).z - rad));
+            tIndex maxZ = min(resZ(), (int) floor(position(i).z + rad + 1));
+
+            for (tIndex _kernelX = minX; _kernelX < maxX; ++_kernelX) {
+                for (tIndex _kernelY = minY; _kernelY < maxY; ++_kernelY) {
+                    for (tIndex _kernelZ = minZ; _kernelZ < maxZ; ++_kernelZ) {
+                        for (tIndex j: _pidxInGrid[idx1d(_kernelX, _kernelY, _kernelZ)]) {
                             f -= _m0 * (_p[i] / (_d[i] * _d[i]) + _p[j] / (_d[j] * _d[j])) *
                                  _kernel.grad_w(position(i) - position(j));
                         }
@@ -626,6 +648,4 @@ private:
     Real _initP;                  // initial pressure for Jacobi method. Must be between 0 and 1
     Real _omega;                  // relaxation coefficient. Must be between 0 and 1
     Real _pressureError;           // maximum pressure variation rate serving as a limit of the Jacobi method
-
-
 };
