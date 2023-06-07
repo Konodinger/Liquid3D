@@ -1,11 +1,11 @@
-#include <stdio.h>
+#include <cstdio>
 
 #include <iostream>
 #include <sstream>
 #include <iomanip>
 #include <vector>
 #include <cmath>
-#include <math.h>
+#include <cmath>
 
 #ifdef _OPENMP
 
