@@ -3,7 +3,6 @@
 //#define __DEBUG2__
 //#define __DEBUG3__
 //#define __DEBUG4__
-//#define __BENCHMARK__
 
 #include <iostream>
 #include <fstream>
@@ -55,13 +54,10 @@ int main(int argc, char **argv) {
     ofstream file;
     std::stringstream fpath;
     int fileNum = 1;
-    while (true) {
+    do {
         fpath.str(std::string());
         fpath << "./" << fileOutput << "_" << std::setw(3) << std::setfill('0') << fileNum++ << ".txt";
-        if (!ifstream(fpath.str()).is_open()) {
-            break;
-        }
-    }
+    } while (ifstream(fpath.str()).is_open());
 
     const unsigned long int nbFluidPart = initBlock.x * initBlock.y * initBlock.z * 8;
     const int nbWallPart = solver.wallParticleCount();

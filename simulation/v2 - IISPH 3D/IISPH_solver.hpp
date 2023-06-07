@@ -220,7 +220,8 @@ public:
         buildNeighbor();
         computeDensity();
 
-        _acc = vector<Vec3f>(_pos.size(), Vec3f(0, 0, 0));
+        for (auto &acc: _acc) acc.setFromFloats(0, 0, 0);
+
         applyBodyForce();
         applyViscousForce();
 
@@ -286,22 +287,24 @@ private:
 
     void computeDensity() {
         Real rad = _kernel.supportRadius();
-        int nb = 0;
 
-#pragma omp parallel for default(none) shared(nb, rad)
+#pragma omp parallel for default(none) shared(rad)
         for (tIndex i = 0; i < particleCount(); ++i) {
             Real rho = 0.f;
-            nb = 0;
 
-            for (tIndex _kernelX = max(0, (int) floor(position(i).x - rad));
-                 _kernelX < min(resX(), (int) floor(position(i).x + rad + 1)); ++_kernelX) {
-                for (tIndex _kernelY = max(0, (int) floor(position(i).y - rad));
-                     _kernelY < min(resY(), (int) floor(position(i).y + rad + 1)); ++_kernelY) {
-                    for (tIndex _kernelZ = max(0, (int) floor(position(i).z - rad));
-                         _kernelZ < min(resZ(), (int) floor(position(i).z + rad + 1)); ++_kernelZ) {
+            tIndex minX = max(0, (int) floor(position(i).x - rad));
+            tIndex maxX = min(resX(), (int) floor(position(i).x + rad + 1));
 
+            tIndex minY = max(0, (int) floor(position(i).y - rad));
+            tIndex maxY = min(resY(), (int) floor(position(i).y + rad + 1));
+
+            tIndex minZ = max(0, (int) floor(position(i).z - rad));
+            tIndex maxZ = min(resZ(), (int) floor(position(i).z + rad + 1));
+
+            for (tIndex _kernelX = minX; _kernelX < maxX; ++_kernelX) {
+                for (tIndex _kernelY = minY; _kernelY < maxY; ++_kernelY) {
+                    for (tIndex _kernelZ = minZ; _kernelZ < maxZ; ++_kernelZ) {
                         for (tIndex j: _pidxInGrid[idx1d(_kernelX, _kernelY, _kernelZ)]) {
-                            nb++;
                             rho += _m0 * _kernel.w(position(i) - position(j));
                         }
                     }
