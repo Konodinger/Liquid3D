@@ -24,10 +24,6 @@ using namespace std;
 // debug index
 int obsPart = 2000;
 
-// for recording videos
-FILE *ffmpeg;
-int *movieBuffer;
-
 // SPH Kernel function: cubic spline
 class CubicSpline {
 public:
@@ -38,7 +34,7 @@ public:
     void setSmoothingLen(const Real h) {
         const Real h2 = square(h), h3 = h2 * h;
         _h = h;
-        _sr = 2e0 * h;
+        _sr = 2e0f * h;
         _c[0] = 2e0 / (3e0 * h);
         _c[1] = 10e0 / (7e0 * M_PI * h2);
         _c[2] = 1e0 / (M_PI * h3);
@@ -46,8 +42,6 @@ public:
         _gc[1] = _c[1] / h;
         _gc[2] = _c[2] / h;
     }
-
-    Real smoothingLen() const { return _h; }
 
     Real supportRadius() const { return _sr; }
 
@@ -78,7 +72,7 @@ public:
 
 private:
     unsigned int _dim;
-    Real _h, _sr, _c[3], _gc[3];
+    Real _h{}, _sr{}, _c[3]{}, _gc[3]{};
 };
 
 
@@ -105,9 +99,9 @@ public:
         }
         _pos.clear();
 
-        _resX = gridRes.x;
-        _resY = gridRes.y;
-        _resZ = gridRes.z;
+        _resX = (int)gridRes.x;
+        _resY = (int)gridRes.y;
+        _resZ = (int)gridRes.z;
 
         // set wall for boundary
         _left = 0.5 * _h;
@@ -618,11 +612,11 @@ private:
     // simulation
     Real _dt;                     // time step
 
-    int _resX, _resY, _resZ;             // background grid resolution
+    int _resX{}, _resY{}, _resZ{};             // background grid resolution
 
     // wall
-    Real _left, _right, _bottom, _top, _back, _front;          // wall (boundary)
-    tIndex _nbWallParticles;          // number of particles that belong to the wall
+    Real _left{}, _right{}, _bottom{}, _top{}, _back{}, _front{};          // wall (boundary)
+    tIndex _nbWallParticles{};          // number of particles that belong to the wall
 
     // SPH coefficients
     Real _nu;                     // viscosity coefficient
