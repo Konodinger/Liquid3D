@@ -33,6 +33,12 @@ def writeObjFile(filename, points, triangles=[], quads=[]):
 # Dimensions in meter
 grid = vdb.createLevelSetSphere(radius=50,center=(1.5, 2, 3))
 
+"""
+composer les sphères pour former la shape, linear compelexity
+
+
+"""
+
 print(grid.evalActiveVoxelBoundingBox())
 grid.name = 'grid'
 
