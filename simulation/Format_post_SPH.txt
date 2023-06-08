@@ -1,8 +1,7 @@
+v1 et v2 :
+
 X_G Y_G Z_G // Constantes indiquant la taille de la grille. Actuellement, le point (0, 0, 0) est dans un coin supérieur (au fond à gauche), mais je peux le passer au coin inférieur.
 dt timesteps // Indique respectivement l'intervalle de temps entre deux frames, en seconde, et le nombre de frames.
-nb_b // Indique le nombre de particules de frontière. On les appelle généralement b_i pour "boundary i".
-b_1x b_1y b_1z // Indique la position des particules de frontière.
-....
 nb_fluid // Indique le nombre de particules de fluide.
 fluid_1x(t = 0) fluid_1y(t = 0) fluid_1z(t = 0) // Indique la position des particules à la frame t = 0.
 ....
@@ -12,5 +11,19 @@ fluid_1x(t = 1) fluid_1y(t = 1) fluid_1z(t = 1) // Indique la position des parti
 ....
 ....
 
+
+
+v3 : On rajoute la vélocité afin de calculer la génération d'écume.
+
+X_G Y_G Z_G // Constantes indiquant la taille de la grille. Actuellement, le point (0, 0, 0) est dans un coin supérieur (au fond à gauche), mais je peux le passer au coin inférieur.
+dt timesteps // Indique respectivement l'intervalle de temps entre deux frames, en seconde, et le nombre de frames.
+nb_fluid // Indique le nombre de particules de fluide.
+fluid_1x(t = 0) fluid_1y(t = 0) fluid_1z(t = 0) fluid_1Vx(t = 0) fluid_1Vy(t = 0) fluid_1Vz(t = 0) // Indique la position et la vélocité des particules à la frame t = 0.
+....
+fluid_1x(t = 1) fluid_1y(t = 1) fluid_1z(t = 1) fluid_1Vx(t = 1) fluid_1Vy(t = 1) fluid_1Vz(t = 1) // Indique la position et la vélocité des particules à la frame t = 1, et ainsi de suite.
+....
+....
+....
+....
 
 Possibles améliorations : indiquer la vitesse et la pression des particules de fluide. Indiquer plus de propriétés de la simulation, comme la taille du noyau, le diamètre des particules, ou encore des paramètres des équations comme la gravité ou la viscosité.
