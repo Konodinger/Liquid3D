@@ -39,4 +39,12 @@ RUN cd /root && \
 ##################################
 # Building the bridge
 ##################################
+RUN cd /root && \
+    git clone https://github.com/Konodinger/Liquid3D.git && \
+    cd /root/Liquid3D/openvdbCppBridge && \
+    rm -rf build && \
+    mkdir build && \
+    cd build && \
+    cmake .. && \
+    make
 

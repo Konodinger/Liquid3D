@@ -36,12 +36,12 @@ You will need to build the bridge inside the container. The C++ project is mount
 
 ## Build
 
-You can use cmake to build the project.
+You can use CMake to build the project.
 
 ```
 mkdir build
-cmake -B build
 cd build
+cmake ..
 make
 ```
 

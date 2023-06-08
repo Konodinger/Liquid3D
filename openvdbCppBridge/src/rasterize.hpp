@@ -27,7 +27,7 @@
  * @see openvdb doc https://www.openvdb.org/documentation/doxygen/classopenvdb_1_1v10__0_1_1tools_1_1ParticlesToLevelSet.html
  */
 void rasterizeParticles(std::vector<openvdb::Vec3R> &positions, const std::string &fileName = "fluid",
-                        const int iteration = 0, const bool shouldGenerateObjFiles = false) {
+                        const int iteration = 0, const float dt = 0.0, const bool shouldGenerateObjFiles = false) {
     auto particleList = new ParticleList(positions);
     std::cout << "Created OpenVDB compatible particle list" << std::endl;
 
@@ -45,8 +45,10 @@ void rasterizeParticles(std::vector<openvdb::Vec3R> &positions, const std::strin
     const float voxelSize = 0.5f;
     const float halfWidth = 2.0f;
     openvdb::FloatGrid::Ptr levelSet = openvdb::createLevelSet<openvdb::FloatGrid>(voxelSize, halfWidth);
-    openvdb::tools::ParticlesToLevelSet<openvdb::FloatGrid> raster(*levelSet);
+    levelSet->setName("levelSet" + std::to_string(iteration));
+    levelSet->insertMeta("dt", openvdb::FloatMetadata(dt));
 
+    openvdb::tools::ParticlesToLevelSet<openvdb::FloatGrid> raster(*levelSet);
     raster.setGrainSize(1); //a value of zero disables threading
     raster.rasterizeSpheres(*particleList,
                             0.75); // the 0.75 is purely arbitrary, it seems we can't decrease it further without losing the meshing

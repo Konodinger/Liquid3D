@@ -4,13 +4,13 @@
 CC = g++
 
 # Compiler flags
-CFLAGS = -Wall -Wextra -Wpedantic -std=c++11 -O3
+CFLAGS = -Wall -Wextra -Wpedantic -std=c++11 -O3 -fopenmp
 
 # Linker flags
 LDFLAGS =
 
 # Executable name
-EXEC = IISPH
+EXEC = 3DIISPH
 
 # Source files
 SRC = main.cpp

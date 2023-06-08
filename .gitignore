@@ -51,6 +51,10 @@ _deps
 openvdbCppBridge/build
 openvdbCppBridge/cmake-build-debug
 
+build
+3DIISPH
+
 .vscode
 .idea
 cmake-build-debug
+__pycache__

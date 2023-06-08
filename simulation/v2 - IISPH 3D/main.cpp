@@ -1,93 +1,99 @@
 //#define __OPEN_MP__
-//#define __DEBUG1__
+#define __DEBUG1__
 //#define __DEBUG2__
 //#define __DEBUG3__
+//#define __DEBUG4__
 
-#include <stdio.h>
 #include <iostream>
 #include <fstream>
 #include "IISPH_solver.hpp"
 
-#ifdef __OPEN_MP__
+#ifdef _OPENMP
+
 #include <omp.h>
+
 #endif
 
-using namespace std;
-
-string fileOutput = "liquidPointCloud";
-bool gSolverStop = false;
-
+std::string fileOutput = "liquidPointCloud";
 
 //Simulation parameters
+const Real solvNu = 0.08;
+const Real solvH = 0.5;
+const Real solvDensity = 3e3;
+const Vec3f solvG = Vec3f(0, 0, -9.8);
+const Real solvInitP = 0.5;
+const Real solvOmega = 0.3;
+const Real solvPressureError = 0.99;
 
-int nbConsecutiveSteps = 5;
-float dt = 0.2f;
-long unsigned int timesteps = 20;
-const int res_x = 48;
-const int res_y = 32;
-const int res_z = 48;
-const int f_length = 8;
-const int f_height = 8;
-const int f_width = 8;
+const int nbConsecutiveSteps = 5;
+const Real dt = 0.01f;
+long unsigned int timesteps = 500;
+const Vec3f gridRes = Vec3f(20, 20, 25);
+const Vec3f initShift = Vec3f(0, 0, 10);
+const Vec3f initBlock = Vec3f(16, 16, 8);
 
-SphSolver gSolver(0.08, 0.5, 3e3, Vec3f(0, -9.8, 0), 0.01, 7.0, 0.5, 0.5, 0.99);
+IisphSolver solver(dt, solvNu, solvH, solvDensity, solvG, solvInitP, solvOmega, solvPressureError);
 
 
-int main(int argc, char **argv)
-{
-#ifdef __OPEN_MP__
-  omp_set_num_threads(6);
+int main(int argc, char **argv) {
+
+    // if openmp is enabled, we print the number of threads used
+#ifdef _OPENMP
+    std::cout << "OpenMP enabled, using " << omp_get_max_threads() << " threads" << std::endl;
+#else
+    std::cout << "OpenMP not enabled, using only 1 thread" << std::endl;
 #endif
 
-  ofstream file;
-  std::stringstream fpath;
-  int fileNum = 1;
-  while(true) {
-    fpath.str(string());
-    fpath << "./" << fileOutput << "_" << std::setw(3) << std::setfill('0') << fileNum++ << ".txt";
-    if (!ifstream(fpath.str()).is_open()) {
-      break;
+    try {
+        solver.initScene(gridRes, initShift, initBlock);
+    } catch (length_error &e) {
+        std::cout << e.what() << std::endl;
+        return 0;
     }
-  }
 
-  file.open(fpath.str());
-  file << res_x << " " << res_y << " " << res_z << "\n";
-  file << dt * nbConsecutiveSteps << " " << timesteps + 1 << "\n";
+    ofstream file;
+    std::stringstream fpath;
+    int fileNum = 1;
+    do {
+        fpath.str(std::string());
+        fpath << "./" << fileOutput << "_" << std::setw(3) << std::setfill('0') << fileNum++ << ".txt";
+    } while (ifstream(fpath.str()).is_open());
 
+    const unsigned long int nbFluidPart = initBlock.x * initBlock.y * initBlock.z * 8;
+    const int nbWallPart = solver.wallParticleCount();
+    vector<Vec3f> partPos((timesteps + 1) * nbFluidPart, Vec3f(0));
 
-  gSolver.initScene(res_x, res_y, res_z, f_length, f_height, f_width);
-  int nbWallPart = gSolver.wallParticleCount();
+    for (unsigned int t = 0; t < timesteps; ++t) {
+#ifdef __DEBUG1__
+        std::cout << "Step number " << t << std::endl;
+#endif
+        for (unsigned int i = 0; i < nbConsecutiveSteps; ++i) solver.update();
 
-  // Next part print wall particles. It is currently removed because unused.
-  /*file << nbWallPart << "\n";
-  for (int i = 0; i < nbWallPart; ++i) {
-  file << gSolver.position(i).x << " " << gSolver.position(i).y << " " << gSolver.position(i).z << "\n";
-  }*/ 
-
-  int nbPart = gSolver.particleCount();
-  file << nbPart - nbWallPart << "\n";
-
-
-  long unsigned int t = 0;
-  for (int i = nbWallPart; i < nbPart; ++i) {
-    file << gSolver.position(i).x << " " << gSolver.position(i).y << " " << gSolver.position(i).z << "\n";
-  }
-
-  while(t < timesteps) {
-    #ifdef __DEBUG1__
-    cout << "Step number " << t + 1 << "\n";
-    #endif
-    if (!gSolverStop){
-      for(int i=0; i<nbConsecutiveSteps; ++i) gSolver.update();
-
-      for (int i = nbWallPart; i < nbPart; ++i) {
-        file << gSolver.position(i).x << " " << gSolver.position(i).y << " " << gSolver.position(i).z << "\n";
-      }
-
-      t++;
+        for (unsigned long int i = 0; i < nbFluidPart; ++i) {
+            partPos[t * nbFluidPart + i] = solver.position(i + nbWallPart);
+        }
     }
-  }
-  cout << " > Quit" << endl;
-  file.close();
-  return 0;
+
+    std::cout << "End of the simulation, saving data..." << std::endl;
+
+    file.open(fpath.str());
+    file << gridRes.x << " " << gridRes.y << " " << gridRes.z << "\n";
+    file << dt * nbConsecutiveSteps << " " << timesteps + 1 << "\n";
+
+    // Next part print wall particles. It is currently removed because unused.
+    /*file << nbWallPart << "\n";
+    for (int i = 0; i < nbWallPart; ++i) {
+    file << solver.position(i).x << " " << solver.position(i).y << " " << solver.position(i).z << "\n";
+    }*/
+
+    file << nbFluidPart << "\n";
+
+    for (auto part: partPos) {
+        file << part.x << " " << part.y << " " << part.z << "\n";
+    }
+
+    std::cout << " > Quit" << std::endl;
+    file.close();
+
+    return 0;
 }
