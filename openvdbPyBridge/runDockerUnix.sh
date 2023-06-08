@@ -1,1 +1,0 @@
-docker run -it --rm -v $(pwd):/scripts fluid_simu bash

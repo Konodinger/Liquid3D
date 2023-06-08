@@ -7,8 +7,8 @@ def kernel(sqr_d, sqr_h):
 
 def particles_to_levelset(particles: np.ndarray, particle_radius: float, voxel_size: float) -> vdb.FloatGrid:
     """
-    creates a density grid from a set of particles
-    based on https://github.com/isl-org/DeepLagrangianFluids/
+    Creates a density grid from a set of particles
+    Based on https://github.com/isl-org/DeepLagrangianFluids/
     """
     if not particle_radius >= voxel_size:
         raise ValueError(f"Error: particle_radius ({particle_radius}) must exceed voxel_size ({voxel_size})")
@@ -65,6 +65,6 @@ def particles_to_levelset(particles: np.ndarray, particle_radius: float, voxel_s
                     if not i in visited_indices:
                         unvisited_indices.add(i)
 
-    grid.signedFloodFill()
+    #grid.signedFloodFill()
 
     return grid
