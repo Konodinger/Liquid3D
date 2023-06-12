@@ -90,16 +90,23 @@ $(document).ready(function(){initNavTree('index.html',''); initResizable(); });
 <div class="textblock"><p ><a class="anchor" id="md_Readme"></a> This is the C++ bridge for OpenVDB. It takes as input a file containing the positions of particles for different time steps and outputs <code>.vdb</code> SDF and point data grids files as well as <code>.obj</code> mesh files in the <code>results</code> folder.</p>
 <h1><a class="anchor" id="autotoc_md1"></a>
 Installation</h1>
-<p >Visit <a href="https://github.com/AcademySoftwareFoundation/openvdb">the official repository of OpenVDB</a> and follow the installation guide.</p>
+<p >This program needs OpenVDB to be installed to work. Visit <a href="https://github.com/AcademySoftwareFoundation/openvdb">the official repository of OpenVDB</a> and follow the installation guide.</p>
 <p >The bridge assumes OpenVDB is installed in your home folder. If this is not the case, edit <code>CMakeLists.txt</code> and change the path to the OpenVDB library to match your installation. nbBoundaryParticles xb1 yb1 zb1 xb2 yb2 zb2 If you have any issue with this step, please refer to the official documentation of OpenVDB: <a href="https://www.openvdb.org/documentation/doxygen/build.html">https://www.openvdb.org/documentation/doxygen/build.html</a> (Building with OpenVDB)</p>
-<h1><a class="anchor" id="autotoc_md2"></a>
+<h2><a class="anchor" id="autotoc_md2"></a>
+Docker</h2>
+<p >If you can't install OpenVDB on your machine, you can use Docker to run the program.</p>
+<p >You can pull the docker image from Docker Hub with the following command:</p>
+<div class="fragment"><div class="line">docker pull barthpaleologue/openvdb_bridge</div>
+</div><!-- fragment --><p >You can also build the image with the script <code>buildDocker.sh</code> since the Dockerfile is included. The docker image is based on Ubuntu 22.04 and contains OpenVDB and all the dependencies needed to run the program.</p>
+<p >You can then run it with <code>runDocker.sh</code>. You will need to build the bridge inside the container. The C++ project is mounted at <code>/openvdb_bridge</code>. See the next section for more information.</p>
+<h1><a class="anchor" id="autotoc_md3"></a>
 Build</h1>
-<p >You can use cmake to build the project.</p>
+<p >You can use CMake to build the project.</p>
 <div class="fragment"><div class="line">mkdir build</div>
 <div class="line">cd build</div>
 <div class="line">cmake ..</div>
 <div class="line">make</div>
-</div><!-- fragment --><h1><a class="anchor" id="autotoc_md3"></a>
+</div><!-- fragment --><h1><a class="anchor" id="autotoc_md4"></a>
 Usage</h1>
 <p >The program can be used with the following command:</p>
 <div class="fragment"><div class="line">./OpenVdbBridge -f &lt;fileName&gt;</div>
@@ -117,11 +124,13 @@ Usage</h1>
 <div class="line">x2 y2 z2</div>
 <div class="line">...</div>
 </div><!-- fragment --><p >You can see an example in the <code>particles_example.txt</code> file.</p>
-<h1><a class="anchor" id="autotoc_md4"></a>
+<h1><a class="anchor" id="autotoc_md5"></a>
 Output</h1>
 <p >The program will generate one <code>.vdb</code> file and one <code>.obj</code> file per time step. The <code>.vdb</code> file contains the SDF and the <code>.obj</code> file contains the mesh.</p>
 <p >You can also generate a <code>.vdb</code> containing a point data grid by adding the <code>-p</code> flag.</p>
-<p >Point data grids are not compatible with Blender but the SDF and the mesh can be directly imported. </p>
+<p >Point data grids are not compatible with Blender but the SDF and the mesh can be directly imported.</p>
+<p ><a href="https://docs.blender.org/manual/en/latest/modeling/volumes/introduction.html">https://docs.blender.org/manual/en/latest/modeling/volumes/introduction.html</a></p>
+<p ><img src="https://github.com/Konodinger/Liquid3D/assets/31370477/70bf1565-6bd1-4577-8520-5b444dda864d" alt="image" class="inline"/> </p>
 </div></div><!-- PageDoc -->
 </div><!-- contents -->
 </div><!-- doc-content -->

@@ -25,10 +25,12 @@
 var NAVTREE =
 [
   [ "OpenVDB C++ Bridge", "index.html", [
-    [ "Installation", "index.html#autotoc_md1", null ],
-    [ "Build", "index.html#autotoc_md2", null ],
-    [ "Usage", "index.html#autotoc_md3", null ],
-    [ "Output", "index.html#autotoc_md4", null ],
+    [ "Installation", "index.html#autotoc_md1", [
+      [ "Docker", "index.html#autotoc_md2", null ]
+    ] ],
+    [ "Build", "index.html#autotoc_md3", null ],
+    [ "Usage", "index.html#autotoc_md4", null ],
+    [ "Output", "index.html#autotoc_md5", null ],
     [ "Classes", "annotated.html", [
       [ "Class List", "annotated.html", "annotated_dup" ],
       [ "Class Index", "classes.html", null ],
@@ -43,7 +45,8 @@ var NAVTREE =
       [ "File List", "files.html", "files_dup" ],
       [ "File Members", "globals.html", [
         [ "All", "globals.html", null ],
-        [ "Functions", "globals_func.html", null ]
+        [ "Functions", "globals_func.html", null ],
+        [ "Macros", "globals_defs.html", null ]
       ] ]
     ] ]
   ] ]

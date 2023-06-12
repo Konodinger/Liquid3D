@@ -101,23 +101,44 @@ $(document).ready(function(){initNavTree('rasterize_8hpp.html',''); initResizabl
 Include dependency graph for rasterize.hpp:</div>
 <div class="dyncontent">
 <div class="center"><img src="rasterize_8hpp__incl.png" border="0" usemap="#asrc_2rasterize_8hpp" alt=""/></div>
+<map name="asrc_2rasterize_8hpp" id="asrc_2rasterize_8hpp">
+<area shape="rect" title=" " alt="" coords="610,5,741,32"/>
+<area shape="rect" title=" " alt="" coords="5,169,68,196"/>
+<area shape="rect" title=" " alt="" coords="1092,169,1243,196"/>
+<area shape="rect" title=" " alt="" coords="221,80,407,121"/>
+<area shape="rect" title=" " alt="" coords="432,87,660,114"/>
+<area shape="rect" title=" " alt="" coords="684,87,928,114"/>
+<area shape="rect" title=" " alt="" coords="952,87,1161,114"/>
+<area shape="rect" href="particleList_8hpp.html" title=" " alt="" coords="74,87,197,114"/>
+<area shape="rect" href="utils_8hpp.html" title=" " alt="" coords="1268,87,1347,114"/>
+<area shape="rect" title=" " alt="" coords="186,169,317,196"/>
+<area shape="rect" title=" " alt="" coords="341,169,401,196"/>
+<area shape="rect" title=" " alt="" coords="93,169,162,196"/>
+<area shape="rect" title=" " alt="" coords="1371,169,1430,196"/>
+<area shape="rect" title=" " alt="" coords="1455,169,1528,196"/>
+<area shape="rect" title=" " alt="" coords="1267,169,1347,196"/>
+</map>
 </div>
 </div><div class="textblock"><div class="dynheader">
 This graph shows which files directly or indirectly include this file:</div>
 <div class="dyncontent">
 <div class="center"><img src="rasterize_8hpp__dep__incl.png" border="0" usemap="#asrc_2rasterize_8hppdep" alt=""/></div>
+<map name="asrc_2rasterize_8hppdep" id="asrc_2rasterize_8hppdep">
+<area shape="rect" title=" " alt="" coords="5,5,136,32"/>
+<area shape="rect" href="main_8cpp.html" title=" " alt="" coords="18,80,123,107"/>
+</map>
 </div>
 </div>
 <p><a href="rasterize_8hpp_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a62962cae2f6a4db1d310a6dbe8c50704"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="rasterize_8hpp.html#a62962cae2f6a4db1d310a6dbe8c50704">rasterizeParticles</a> (std::vector&lt; openvdb::Vec3R &gt; &amp;positions, const std::string &amp;fileName=&quot;fluid&quot;, const int iteration=0, const bool shouldGenerateObjFiles=false)</td></tr>
-<tr class="separator:a62962cae2f6a4db1d310a6dbe8c50704"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abbe9dd1770aa2dd2dd257745054835f2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="rasterize_8hpp.html#abbe9dd1770aa2dd2dd257745054835f2">rasterizeParticles</a> (std::vector&lt; openvdb::Vec3R &gt; &amp;positions, const std::string &amp;fileName, const float particleRadius, const float voxelSize, const float halfWidth, const int iteration=0, const float dt=0.0, const bool shouldGenerateObjFiles=false)</td></tr>
+<tr class="separator:abbe9dd1770aa2dd2dd257745054835f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function Documentation</h2>
-<a id="a62962cae2f6a4db1d310a6dbe8c50704" name="a62962cae2f6a4db1d310a6dbe8c50704"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a62962cae2f6a4db1d310a6dbe8c50704">&#9670;&nbsp;</a></span>rasterizeParticles()</h2>
+<a id="abbe9dd1770aa2dd2dd257745054835f2" name="abbe9dd1770aa2dd2dd257745054835f2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abbe9dd1770aa2dd2dd257745054835f2">&#9670;&nbsp;</a></span>rasterizeParticles()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -132,13 +153,37 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>fileName</em> = <code>&quot;fluid&quot;</code>, </td>
+          <td class="paramname"><em>fileName</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const float&#160;</td>
+          <td class="paramname"><em>particleRadius</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const float&#160;</td>
+          <td class="paramname"><em>voxelSize</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const float&#160;</td>
+          <td class="paramname"><em>halfWidth</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const int&#160;</td>
           <td class="paramname"><em>iteration</em> = <code>0</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const float&#160;</td>
+          <td class="paramname"><em>dt</em> = <code>0.0</code>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -156,7 +201,10 @@ Functions</h2></td></tr>
 <p >Rasterize a list of particles into a level set and write it to a <code>.vdb</code> file. The files are output in the <code>results</code> directory with the given name and iteration number. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">positions</td><td>the list of particle positions for one iteration </td></tr>
-    <tr><td class="paramname">fileName</td><td>the name of the file to output (without extension) (fluid by default) </td></tr>
+    <tr><td class="paramname">fileName</td><td>the name of the file to output (without extension) </td></tr>
+    <tr><td class="paramname">particleRadius</td><td>the radius of the particles </td></tr>
+    <tr><td class="paramname">voxelSize</td><td>the size of the voxels </td></tr>
+    <tr><td class="paramname">halfWidth</td><td>the half width of the level set </td></tr>
     <tr><td class="paramname">iteration</td><td>the iteration number (0 by default) to append to the file name </td></tr>
     <tr><td class="paramname">shouldGenerateObjFiles</td><td>whether or not to generate <code>.obj</code> files (false by default)</td></tr>
   </table>

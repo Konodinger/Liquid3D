@@ -9,7 +9,7 @@
 
 #define DEFAULT_PARTICLE_RADIUS 0.4f
 #define DEFAULT_VOXEL_SIZE 0.1f
-#define DEFAULT_HALF_WIDTH 2.0f
+#define DEFAULT_HALF_WIDTH 3.0f
 
 int main(int argc, char **argv) {
     if (cmdOptionExists(argv, argv + argc, "-h")) {
@@ -20,9 +20,12 @@ int main(int argc, char **argv) {
         std::cout << "\t-h\tPrint this help message" << std::endl;
         std::cout << "\t-p\tGenerate point grids as well" << std::endl;
         std::cout << "\t--obj\tGenerate .obj files as well" << std::endl;
-        std::cout << "\t--particleRadius <size>\tSpecify the radius of the particles" << std::endl;
-        std::cout << "\t--voxelSize <size>\tSpecify the size of the voxels" << std::endl;
-        std::cout << "\t--halfWidth <size>\tSpecify the half width of the narrow band the levelset" << std::endl;
+        std::cout << "\t--particleRadius <size>\tSpecify the radius of the particles. Default: "
+                  << DEFAULT_PARTICLE_RADIUS << std::endl;
+        std::cout << "\t--voxelSize <size>\tSpecify the size of the voxels. Default: " << DEFAULT_VOXEL_SIZE
+                  << std::endl;
+        std::cout << "\t--halfWidth <size>\tSpecify the half width of the narrow band the levelset. Default: "
+                  << DEFAULT_HALF_WIDTH << std::endl;
         std::cout << std::endl;
 
         return 0;
