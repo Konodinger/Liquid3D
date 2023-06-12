@@ -9,11 +9,9 @@ This program needs OpenVDB to be installed to work.
 Visit [the official repository of OpenVDB](https://github.com/AcademySoftwareFoundation/openvdb) and follow the
 installation guide.
 
-The bridge assumes OpenVDB is installed in your home folder. If this is not the case, edit `CMakeLists.txt` and change
-the path to the OpenVDB library to match your installation.
-nbBoundaryParticles
-xb1 yb1 zb1
-xb2 yb2 zb2
+**The bridge assumes OpenVDB is installed in your home folder. If this is not the case, edit `CMakeLists.txt` and change
+the path to the OpenVDB library to match your installation.**
+
 If you have any issue with this step, please refer to the official documentation of
 OpenVDB: https://www.openvdb.org/documentation/doxygen/build.html (Building with OpenVDB)
 
@@ -27,12 +25,9 @@ You can pull the docker image from Docker Hub with the following command:
 docker pull barthpaleologue/openvdb_bridge
 ```
 
-You can also build the image with the script `buildDocker.sh` since the Dockerfile is included.
-The docker image is based on Ubuntu 22.04 and contains OpenVDB and all the dependencies needed to run the program.
+You can also build the image yourself using the given `Dockerfile`.
 
-You can then run it with `runDocker.sh`.
-You will need to build the bridge inside the container. The C++ project is mounted at
-`/openvdb_bridge`. See the next section for more information.
+The docker image contains this program and OpenVDB ready to be used.
 
 ## Build
 
@@ -61,6 +56,9 @@ Options:
 	-h		Print this help message
 	-p	    Generate point grids as well
 	--obj	Generate obj files as well
+	--particleRadius <radius>	Specify the radius of the particles
+	--voxelSize <size>	Specify the size of the voxels
+	--halfWidth <width>	Specify the half width of the SDF
 ```
 
 The file must be formatted as follows:
@@ -78,13 +76,9 @@ You can see an example in the `particles_example.txt` file.
 
 ## Output
 
-The program will generate one `.vdb` file and one `.obj` file per time step. The `.vdb` file contains the SDF and the
-`.obj` file contains the mesh.
+The program will generate one `.vdb` file per timestep containing a level set representation of the fluid.
 
-You can also generate a `.vdb` containing a point data grid by adding the `-p` flag.
+You can also generate a `.vdb` containing a point data grid by adding the `-p` flag, or generate `.obj` files by adding
+the `--obj` flag.
 
 Point data grids are not compatible with Blender but the SDF and the mesh can be directly imported.
-
-https://docs.blender.org/manual/en/latest/modeling/volumes/introduction.html
-
-![image](https://github.com/Konodinger/Liquid3D/assets/31370477/70bf1565-6bd1-4577-8520-5b444dda864d)

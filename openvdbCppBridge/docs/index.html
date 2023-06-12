@@ -91,14 +91,15 @@ $(document).ready(function(){initNavTree('index.html',''); initResizable(); });
 <h1><a class="anchor" id="autotoc_md1"></a>
 Installation</h1>
 <p >This program needs OpenVDB to be installed to work. Visit <a href="https://github.com/AcademySoftwareFoundation/openvdb">the official repository of OpenVDB</a> and follow the installation guide.</p>
-<p >The bridge assumes OpenVDB is installed in your home folder. If this is not the case, edit <code>CMakeLists.txt</code> and change the path to the OpenVDB library to match your installation. nbBoundaryParticles xb1 yb1 zb1 xb2 yb2 zb2 If you have any issue with this step, please refer to the official documentation of OpenVDB: <a href="https://www.openvdb.org/documentation/doxygen/build.html">https://www.openvdb.org/documentation/doxygen/build.html</a> (Building with OpenVDB)</p>
+<p ><b>The bridge assumes OpenVDB is installed in your home folder. If this is not the case, edit <code>CMakeLists.txt</code> and change the path to the OpenVDB library to match your installation.</b></p>
+<p >If you have any issue with this step, please refer to the official documentation of OpenVDB: <a href="https://www.openvdb.org/documentation/doxygen/build.html">https://www.openvdb.org/documentation/doxygen/build.html</a> (Building with OpenVDB)</p>
 <h2><a class="anchor" id="autotoc_md2"></a>
 Docker</h2>
 <p >If you can't install OpenVDB on your machine, you can use Docker to run the program.</p>
 <p >You can pull the docker image from Docker Hub with the following command:</p>
 <div class="fragment"><div class="line">docker pull barthpaleologue/openvdb_bridge</div>
-</div><!-- fragment --><p >You can also build the image with the script <code>buildDocker.sh</code> since the Dockerfile is included. The docker image is based on Ubuntu 22.04 and contains OpenVDB and all the dependencies needed to run the program.</p>
-<p >You can then run it with <code>runDocker.sh</code>. You will need to build the bridge inside the container. The C++ project is mounted at <code>/openvdb_bridge</code>. See the next section for more information.</p>
+</div><!-- fragment --><p >You can also build the image yourself using the given <code>Dockerfile</code>.</p>
+<p >The docker image contains this program and OpenVDB ready to be used.</p>
 <h1><a class="anchor" id="autotoc_md3"></a>
 Build</h1>
 <p >You can use CMake to build the project.</p>
@@ -116,6 +117,9 @@ Usage</h1>
 <div class="line">    -h      Print this help message</div>
 <div class="line">    -p      Generate point grids as well</div>
 <div class="line">    --obj   Generate obj files as well</div>
+<div class="line">    --particleRadius &lt;radius&gt;   Specify the radius of the particles</div>
+<div class="line">    --voxelSize &lt;size&gt;  Specify the size of the voxels</div>
+<div class="line">    --halfWidth &lt;width&gt; Specify the half width of the SDF</div>
 </div><!-- fragment --><p >The file must be formatted as follows:</p>
 <div class="fragment"><div class="line">gridSizeX gridSizeY gridSizeZ</div>
 <div class="line">dt nbTimeSteps</div>
@@ -126,11 +130,9 @@ Usage</h1>
 </div><!-- fragment --><p >You can see an example in the <code>particles_example.txt</code> file.</p>
 <h1><a class="anchor" id="autotoc_md5"></a>
 Output</h1>
-<p >The program will generate one <code>.vdb</code> file and one <code>.obj</code> file per time step. The <code>.vdb</code> file contains the SDF and the <code>.obj</code> file contains the mesh.</p>
-<p >You can also generate a <code>.vdb</code> containing a point data grid by adding the <code>-p</code> flag.</p>
-<p >Point data grids are not compatible with Blender but the SDF and the mesh can be directly imported.</p>
-<p ><a href="https://docs.blender.org/manual/en/latest/modeling/volumes/introduction.html">https://docs.blender.org/manual/en/latest/modeling/volumes/introduction.html</a></p>
-<p ><img src="https://github.com/Konodinger/Liquid3D/assets/31370477/70bf1565-6bd1-4577-8520-5b444dda864d" alt="image" class="inline"/> </p>
+<p >The program will generate one <code>.vdb</code> file per timestep containing a level set representation of the fluid.</p>
+<p >You can also generate a <code>.vdb</code> containing a point data grid by adding the <code>-p</code> flag, or generate <code>.obj</code> files by adding the <code>--obj</code> flag.</p>
+<p >Point data grids are not compatible with Blender but the SDF and the mesh can be directly imported. </p>
 </div></div><!-- PageDoc -->
 </div><!-- contents -->
 </div><!-- doc-content -->
