@@ -17,7 +17,7 @@ The 3D IISPH Simulation can be built using CMake or using Make whichever you pre
 
 ### OpenVDB C++ bridge
 
-The C++ bridge can be built using CMake or using Docker. The build instructions are detailled in the `README.md` file in the folder. Should it fail, you can use our python fallback.
+The C++ bridge can be built using CMake or using Docker. The build instructions are detailled in the `README.md` file in the `openVdbCppBridge` folder. Should it fail, you can use our python fallback.
 
 ### Everything at once
 
@@ -27,7 +27,7 @@ If OpenVDB is installed on your computer in your home directory you can build bo
 ./build.sh
 ```
 
-If OpenVDB is installed somewhere else you can specify the path to the OpenVDB installation in the file `openvdbCppBridge/CMakeLists.txt` and then run the build script.
+If OpenVDB is installed somewhere else than your home directory you must specify the path to the OpenVDB installation in the file `openvdbCppBridge/CMakeLists.txt` and then run the build script.
 
 ## Run
 
