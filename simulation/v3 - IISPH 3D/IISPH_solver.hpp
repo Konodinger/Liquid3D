@@ -33,10 +33,11 @@ public:
             const Real h = 0.5, const Real density = 1e3,
             const Vec3f g = Vec3f(0, -9.8, 0), const Real initP = 0.5,
             const Real omega = 0.5, const Real pressureError = 1.) :
-            _kernel(h), _dt(dt), _nu(nu),
+            _kernel(h), _rad(_kernel.supportRadius()), _dt(dt), _nu(nu),
             _h(h), _d0(density), _g(g),
             _initP(initP), _omega(omega), _pressureError(pressureError) {
         _m0 = _d0 * _h * _h * _h / 8. * M_PI * 4. / 3.;
+        maxVel = Vec3f();
     }
 
     // assume an arbitrary grid with the size of res_x*res_y; a fluid mass fill up
@@ -156,7 +157,8 @@ public:
         computeDensity();
     }
 
-    void update() {
+    void update(Real dt) {
+        _dt = dt;
 #ifdef __DEBUG1__
         cout << '.' << flush;
 #endif
@@ -168,15 +170,15 @@ public:
         applyBodyForce();
         applyViscousForce();
 
-        // IISMH part
+        // IISPH part
         computeIntermediateVelocity();
         computeDiiCoeff();
         computeAiiCoeff();
         computeIntermediateDensity();
 
-        computePressure(); // Huge loop where we compute c_i and p_i
+        computePressure(); // Huge loop where we compute c_i and p_i.
 
-        //end of IISPH part
+        // End of IISPH part
         applyPressureForce();
 
         updateVelocity();
@@ -186,12 +188,12 @@ public:
 
     }
 
-    const bool particleCollision (const Vec3f &part) const {
+    bool particleCollision (const Vec3f &part) const {
         return (part.x < _left || part.y < _bottom || part.z < _back || part.x > _right ||
                 part.y > _top || part.z > _front);
     }
 
-    const void clampParticle(Vec3f &part) const {
+    void clampParticle(Vec3f &part) const {
         part.x = clamp(part.x, _left, _right);
         part.y = clamp(part.y, _bottom, _top);
         part.z = clamp(part.z, _back, _front);
@@ -199,8 +201,9 @@ public:
 
     const CubicSpline &getKernel() const { return _kernel; }
     tIndex particleCount() const { return _pos.size(); }
-    tIndex wallParticleCount() { return _nbWallParticles; }
-    tIndex fluidParticleCount() { return _pos.size() - _nbWallParticles; }
+    tIndex wallParticleCount() const { return _nbWallParticles; }
+    tIndex fluidParticleCount() const { return _pos.size() - _nbWallParticles; }
+    Real particleMass() const { return _m0; }
     const vector <tIndex> &gridParticles(const tIndex i, const tIndex j, const tIndex k) const {
         return _pidxInGrid[idx1d(i, j, k)];
     };
@@ -208,8 +211,9 @@ public:
     const Vec3f &position(const tIndex i) const { return _pos[i]; }
     const Vec3f &velocity(const tIndex i) const { return _vel[i]; }
     const Vec3f &acceleration(const tIndex i) const { return _acc[i]; }
-    const Real &pressure(const tIndex i) const { return _p[i]; }
-    const Real &density(const tIndex i) const { return _d[i]; }
+    Real pressure(const tIndex i) const { return _p[i]; }
+    Real density(const tIndex i) const { return _d[i]; }
+    const Vec3f &maxVelocity() const {return maxVel; }
     int resX() const { return _resX; }
     int resY() const { return _resY; }
     int resZ() const { return _resZ; }
@@ -217,7 +221,6 @@ public:
 private:
     void buildNeighbor() {
 
-//#pragma omp parallel for
         for (auto &pix: _pidxInGrid) {
             pix.clear();
         }
@@ -228,23 +231,18 @@ private:
     }
 
     void computeDensity() {
-        Real rad = _kernel.supportRadius();
-        int nb = 0;
-
-#pragma omp parallel for
+#pragma omp parallel for default(none)
         for (tIndex i = 0; i < particleCount(); ++i) {
             Real rho = 0.f;
-            nb = 0;
 
-            for (tIndex _kernelX = max(0, (int) floor(position(i).x - rad));
-                 _kernelX < min(resX(), (int) floor(position(i).x + rad + 1)); ++_kernelX) {
-                for (tIndex _kernelY = max(0, (int) floor(position(i).y - rad));
-                     _kernelY < min(resY(), (int) floor(position(i).y + rad + 1)); ++_kernelY) {
-                    for (tIndex _kernelZ = max(0, (int) floor(position(i).z - rad));
-                         _kernelZ < min(resZ(), (int) floor(position(i).z + rad + 1)); ++_kernelZ) {
+            for (tIndex _kernelX = max(0, (int) floor(position(i).x - _rad));
+                 _kernelX < min(resX(), (int) floor(position(i).x + _rad + 1)); ++_kernelX) {
+                for (tIndex _kernelY = max(0, (int) floor(position(i).y - _rad));
+                     _kernelY < min(resY(), (int) floor(position(i).y + _rad + 1)); ++_kernelY) {
+                    for (tIndex _kernelZ = max(0, (int) floor(position(i).z - _rad));
+                         _kernelZ < min(resZ(), (int) floor(position(i).z + _rad + 1)); ++_kernelZ) {
 
                         for (tIndex j: _pidxInGrid[idx1d(_kernelX, _kernelY, _kernelZ)]) {
-                            nb++;
                             rho += _m0 * _kernel.w(position(i) - position(j));
                         }
                     }
@@ -265,18 +263,16 @@ private:
     }
 
     void applyViscousForce() {
-        Real rad = _kernel.supportRadius();
-
-#pragma omp parallel for
+#pragma omp parallel for default(none)
         for (tIndex i = _nbWallParticles; i < particleCount(); ++i) {
             Vec3f dist = Vec3f();
             Vec3f viscousAcc = Vec3f();
-            for (tIndex _kernelX = max(0, (int) floor(position(i).x - rad));
-                 _kernelX < min(resX(), (int) floor(position(i).x + rad + 1)); ++_kernelX) {
-                for (tIndex _kernelY = max(0, (int) floor(position(i).y - rad));
-                     _kernelY < min(resY(), (int) floor(position(i).y + rad + 1)); ++_kernelY) {
-                    for (tIndex _kernelZ = max(0, (int) floor(position(i).z - rad));
-                         _kernelZ < min(resZ(), (int) floor(position(i).z + rad + 1)); ++_kernelZ) {
+            for (tIndex _kernelX = max(0, (int) floor(position(i).x - _rad));
+                 _kernelX < min(resX(), (int) floor(position(i).x + _rad + 1)); ++_kernelX) {
+                for (tIndex _kernelY = max(0, (int) floor(position(i).y - _rad));
+                     _kernelY < min(resY(), (int) floor(position(i).y + _rad + 1)); ++_kernelY) {
+                    for (tIndex _kernelZ = max(0, (int) floor(position(i).z - _rad));
+                         _kernelZ < min(resZ(), (int) floor(position(i).z + _rad + 1)); ++_kernelZ) {
                         for (tIndex j: _pidxInGrid[idx1d(_kernelX, _kernelY, _kernelZ)]) {
                             dist = position(i) - position(j);
                             viscousAcc += _m0 / _d[j] * (velocity(i) - velocity(j)) *
@@ -303,18 +299,16 @@ private:
     }
 
     void computeDiiCoeff() {
-        Real rad = _kernel.supportRadius();
-
-#pragma omp parallel for
+#pragma omp parallel for default(none)
         for (tIndex i = _nbWallParticles; i < particleCount(); ++i) {
             _d_ii[i] = Vec3f(0, 0, 0);
 
-            for (tIndex _kernelX = max(0, (int) floor(position(i).x - rad));
-                 _kernelX < min(resX(), (int) floor(position(i).x + rad + 1)); ++_kernelX) {
-                for (tIndex _kernelY = max(0, (int) floor(position(i).y - rad));
-                     _kernelY < min(resY(), (int) floor(position(i).y + rad + 1)); ++_kernelY) {
-                    for (tIndex _kernelZ = max(0, (int) floor(position(i).z - rad));
-                         _kernelZ < min(resZ(), (int) floor(position(i).z + rad + 1)); ++_kernelZ) {
+            for (tIndex _kernelX = max(0, (int) floor(position(i).x - _rad));
+                 _kernelX < min(resX(), (int) floor(position(i).x + _rad + 1)); ++_kernelX) {
+                for (tIndex _kernelY = max(0, (int) floor(position(i).y - _rad));
+                     _kernelY < min(resY(), (int) floor(position(i).y + _rad + 1)); ++_kernelY) {
+                    for (tIndex _kernelZ = max(0, (int) floor(position(i).z - _rad));
+                         _kernelZ < min(resZ(), (int) floor(position(i).z + _rad + 1)); ++_kernelZ) {
                         for (tIndex j: _pidxInGrid[idx1d(_kernelX, _kernelY, _kernelZ)]) {
 
                             _d_ii[i] += _m0 * _kernel.grad_w(position(i) - position(j));
@@ -329,18 +323,16 @@ private:
     }
 
     void computeAiiCoeff() {
-        Real rad = _kernel.supportRadius();
-
-#pragma omp parallel for
+#pragma omp parallel for default(none)
         for (tIndex i = _nbWallParticles; i < particleCount(); ++i) {
             _a_ii[i] = 0;
 
-            for (tIndex _kernelX = max(0, (int) floor(position(i).x - rad));
-                 _kernelX < min(resX(), (int) floor(position(i).x + rad + 1)); ++_kernelX) {
-                for (tIndex _kernelY = max(0, (int) floor(position(i).y - rad));
-                     _kernelY < min(resY(), (int) floor(position(i).y + rad + 1)); ++_kernelY) {
-                    for (tIndex _kernelZ = max(0, (int) floor(position(i).z - rad));
-                         _kernelZ < min(resZ(), (int) floor(position(i).z + rad + 1)); ++_kernelZ) {
+            for (tIndex _kernelX = max(0, (int) floor(position(i).x - _rad));
+                 _kernelX < min(resX(), (int) floor(position(i).x + _rad + 1)); ++_kernelX) {
+                for (tIndex _kernelY = max(0, (int) floor(position(i).y - _rad));
+                     _kernelY < min(resY(), (int) floor(position(i).y + _rad + 1)); ++_kernelY) {
+                    for (tIndex _kernelZ = max(0, (int) floor(position(i).z - _rad));
+                         _kernelZ < min(resZ(), (int) floor(position(i).z + _rad + 1)); ++_kernelZ) {
                         for (tIndex j: _pidxInGrid[idx1d(_kernelX, _kernelY, _kernelZ)]) {
 
                             _a_ii[i] += _m0 * (_d_ii[i] + _dt * _dt * _m0 / (_d[i] * _d[i]) *
@@ -356,18 +348,16 @@ private:
     }
 
     void computeIntermediateDensity() {
-        Real rad = _kernel.supportRadius();
-
-#pragma omp parallel for
+#pragma omp parallel for default(none)
         for (tIndex i = _nbWallParticles; i < particleCount(); ++i) {
             _interD[i] = _d[i];
 
-            for (tIndex _kernelX = max(0, (int) floor(position(i).x - rad));
-                 _kernelX < min(resX(), (int) floor(position(i).x + rad + 1)); ++_kernelX) {
-                for (tIndex _kernelY = max(0, (int) floor(position(i).y - rad));
-                     _kernelY < min(resY(), (int) floor(position(i).y + rad + 1)); ++_kernelY) {
-                    for (tIndex _kernelZ = max(0, (int) floor(position(i).z - rad));
-                         _kernelZ < min(resZ(), (int) floor(position(i).z + rad + 1)); ++_kernelZ) {
+            for (tIndex _kernelX = max(0, (int) floor(position(i).x - _rad));
+                 _kernelX < min(resX(), (int) floor(position(i).x + _rad + 1)); ++_kernelX) {
+                for (tIndex _kernelY = max(0, (int) floor(position(i).y - _rad));
+                     _kernelY < min(resY(), (int) floor(position(i).y + _rad + 1)); ++_kernelY) {
+                    for (tIndex _kernelZ = max(0, (int) floor(position(i).z - _rad));
+                         _kernelZ < min(resZ(), (int) floor(position(i).z + _rad + 1)); ++_kernelZ) {
                         for (tIndex j: _pidxInGrid[idx1d(_kernelX, _kernelY, _kernelZ)]) {
 
                             _interD[i] += _dt * _m0 * (_interVel[i] - _interVel[j]).dotProduct(
@@ -381,32 +371,30 @@ private:
     }
 
     void computePressure() {
-        Real rad = _kernel.supportRadius();
-
-#pragma omp parallel for
+#pragma omp parallel for default(none)
         for (tIndex i = _nbWallParticles; i < particleCount(); ++i) {
             _p[i] *= _initP;
 
         }
 
-        int l = 0;
+        int iter = 0;
         int convCriteria = true;
 
-        while ((convCriteria) | (l < 2)) {
+        while ((convCriteria) | (iter < 2)) {
 
             convCriteria = false;
             int nbIssue = 0;
 
-#pragma omp parallel for
+#pragma omp parallel for default(none) shared(convCriteria)
             for (tIndex i = _nbWallParticles; i < particleCount(); ++i) {
                 _c_i[i] = Vec3f(0, 0, 0);
 
-                for (tIndex _kernelX = max(0, (int) floor(position(i).x - rad));
-                     _kernelX < min(resX(), (int) floor(position(i).x + rad + 1)); ++_kernelX) {
-                    for (tIndex _kernelY = max(0, (int) floor(position(i).y - rad));
-                         _kernelY < min(resY(), (int) floor(position(i).y + rad + 1)); ++_kernelY) {
-                        for (tIndex _kernelZ = max(0, (int) floor(position(i).z - rad));
-                             _kernelZ < min(resZ(), (int) floor(position(i).z + rad + 1)); ++_kernelZ) {
+                for (tIndex _kernelX = max(0, (int) floor(position(i).x - _rad));
+                     _kernelX < min(resX(), (int) floor(position(i).x + _rad + 1)); ++_kernelX) {
+                    for (tIndex _kernelY = max(0, (int) floor(position(i).y - _rad));
+                         _kernelY < min(resY(), (int) floor(position(i).y + _rad + 1)); ++_kernelY) {
+                        for (tIndex _kernelZ = max(0, (int) floor(position(i).z - _rad));
+                             _kernelZ < min(resZ(), (int) floor(position(i).z + _rad + 1)); ++_kernelZ) {
                             for (tIndex j: _pidxInGrid[idx1d(_kernelX, _kernelY, _kernelZ)]) {
 
                                 _c_i[i] += _p[j] / (_d[j] * _d[j]) * _kernel.grad_w(position(i) - position(j));
@@ -418,18 +406,18 @@ private:
                 _c_i[i] *= -_dt * _dt * _m0;
             }
 
-#pragma omp parallel for
+#pragma omp parallel for default(none) shared(convCriteria, nbIssue)
             for (tIndex i = _nbWallParticles; i < particleCount(); ++i) {
                 Real newP = 0.f;
                 if (_a_ii[i] != 0.f) {
                     _predP[i] = _d0 - _interD[i];
 
-                    for (tIndex _kernelX = max(0, (int) floor(position(i).x - rad));
-                         _kernelX < min(resX(), (int) floor(position(i).x + rad + 1)); ++_kernelX) {
-                        for (tIndex _kernelY = max(0, (int) floor(position(i).y - rad));
-                             _kernelY < min(resY(), (int) floor(position(i).y + rad + 1)); ++_kernelY) {
-                            for (tIndex _kernelZ = max(0, (int) floor(position(i).z - rad));
-                                 _kernelZ < min(resZ(), (int) floor(position(i).z + rad + 1)); ++_kernelZ) {
+                    for (tIndex _kernelX = max(0, (int) floor(position(i).x - _rad));
+                         _kernelX < min(resX(), (int) floor(position(i).x + _rad + 1)); ++_kernelX) {
+                        for (tIndex _kernelY = max(0, (int) floor(position(i).y - _rad));
+                             _kernelY < min(resY(), (int) floor(position(i).y + _rad + 1)); ++_kernelY) {
+                            for (tIndex _kernelZ = max(0, (int) floor(position(i).z - _rad));
+                                 _kernelZ < min(resZ(), (int) floor(position(i).z + _rad + 1)); ++_kernelZ) {
                                 for (tIndex j: _pidxInGrid[idx1d(_kernelX, _kernelY, _kernelZ)]) {
                                     if (j < _nbWallParticles) { //Boundary
                                         _predP[i] -=
@@ -456,31 +444,28 @@ private:
                 _p[i] = newP;
             }
 
-            l++;
+            iter++;
 #ifdef __DEBUG3__
             cout << "NbIssue " << nbIssue << " InterVel " << _interVel[obsPart] << " d_ii " << _d_ii[obsPart] << " a_ii " << _a_ii[obsPart] << " InterDen " << _interD[obsPart] << " c_i " << _c_i[obsPart] << " PredP " << _predP[obsPart] <<" Pr " << _p[obsPart] << endl;
 #endif
         }
 #ifdef __DEBUG2__
-        cout << "Iterations : " << l << endl;
+        cout << "Iterations : " << iter << endl;
 #endif
 
     }
 
 
     void applyPressureForce() {
-        // TODO:
-        Real rad = _kernel.supportRadius();
-
-#pragma omp parallel for
+#pragma omp parallel for default(none)
         for (tIndex i = _nbWallParticles; i < particleCount(); ++i) {
             Vec3f f = Vec3f(0);
-            for (tIndex _kernelX = max(0, (int) floor(position(i).x - rad));
-                 _kernelX < min(resX(), (int) floor(position(i).x + rad + 1)); ++_kernelX) {
-                for (tIndex _kernelY = max(0, (int) floor(position(i).y - rad));
-                     _kernelY < min(resY(), (int) floor(position(i).y + rad + 1)); ++_kernelY) {
-                    for (tIndex _kernelZ = max(0, (int) floor(position(i).z - rad));
-                         _kernelZ < min(resZ(), (int) floor(position(i).z + rad + 1)); ++_kernelZ) {
+            for (tIndex _kernelX = max(0, (int) floor(position(i).x - _rad));
+                 _kernelX < min(resX(), (int) floor(position(i).x + _rad + 1)); ++_kernelX) {
+                for (tIndex _kernelY = max(0, (int) floor(position(i).y - _rad));
+                     _kernelY < min(resY(), (int) floor(position(i).y + _rad + 1)); ++_kernelY) {
+                    for (tIndex _kernelZ = max(0, (int) floor(position(i).z - _rad));
+                         _kernelZ < min(resZ(), (int) floor(position(i).z + _rad + 1)); ++_kernelZ) {
                         for (tIndex j: _pidxInGrid[idx1d(_kernelX, _kernelY, _kernelZ)]) {
 
                             f -= _m0 * (_p[i] / (_d[i] * _d[i]) + _p[j] / (_d[j] * _d[j])) *
@@ -499,10 +484,23 @@ private:
     }
 
     void updateVelocity() {
-#pragma omp parallel for
+        maxVel = Vec3f(0);
+#ifdef __DEBUG5__
+        tIndex maxInd = 0;
+#endif        
         for (tIndex i = _nbWallParticles; i < particleCount(); ++i) {
             _vel[i] += _dt * _acc[i];
+            if (_vel[i].lengthSquare() > maxVel.lengthSquare()) {
+                maxVel = _vel[i];
+#ifdef __DEBUG5__
+                maxInd = i;
+#endif
+            }
         }
+
+#ifdef __DEBUG5__
+        cout << "Maximum velocity: " << maxVel << " at index " << maxInd << " (norm = " << maxVel.length() << ")." << endl;
+#endif
     }
 
     void updatePosition() {
@@ -533,6 +531,7 @@ private:
     vector <vector<tIndex>> _pidxInGrid; // will help you find neighbor particles
 
     const CubicSpline _kernel;
+    const Real _rad;
 
     // simulation
     Real _dt;                     // time step
@@ -554,8 +553,9 @@ private:
     vector <Vec3f> _pos;      // position
     vector <Vec3f> _vel;      // velocity
     vector <Vec3f> _acc;      // acceleration
-    vector <Real> _p;        // pressure
-    vector <Real> _d;        // density
+    vector <Real> _p;         // pressure
+    vector <Real> _d;         // density
+    Vec3f maxVel;             //maximum velocity
 
     //IISPH specific data
     vector <Vec3f> _interVel; // intermediate velocity (without pressure force)
@@ -564,9 +564,9 @@ private:
     vector <Vec3f> _d_ii;     // first level coef of the SOE
     vector <Vec3f> _c_i;      // second level coef of the SOE
     vector <Real> _predP;     // predicted pressure
-    Real _initP;                  // initial pressure for Jacobi method. Must be between 0 and 1
-    Real _omega;                  // relaxation coefficient. Must be between 0 and 1
-    Real _pressureError;           // maximum pressure variation rate serving as a limit of the Jacobi method
+    const Real _initP;                  // initial pressure for Jacobi method. Must be between 0 and 1
+    const Real _omega;                  // relaxation coefficient. Must be between 0 and 1
+    const Real _pressureError;           // maximum pressure variation rate serving as a limit of the Jacobi method
 
 
 };

@@ -54,19 +54,20 @@ public:
             }
             
         };
-    void stfStep() {
-            //Step 1: advection and dissolution.
-            computeNeighbor();
-            cout << sfbList.size() << endl;
-            computeVelocityPosition();
 
-            //Step 2: formation.
-            sfbFormation();
-        };
+    void sfbStep(Real dt) {
+        _dt = dt;
+        //Step 1: advection and dissolution.
+        computeNeighbor();
+        cout << sfbList.size() << endl;
+        computeVelocityPosition();
+
+        //Step 2: formation.
+        sfbFormation();
+    };
 
 private:
     void computeNeighbor() {
-//#pragma omp parallel for
         for (sfb diffuse : sfbList) {
             diffuse.fluidNeighbor = vector<tIndex>();
 
@@ -97,7 +98,6 @@ private:
         }
 
         for (list<sfb>::iterator it = sfbList.begin(); it != sfbList.end();) {
-            cout << (*it).nature << endl;
             if (((*it).nature == FOAM) & ((*it).lifetime <= 0.f)) {
                 cout << "DEAD";
                 it = sfbList.erase(it);
@@ -141,8 +141,34 @@ private:
         sfbList.push_back(sfb());
 
         for (tIndex i = (_solver->wallParticleCount()); i < _solver->particleCount(); ++i) {
+            Vec3f posI = _solver->position(i);
+            Real kineticPotential = _clamp(0.5*_solver->particleMass()*_solver->velocity(i).lengthSquare(), _tauEnergyMin, _tauEnergyMax);
+            
             Real scaVelDiff = 0.f;
+
+            Vec3f normal(0);
+            Real cumul = 0.;
             //À COMPLETER
+
+            for (tIndex _kernelX = max(0, (int) floor(posI.x - _sr));
+                 _kernelX < min(_resX, (int) floor(posI.x + _sr + 1)); ++_kernelX) {
+                for (tIndex _kernelY = max(0, (int) floor(posI.y - _sr));
+                     _kernelY < min(_resY, (int) floor(posI.y + _sr + 1)); ++_kernelY) {
+                    for (tIndex _kernelZ = max(0, (int) floor(posI.z - _sr));
+                         _kernelZ < min(_resZ, (int) floor(posI.z + _sr + 1)); ++_kernelZ) {
+                        for (tIndex j: _solver->gridParticles(_kernelX, _kernelY, _kernelZ)) {
+
+                            Vec3f pos_ij = _solver->position(j) - posI;
+                            Vec3f vel_ij = _solver->velocity(j) - _solver->velocity(i);
+                            scaVelDiff += vel_ij.length() * (1 - vel_ij.normalized().dotProduct(pos_ij.normalized())) * _lKernel.w(pos_ij);
+
+                            normal -= pos_ij;
+                        }
+                    }
+                }
+            }
+
+            Real trappedPotential = _clamp(scaVelDiff, _tauTrappedMin, _tauTrappedMax);
         }
     };
 
@@ -162,6 +188,7 @@ private:
     int diffuseCount() {return sfbList.size();}
 
 
+    inline Real _clamp(const Real value, const Real tauMin, const Real tauMax) {return (min(value, tauMax) - min(value, tauMin))/(tauMax - tauMin);}
     inline tIndex idx1d(const int i, const int j, const int k) { return i + j * _resX + k * _resX * _resY; }
     
     const IisphSolver * _solver;
@@ -169,15 +196,25 @@ private:
     const LinearKernel _lKernel;
     const CubicSpline _cKernel;
     const Real _sr;
-    const Real _dt;
+    Real _dt;
     list<sfb> sfbList;
     vector <vector<tIndex>> _sfbIndexInGrid; // will help you find neighbor particles.
 
     //Advection parameters.
-    const int _minBubbleNeighbor;
-    const int _minFoamNeighbor;
+    long long unsigned int _minBubbleNeighbor;
+    long long unsigned int _minFoamNeighbor;
     const Real _kb;
     const Real _kd;
+
+    //Generation parameters.
+    const Real _tauTrappedMin = 0.;
+    const Real _tauTrappedMax = 1.;
+    const Real _generateTrapped = 1.;
+    const Real _tauCrestMin = 0.;
+    const Real _tauCrestMax = 1.;
+    const Real _generateCrest = 1.;
+    const Real _tauEnergyMin = 0.;
+    const Real _tauEnergyMax = 1.;
 };
 
 #endif

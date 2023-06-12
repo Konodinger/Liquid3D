@@ -13,7 +13,7 @@ fluid_1x(t = 1) fluid_1y(t = 1) fluid_1z(t = 1) // Indique la position des parti
 
 
 
-v3 : On rajoute la vélocité afin de calculer la génération d'écume.
+v3 : Une option (activable par le flag __PRINT_VELOCITY__) rajoute la vélocité afin de calculer la génération d'écume.
 
 X_G Y_G Z_G // Constantes indiquant la taille de la grille. Actuellement, le point (0, 0, 0) est dans un coin supérieur (au fond à gauche), mais je peux le passer au coin inférieur.
 dt timesteps // Indique respectivement l'intervalle de temps entre deux frames, en seconde, et le nombre de frames.

@@ -1,23 +1,23 @@
-//#define __OPEN_MP__
 #define __DEBUG1__
 //#define __DEBUG2__
 //#define __DEBUG3__
 //#define __DEBUG4__
+//#define __DEBUG5__ //For CFL conditions.
 
 #include <iostream>
 #include <fstream>
 #include "IISPH_solver.hpp"
 
 #ifdef _OPENMP
-
 #include <omp.h>
-
 #endif
 
-std::string fileOutput = "liquidPointCloud";
+using namespace std;
+
+string fileOutput = "liquidPointCloud";
 
 //Simulation parameters
-const Real solvNu = 0.08;
+const Real solvNu = 0.02;
 const Real solvH = 0.5;
 const Real solvDensity = 3e3;
 const Vec3f solvG = Vec3f(0, 0, -9.8);
@@ -26,11 +26,14 @@ const Real solvOmega = 0.3;
 const Real solvPressureError = 0.99;
 
 const int nbConsecutiveSteps = 5;
-const Real dt = 0.01f;
-long unsigned int timesteps = 500;
+const Real dt = 0.008f;
+const Real fileDt = nbConsecutiveSteps * dt;
+const Real cflNumber = 0.4f;
+
+long unsigned int timesteps = 100;
 const Vec3f gridRes = Vec3f(20, 20, 25);
-const Vec3f initShift = Vec3f(0, 0, 10);
-const Vec3f initBlock = Vec3f(16, 16, 8);
+const Vec3f initShift = Vec3f(2, 2, 10);
+const Vec3f initBlock = Vec3f(12, 12, 8);
 
 IisphSolver solver(dt, solvNu, solvH, solvDensity, solvG, solvInitP, solvOmega, solvPressureError);
 
@@ -39,52 +42,59 @@ int main(int argc, char **argv) {
 
     // if openmp is enabled, we print the number of threads used
 #ifdef _OPENMP
-    std::cout << "OpenMP enabled, using " << omp_get_max_threads() << " threads" << std::endl;
+    cout << "OpenMP enabled, using " << omp_get_max_threads() << " threads" << endl;
 #else
-    std::cout << "OpenMP not enabled, using only 1 thread" << std::endl;
+    cout << "OpenMP not enabled, using only 1 thread" << endl;
 #endif
 
     try {
         solver.initScene(gridRes, initShift, initBlock);
     } catch (length_error &e) {
-        std::cout << e.what() << std::endl;
+        cout << e.what() << endl;
         return 0;
     }
 
     ofstream file;
-    std::stringstream fpath;
+    stringstream fpath;
     int fileNum = 1;
     do {
-        fpath.str(std::string());
-        fpath << "./" << fileOutput << "_" << std::setw(3) << std::setfill('0') << fileNum++ << ".txt";
+        fpath.str(string());
+        fpath << "./" << fileOutput << "_" << setw(3) << setfill('0') << fileNum++ << ".txt";
     } while (ifstream(fpath.str()).is_open());
 
     const unsigned long int nbFluidPart = initBlock.x * initBlock.y * initBlock.z * 8;
     const int nbWallPart = solver.wallParticleCount();
     vector<Vec3f> partPos((timesteps + 1) * nbFluidPart, Vec3f(0));
 
-    for (unsigned int t = 0; t < timesteps; ++t) {
+    for (unsigned long int i = 0; i < nbFluidPart; ++i) {
+        partPos[i] = solver.position(i + nbWallPart);
+    }
+    
+    for (unsigned int t = 1; t < timesteps; ++t) {
 #ifdef __DEBUG1__
-        std::cout << "Step number " << t << std::endl;
+        cout << "Step number " << t << endl;
 #endif
-        for (unsigned int i = 0; i < nbConsecutiveSteps; ++i) solver.update();
+        Real timeStepDt = dt;
+        Real timeElapsed = 0.;
+        while (timeElapsed < fileDt) {
+            solver.update(timeStepDt);
+
+            timeElapsed += timeStepDt;
+            Real cflCriterion = cflNumber * solver.getKernel().supportRadius()/solver.maxVelocity().length();
+            timeStepDt = min(min(dt, cflCriterion), fileDt - timeElapsed);
+
+        }
 
         for (unsigned long int i = 0; i < nbFluidPart; ++i) {
             partPos[t * nbFluidPart + i] = solver.position(i + nbWallPart);
         }
     }
 
-    std::cout << "End of the simulation, saving data..." << std::endl;
+    cout << "End of the simulation, saving data..." << endl;
 
     file.open(fpath.str());
     file << gridRes.x << " " << gridRes.y << " " << gridRes.z << "\n";
     file << dt * nbConsecutiveSteps << " " << timesteps + 1 << "\n";
-
-    // Next part print wall particles. It is currently removed because unused.
-    /*file << nbWallPart << "\n";
-    for (int i = 0; i < nbWallPart; ++i) {
-    file << solver.position(i).x << " " << solver.position(i).y << " " << solver.position(i).z << "\n";
-    }*/
 
     file << nbFluidPart << "\n";
 
@@ -92,7 +102,7 @@ int main(int argc, char **argv) {
         file << part.x << " " << part.y << " " << part.z << "\n";
     }
 
-    std::cout << " > Quit" << std::endl;
+    cout << " > Quit" << endl;
     file.close();
 
     return 0;
