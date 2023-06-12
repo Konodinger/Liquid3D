@@ -18,7 +18,10 @@
  * Rasterize a list of particles into a level set and write it to a `.vdb` file.
  * The files are output in the `results` directory with the given name and iteration number.
  * @param positions the list of particle positions for one iteration
- * @param fileName the name of the file to output (without extension) (fluid by default)
+ * @param fileName the name of the file to output (without extension)
+ * @param particleRadius the radius of the particles
+ * @param voxelSize the size of the voxels
+ * @param halfWidth the half width of the level set
  * @param iteration the iteration number (0 by default) to append to the file name
  * @param shouldGenerateObjFiles whether or not to generate `.obj` files (false by default)
  *
@@ -26,7 +29,8 @@
  * @see unit test https://github.com/dneg/openvdb/blob/587c9ae84c2822bbc03d0d7eceb52898582841b9/openvdb/openvdb/unittest/TestParticlesToLevelSet.cc#L470
  * @see openvdb doc https://www.openvdb.org/documentation/doxygen/classopenvdb_1_1v10__0_1_1tools_1_1ParticlesToLevelSet.html
  */
-void rasterizeParticles(std::vector<openvdb::Vec3R> &positions, const std::string &fileName = "fluid",
+void rasterizeParticles(std::vector<openvdb::Vec3R> &positions, const std::string &fileName,
+                        const float particleRadius, const float voxelSize, const float halfWidth,
                         const int iteration = 0, const float dt = 0.0, const bool shouldGenerateObjFiles = false) {
     auto particleList = new ParticleList(positions);
     std::cout << "Created OpenVDB compatible particle list" << std::endl;
@@ -42,16 +46,13 @@ void rasterizeParticles(std::vector<openvdb::Vec3R> &positions, const std::strin
     // points to levelset (https://github.com/dneg/openvdb/blob/587c9ae84c2822bbc03d0d7eceb52898582841b9/openvdb/openvdb/unittest/TestParticlesToLevelSet.cc#L471)
     // see also https://stackoverflow.com/questions/68405603/i-am-trying-to-convert-point-cloud-to-mesh-using-openvdb
 
-    const float voxelSize = 0.5f;
-    const float halfWidth = 2.0f;
     openvdb::FloatGrid::Ptr levelSet = openvdb::createLevelSet<openvdb::FloatGrid>(voxelSize, halfWidth);
     levelSet->setName("levelSet" + std::to_string(iteration));
     levelSet->insertMeta("dt", openvdb::FloatMetadata(dt));
 
     openvdb::tools::ParticlesToLevelSet<openvdb::FloatGrid> raster(*levelSet);
     raster.setGrainSize(1); //a value of zero disables threading
-    raster.rasterizeSpheres(*particleList,
-                            0.75); // the 0.75 is purely arbitrary, it seems we can't decrease it further without losing the meshing
+    raster.rasterizeSpheres(*particleList,particleRadius);
     raster.finalize();
 
     std::cout << "\nParticles have been converted to a level set:" << std::endl;

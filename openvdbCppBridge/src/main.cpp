@@ -7,9 +7,11 @@
 #include "rasterize.hpp"
 #include "pointGrid.hpp"
 
-int main(int argc, char **argv) {
-    // usage: ./openvdbBridge <particlesPositions.txt>
+#define DEFAULT_PARTICLE_RADIUS 0.4f
+#define DEFAULT_VOXEL_SIZE 0.1f
+#define DEFAULT_HALF_WIDTH 2.0f
 
+int main(int argc, char **argv) {
     if (cmdOptionExists(argv, argv + argc, "-h")) {
         std::cout << "Usage: " << argv[0] << " -f <fileName>\n" << std::endl;
 
@@ -18,6 +20,9 @@ int main(int argc, char **argv) {
         std::cout << "\t-h\tPrint this help message" << std::endl;
         std::cout << "\t-p\tGenerate point grids as well" << std::endl;
         std::cout << "\t--obj\tGenerate .obj files as well" << std::endl;
+        std::cout << "\t--particleRadius <size>\tSpecify the radius of the particles" << std::endl;
+        std::cout << "\t--voxelSize <size>\tSpecify the size of the voxels" << std::endl;
+        std::cout << "\t--halfWidth <size>\tSpecify the half width of the narrow band the levelset" << std::endl;
         std::cout << std::endl;
 
         return 0;
@@ -33,6 +38,15 @@ int main(int argc, char **argv) {
     bool shouldGenerateGrids = cmdOptionExists(argv, argv + argc, "-p");
 
     bool shouldGenerateObjFiles = cmdOptionExists(argv, argv + argc, "--obj");
+
+    char *cmdParticleRadius = getCmdOption(argv, argv + argc, "--particleRadius");
+    float particleRadius = cmdParticleRadius == nullptr ? DEFAULT_PARTICLE_RADIUS : std::stof(cmdParticleRadius);
+
+    char *cmdVoxelSize = getCmdOption(argv, argv + argc, "--voxelSize");
+    float voxelSize = cmdVoxelSize == nullptr ? DEFAULT_VOXEL_SIZE : std::stof(cmdVoxelSize);
+
+    char *cmdHalfWidth = getCmdOption(argv, argv + argc, "--halfWidth");
+    float halfWidth = cmdHalfWidth == nullptr ? DEFAULT_HALF_WIDTH : std::stof(cmdHalfWidth);
 
     // read particlesPositions from file particlesPositions.txt
     // each line contains 3 float numbers separated by space
@@ -84,7 +98,8 @@ int main(int argc, char **argv) {
         std::cout << "\n----------- Time step " << i << " -----------\n" << std::endl;
 
         // creates a SDF and a mesh from the particles (output in the results folder)
-        rasterizeParticles(particlesPositions[i], "fluid", i, dt, shouldGenerateObjFiles);
+        rasterizeParticles(particlesPositions[i], "fluid", particleRadius, voxelSize, halfWidth, i, dt,
+                           shouldGenerateObjFiles);
 
         // creates a point grid from the particles (output in the results folder) not compatible with Blender
         if (shouldGenerateGrids) createPointGrid(particlesPositions[i], "fluid", i);
