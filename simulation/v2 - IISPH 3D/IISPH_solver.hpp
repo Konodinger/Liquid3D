@@ -93,12 +93,7 @@ public:
 
     // assume an arbitrary grid with the size of res_x*res_y; a fluid mass fill up
     // the size of f_width, f_height; each cell is sampled with 2x2 particles.
-    void initScene(
-            const Vec3f gridRes, const Vec3f initShift, const Vec3f initBlock) {
-        if ((initShift.x + initBlock.x + 1 >= gridRes.x) | (initShift.y + initBlock.y + 1 >= gridRes.y) |
-            (initShift.z + initBlock.z + 1 >= gridRes.z)) {
-            throw length_error("Issue with the size and position of the initial particles.");
-        }
+    void initScene(const Vec3f gridRes, InitType initType) {
         _pos.clear();
 
         _resX = (int) gridRes.x;
@@ -166,7 +161,27 @@ public:
 
         obsPart += _nbWallParticles;
 
-        initCube(initShift, initBlock, _pos);
+        const Vec3f blockPosition = Vec3f(0.5f * gridRes.x, 0.5f * gridRes.y, 0.5f * gridRes.z);
+        const Vec3f blockDimensions = Vec3f(0.5f * gridRes.x, 0.5f * gridRes.y, 0.25f * gridRes.z);
+
+        const Vec3f spherePosition = Vec3f(0.5f * gridRes.x, 0.5f * gridRes.y, 0.5f * gridRes.z);
+        const Real sphereRadius = min(gridRes.x, min(gridRes.y, gridRes.z)) / 4.0f;
+
+        const Vec3f torusPosition = Vec3f(0.5f * gridRes.x, 0.5f * gridRes.y, 0.5f * gridRes.z);
+        const Real torusMajorRadius = min(gridRes.x, min(gridRes.y, gridRes.z)) / 4.0f;
+        const Real torusMinorRadius = torusMajorRadius / 3.0f;
+
+        switch (initType) {
+            case InitType::BLOCK:
+                initBlock(blockPosition, blockDimensions, _pos);
+                break;
+            case InitType::SPHERE:
+                initSphere(spherePosition, sphereRadius, _pos);
+                break;
+            case InitType::TORUS:
+                initTorus(torusPosition, torusMajorRadius, torusMinorRadius, _pos);
+                break;
+        }
 
         // make sure for the other particle quantities
         _vel = vector<Vec3f>(_pos.size(), Vec3f(0, 0, 0));

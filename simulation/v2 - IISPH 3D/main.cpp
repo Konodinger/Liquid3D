@@ -34,8 +34,7 @@ const Real cflNumber = 0.4f;
 
 long unsigned int timesteps = 100;
 const Vec3f gridRes = Vec3f(20, 20, 25);
-const Vec3f initShift = Vec3f(2, 2, 10);
-const Vec3f initBlock = Vec3f(12, 12, 8);
+InitType initType = InitType::BLOCK;
 
 IisphSolver solver(dt, solvNu, solvH, solvDensity, solvG, solvInitP, solvOmega, solvPressureError);
 
@@ -50,7 +49,7 @@ int main(int argc, char **argv) {
 #endif
 
     try {
-        solver.initScene(gridRes, initShift, initBlock);
+        solver.initScene(gridRes, initType);
     } catch (length_error &e) {
         cout << e.what() << endl;
         return 0;
@@ -64,7 +63,7 @@ int main(int argc, char **argv) {
         fpath << "./" << fileOutput << "_" << setw(3) << setfill('0') << fileNum++ << ".txt";
     } while (ifstream(fpath.str()).is_open());
 
-    const unsigned long int nbFluidPart = initBlock.x * initBlock.y * initBlock.z * 8;
+    const unsigned long int nbFluidPart = solver.fluidParticleCount();
     const int nbWallPart = solver.wallParticleCount();
     vector<Vec3f> partPos((timesteps + 1) * nbFluidPart, Vec3f(0));
 
