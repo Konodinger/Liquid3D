@@ -182,6 +182,7 @@ public:
                 initTorus(torusPosition, torusMajorRadius, torusMinorRadius, _pos);
                 break;
         }
+        std::cout << "Simulating " << fluidParticleCount() << " particles of fluid" << std::endl;
 
         // make sure for the other particle quantities
         _vel = vector<Vec3f>(_pos.size(), Vec3f(0, 0, 0));

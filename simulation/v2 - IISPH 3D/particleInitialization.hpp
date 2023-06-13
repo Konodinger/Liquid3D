@@ -38,7 +38,6 @@ void initBlock(Vec3f blockPosition, Vec3f blockDimensions, std::vector<Vec3f> &p
             }
         }
     }
-    std::cout << "Simulating " << particlePositions.size() - initialSize << " particles of fluid" << std::endl;
 }
 
 void initSphere(Vec3f spherePosition, float sphereRadius, std::vector<Vec3f> &particlePositions) {
@@ -70,7 +69,6 @@ void initSphere(Vec3f spherePosition, float sphereRadius, std::vector<Vec3f> &pa
             }
         }
     }
-    std::cout << "Simulating " << particlePositions.size() - initialSize << " particles of fluid" << std::endl;
 }
 
 void initTorus(Vec3f torusPosition, float majorRadius, float minorRadius, std::vector<Vec3f> &particlePositions) {
@@ -110,7 +108,6 @@ void initTorus(Vec3f torusPosition, float majorRadius, float minorRadius, std::v
             }
         }
     }
-    std::cout << "Simulating " << particlePositions.size() - initialSize << " particles of fluid" << std::endl;
 }
 
 #endif //INC_3DIISPH_PARTICLEINITIALIZATION_HPP
