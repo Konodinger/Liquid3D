@@ -1,5 +1,6 @@
 # Liquid3D
 
+[![CodeQL](https://github.com/Konodinger/Liquid3D/actions/workflows/codeql.yml/badge.svg)](https://github.com/Konodinger/Liquid3D/actions/workflows/codeql.yml)
 [![3D IISPH Makefile CI (V2)](https://github.com/Konodinger/Liquid3D/actions/workflows/makefile2.yml/badge.svg)](https://github.com/Konodinger/Liquid3D/actions/workflows/makefile2.yml)
 [![3D IISPH Makefile CI (V3)](https://github.com/Konodinger/Liquid3D/actions/workflows/makefile3.yml/badge.svg)](https://github.com/Konodinger/Liquid3D/actions/workflows/makefile3.yml)
 [![3D IISPH CMake (V2)](https://github.com/Konodinger/Liquid3D/actions/workflows/cmake2.yml/badge.svg)](https://github.com/Konodinger/Liquid3D/actions/workflows/cmake2.yml)
