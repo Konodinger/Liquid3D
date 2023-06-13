@@ -1,7 +1,9 @@
 # Liquid3D
 
-[![3D IISPH Makefile CI](https://github.com/Konodinger/Liquid3D/actions/workflows/makefile.yml/badge.svg)](https://github.com/Konodinger/Liquid3D/actions/workflows/makefile.yml)
-[![3D IISPH CMake](https://github.com/Konodinger/Liquid3D/actions/workflows/cmake.yml/badge.svg)](https://github.com/Konodinger/Liquid3D/actions/workflows/cmake.yml)
+[![3D IISPH Makefile CI (V2)](https://github.com/Konodinger/Liquid3D/actions/workflows/makefile2.yml/badge.svg)](https://github.com/Konodinger/Liquid3D/actions/workflows/makefile2.yml)
+[![3D IISPH Makefile CI (V3)](https://github.com/Konodinger/Liquid3D/actions/workflows/makefile3.yml/badge.svg)](https://github.com/Konodinger/Liquid3D/actions/workflows/makefile3.yml)
+[![3D IISPH CMake (V2)](https://github.com/Konodinger/Liquid3D/actions/workflows/cmake2.yml/badge.svg)](https://github.com/Konodinger/Liquid3D/actions/workflows/cmake2.yml)
+[![3D IISPH CMake (V3)](https://github.com/Konodinger/Liquid3D/actions/workflows/cmake3.yml/badge.svg)](https://github.com/Konodinger/Liquid3D/actions/workflows/cmake3.yml)
 
 This is the main repository for our IGR205 project at Telecom Paris.
 
