@@ -11,7 +11,9 @@
 #include "SFB_generator.hpp"
 
 #ifdef _OPENMP
+
 #include <omp.h>
+
 #endif
 
 using namespace std;
@@ -40,8 +42,7 @@ const Real cflNumber = 0.4f;
 
 long unsigned int timesteps = 100;
 const Vec3f gridRes = Vec3f(20, 20, 25);
-const Vec3f initShift = Vec3f(2, 2, 10);
-const Vec3f initBlock = Vec3f(12, 12, 8);
+const InitType initType = InitType::TORUS;
 
 IisphSolver solver(dt, solvNu, solvH, solvDensity, solvG, solvInitP, solvOmega, solvPressureError);
 
@@ -58,7 +59,7 @@ int main(int argc, char **argv) {
 #endif
 
     try {
-        solver.initScene(gridRes, initShift, initBlock);
+        solver.initScene(gridRes, initType);
     } catch (length_error &e) {
         cout << e.what() << endl;
         return 0;
@@ -72,10 +73,10 @@ int main(int argc, char **argv) {
         fpath << "./" << fileOutput << "_" << setw(3) << setfill('0') << fileNum++ << ".txt";
     } while (ifstream(fpath.str()).is_open());
 
-    const unsigned long int nbFluidPart = initBlock.x * initBlock.y * initBlock.z * 8;
+    const unsigned long int nbFluidPart = solver.fluidParticleCount();
     const int nbWallPart = solver.wallParticleCount();
-    vector <Vec3f> partPos((timesteps + 1) * nbFluidPart, Vec3f(0));
-    vector <Vec3f> partVel((timesteps + 1) * nbFluidPart, Vec3f(0));
+    vector<Vec3f> partPos((timesteps + 1) * nbFluidPart, Vec3f(0));
+    vector<Vec3f> partVel((timesteps + 1) * nbFluidPart, Vec3f(0));
 
     for (unsigned long int i = 0; i < nbFluidPart; ++i) {
         partPos[i] = solver.position(i + nbWallPart);
@@ -93,7 +94,7 @@ int main(int argc, char **argv) {
             sfbSim.sfbStep(timeStepDt);
 
             timeElapsed += timeStepDt;
-            Real cflCriterion = cflNumber * solver.getKernel().supportRadius()/solver.maxVelocity().length();
+            Real cflCriterion = cflNumber * solver.getKernel().supportRadius() / solver.maxVelocity().length();
             timeStepDt = min(min(dt, cflCriterion), fileDt - timeElapsed);
 
         }
@@ -115,8 +116,8 @@ int main(int argc, char **argv) {
     for (unsigned int i = 0; i < (timesteps + 1) * nbFluidPart; ++i) {
         file << partPos[i].x << " " << partPos[i].y << " " << partPos[i].z;
 #ifdef __PRINT_VELOCITY__
-         << " " << partVel[i].x << " " << partVel[i].y << " " << partVel[i].z;
-#endif 
+        << " " << partVel[i].x << " " << partVel[i].y << " " << partVel[i].z;
+#endif
         file << "\n";
 
     }

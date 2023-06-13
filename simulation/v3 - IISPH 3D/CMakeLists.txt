@@ -12,7 +12,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 
 project(3DIISPH)
 
-add_executable(${PROJECT_NAME} ./main.cpp ./Vector.hpp ./Kernel.hpp ./IISPH_solver.hpp ./SFB_generator.hpp)
+add_executable(${PROJECT_NAME} ./main.cpp ./Vector.hpp ./Kernel.hpp ./IISPH_solver.hpp ./SFB_generator.hpp ./particleInitialization.hpp)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE ${CMAKE_DL_LIBS})
 

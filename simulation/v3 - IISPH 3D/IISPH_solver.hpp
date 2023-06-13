@@ -10,11 +10,14 @@
 #include <math.h>
 
 #ifdef _OPENMP
+
 #include <omp.h>
+
 #endif
 
 #include "Vector.hpp"
 #include "Kernel.hpp"
+#include "particleInitialization.hpp"
 
 using namespace std;
 
@@ -42,12 +45,7 @@ public:
 
     // assume an arbitrary grid with the size of res_x*res_y; a fluid mass fill up
     // the size of f_width, f_height; each cell is sampled with 2x2 particles.
-    void initScene(
-            const Vec3f gridRes, const Vec3f initShift, const Vec3f initBlock) {
-        if ((initShift.x + initBlock.x + 1 >= gridRes.x) | (initShift.y + initBlock.y + 1 >= gridRes.y) |
-            (initShift.z + initBlock.z + 1 >= gridRes.z)) {
-            throw length_error("Issue with the size and position of the initial particles.");
-        }
+    void initScene(const Vec3f gridRes, InitType initType) {
         _pos.clear();
 
         _resX = gridRes.x;
@@ -115,21 +113,28 @@ public:
 
         obsPart += _nbWallParticles;
 
-        // sample a fluid mass
-        for (int i = initShift.x; i < initBlock.x + initShift.x; ++i) {
-            for (int j = initShift.y; j < initBlock.y + initShift.y; ++j) {
-                for (int k = initShift.z; k < initBlock.z + initShift.z; ++k) {
-                    _pos.push_back(Vec3f(i + 1.25, j + 1.25, k + 1.25));
-                    _pos.push_back(Vec3f(i + 1.75, j + 1.25, k + 1.25));
-                    _pos.push_back(Vec3f(i + 1.25, j + 1.75, k + 1.25));
-                    _pos.push_back(Vec3f(i + 1.75, j + 1.75, k + 1.25));
-                    _pos.push_back(Vec3f(i + 1.25, j + 1.25, k + 1.25));
-                    _pos.push_back(Vec3f(i + 1.75, j + 1.25, k + 1.25));
-                    _pos.push_back(Vec3f(i + 1.25, j + 1.75, k + 1.25));
-                    _pos.push_back(Vec3f(i + 1.75, j + 1.75, k + 1.25));
-                }
-            }
+        const Vec3f blockPosition = Vec3f(0.5f * gridRes.x, 0.5f * gridRes.y, 0.5f * gridRes.z);
+        const Vec3f blockDimensions = Vec3f(0.5f * gridRes.x, 0.5f * gridRes.y, 0.25f * gridRes.z);
+
+        const Vec3f spherePosition = Vec3f(0.5f * gridRes.x, 0.5f * gridRes.y, 0.5f * gridRes.z);
+        const Real sphereRadius = min(gridRes.x, min(gridRes.y, gridRes.z)) / 4.0f;
+
+        const Vec3f torusPosition = Vec3f(0.5f * gridRes.x, 0.5f * gridRes.y, 0.5f * gridRes.z);
+        const Real torusMajorRadius = min(gridRes.x, min(gridRes.y, gridRes.z)) / 4.0f;
+        const Real torusMinorRadius = torusMajorRadius / 3.0f;
+
+        switch (initType) {
+            case InitType::BLOCK:
+                initBlock(blockPosition, blockDimensions, _pos);
+                break;
+            case InitType::SPHERE:
+                initSphere(spherePosition, sphereRadius, _pos);
+                break;
+            case InitType::TORUS:
+                initTorus(torusPosition, torusMajorRadius, torusMinorRadius, _pos);
+                break;
         }
+        std::cout << "Simulating " << fluidParticleCount() << " particles of fluid" << std::endl;
 
 
 
@@ -150,7 +155,7 @@ public:
 
 
         for (int i = 0; i < _resX * _resY * _resZ; i++) {
-            _pidxInGrid.push_back(vector < tIndex > {});
+            _pidxInGrid.push_back(vector<tIndex>{});
         }
 
         buildNeighbor();
@@ -188,7 +193,7 @@ public:
 
     }
 
-    bool particleCollision (const Vec3f &part) const {
+    bool particleCollision(const Vec3f &part) const {
         return (part.x < _left || part.y < _bottom || part.z < _back || part.x > _right ||
                 part.y > _top || part.z > _front);
     }
@@ -200,22 +205,37 @@ public:
     }
 
     const CubicSpline &getKernel() const { return _kernel; }
+
     tIndex particleCount() const { return _pos.size(); }
+
     tIndex wallParticleCount() const { return _nbWallParticles; }
+
     tIndex fluidParticleCount() const { return _pos.size() - _nbWallParticles; }
+
     Real particleMass() const { return _m0; }
-    const vector <tIndex> &gridParticles(const tIndex i, const tIndex j, const tIndex k) const {
+
+    const vector<tIndex> &gridParticles(const tIndex i, const tIndex j, const tIndex k) const {
         return _pidxInGrid[idx1d(i, j, k)];
     };
-    const Vec3f &gravity() const {return _g;}
+
+    const Vec3f &gravity() const { return _g; }
+
     const Vec3f &position(const tIndex i) const { return _pos[i]; }
+
     const Vec3f &velocity(const tIndex i) const { return _vel[i]; }
+
     const Vec3f &acceleration(const tIndex i) const { return _acc[i]; }
+
     Real pressure(const tIndex i) const { return _p[i]; }
+
     Real density(const tIndex i) const { return _d[i]; }
-    const Vec3f &maxVelocity() const {return maxVel; }
+
+    const Vec3f &maxVelocity() const { return maxVel; }
+
     int resX() const { return _resX; }
+
     int resY() const { return _resY; }
+
     int resZ() const { return _resZ; }
 
 private:
@@ -487,7 +507,7 @@ private:
         maxVel = Vec3f(0);
 #ifdef __DEBUG5__
         tIndex maxInd = 0;
-#endif        
+#endif
         for (tIndex i = _nbWallParticles; i < particleCount(); ++i) {
             _vel[i] += _dt * _acc[i];
             if (_vel[i].lengthSquare() > maxVel.lengthSquare()) {
@@ -528,7 +548,7 @@ private:
 
     inline tIndex idx1d(const int i, const int j, const int k) const { return i + j * resX() + k * resX() * resY(); }
 
-    vector <vector<tIndex>> _pidxInGrid; // will help you find neighbor particles
+    vector<vector<tIndex>> _pidxInGrid; // will help you find neighbor particles
 
     const CubicSpline _kernel;
     const Real _rad;
@@ -550,20 +570,20 @@ private:
     Real _m0;                     // rest mass
 
     // particle data
-    vector <Vec3f> _pos;      // position
-    vector <Vec3f> _vel;      // velocity
-    vector <Vec3f> _acc;      // acceleration
-    vector <Real> _p;         // pressure
-    vector <Real> _d;         // density
+    vector<Vec3f> _pos;      // position
+    vector<Vec3f> _vel;      // velocity
+    vector<Vec3f> _acc;      // acceleration
+    vector<Real> _p;         // pressure
+    vector<Real> _d;         // density
     Vec3f maxVel;             //maximum velocity
 
     //IISPH specific data
-    vector <Vec3f> _interVel; // intermediate velocity (without pressure force)
-    vector <Real> _interD;    // intermediate density (with _predVel)
-    vector <Real> _a_ii;      // diagonal coef of the SOE
-    vector <Vec3f> _d_ii;     // first level coef of the SOE
-    vector <Vec3f> _c_i;      // second level coef of the SOE
-    vector <Real> _predP;     // predicted pressure
+    vector<Vec3f> _interVel; // intermediate velocity (without pressure force)
+    vector<Real> _interD;    // intermediate density (with _predVel)
+    vector<Real> _a_ii;      // diagonal coef of the SOE
+    vector<Vec3f> _d_ii;     // first level coef of the SOE
+    vector<Vec3f> _c_i;      // second level coef of the SOE
+    vector<Real> _predP;     // predicted pressure
     const Real _initP;                  // initial pressure for Jacobi method. Must be between 0 and 1
     const Real _omega;                  // relaxation coefficient. Must be between 0 and 1
     const Real _pressureError;           // maximum pressure variation rate serving as a limit of the Jacobi method
