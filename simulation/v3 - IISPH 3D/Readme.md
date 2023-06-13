@@ -36,3 +36,15 @@ or
 ```bash
 make run
 ```
+
+You can use the following command arguments:
+
+`--help`, `-h` Display the help message
+
+`--output <value>`, `-o <value>` Set the output file name (default: liquidPointCloud)
+
+`--timesteps <value>`, `-t <value>` Set the number of timesteps (default: 50)
+
+`--init <value>`, `-i <value>` Set the initial particle configuration (default: sphere) (torus, block, sphere)
+
+`--resolution <value>`, `-r <value>` Set the resolution of the scene (default: 1.0)

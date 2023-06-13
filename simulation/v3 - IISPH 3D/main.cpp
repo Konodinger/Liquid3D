@@ -60,8 +60,10 @@ int main(int argc, char **argv) {
         cout << "\t--output <value>, -o <value>\t Set the output file name (default: liquidPointCloud)" << endl;
         cout << "\t--timesteps <value>, -t <value>\t Set the number of timesteps (default: " << DEFAULT_NB_TIMESTEPS
              << ")" << endl;
-        cout << "\t--init <value>, -i <value>\t Set the initial particle configuration (default: sphere) (torus, block, sphere)" << endl;
-        cout << "\t--resolution <value>, -r <value>\t Set the scale of the scene (default: 1.0)" << endl;
+        cout
+                << "\t--init <value>, -i <value>\t Set the initial particle configuration (default: sphere) (torus, block, sphere)"
+                << endl;
+        cout << "\t--resolution <value>, -r <value>\t Set the resolution of the scene (default: 1.0)" << endl;
 
         return 0;
     }
