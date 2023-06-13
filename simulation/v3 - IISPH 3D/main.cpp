@@ -9,6 +9,7 @@
 #include <fstream>
 #include "IISPH_solver.hpp"
 #include "SFB_generator.hpp"
+#include "utils.hpp"
 
 #ifdef _OPENMP
 
@@ -40,9 +41,11 @@ const Real dt = 0.008f;
 const Real fileDt = nbConsecutiveSteps * dt;
 const Real cflNumber = 0.4f;
 
-long unsigned int timesteps = 100;
-const Vec3f gridRes = Vec3f(20, 20, 25);
-const InitType initType = InitType::TORUS;
+#define DEFAULT_NB_TIMESTEPS 50
+#define DEFAULT_INIT_TYPE InitType::SPHERE;
+
+#define DEFAULT_RESOLUTION 1.0f
+Vec3f gridRes = Vec3f(20, 20, 25);
 
 IisphSolver solver(dt, solvNu, solvH, solvDensity, solvG, solvInitP, solvOmega, solvPressureError);
 
@@ -50,6 +53,72 @@ sfbSimulation sfbSim(&solver, solvH, dt, minBubbleNeighbor, minFoamNeighbor);
 
 
 int main(int argc, char **argv) {
+    if (cmdOptionExists(argv, argv + argc, "--help") || cmdOptionExists(argv, argv + argc, "-h")) {
+        cout << "Usage: ./main [options]" << endl;
+        cout << "Options:" << endl;
+        cout << "\t--help, -h\t Display this help message" << endl;
+        cout << "\t--output <value>, -o <value>\t Set the output file name (default: liquidPointCloud)" << endl;
+        cout << "\t--timesteps <value>, -t <value>\t Set the number of timesteps (default: " << DEFAULT_NB_TIMESTEPS
+             << ")" << endl;
+        cout << "\t--init <value>, -i <value>\t Set the initial particle configuration (default: sphere) (torus, block, sphere)" << endl;
+        cout << "\t--resolution <value>, -r <value>\t Set the scale of the scene (default: 1.0)" << endl;
+
+        return 0;
+    }
+
+    unsigned long int timesteps = DEFAULT_NB_TIMESTEPS;
+    char *timestepsCmdArg = getCmdOption(argv, argv + argc, "--timesteps");
+    char *timestepsCmdArgShort = getCmdOption(argv, argv + argc, "-t");
+    if (timestepsCmdArg) timesteps = atoi(timestepsCmdArg);
+    else if (timestepsCmdArgShort) timesteps = atoi(timestepsCmdArgShort);
+
+    InitType initType = DEFAULT_INIT_TYPE;
+    char *initTypeCmdArg = getCmdOption(argv, argv + argc, "--init");
+    char *initTypeCmdArgShort = getCmdOption(argv, argv + argc, "-i");
+    std::string initTypeStr;
+    if (initTypeCmdArg) initTypeStr = initTypeCmdArg;
+    else if (initTypeCmdArgShort) initTypeStr = initTypeCmdArgShort;
+    if (!initTypeStr.empty()) {
+        // sphere
+        if (initTypeStr == "sphere") {
+            initType = InitType::SPHERE;
+        } else if (initTypeStr == "torus") {
+            initType = InitType::TORUS;
+        } else if (initTypeStr == "block") {
+            initType = InitType::BLOCK;
+        } else {
+            cout << "Unknown initial scene type: " << initTypeStr << endl;
+            return 0;
+        }
+    }
+
+    stringstream fpath;
+    ofstream file;
+
+    char *outputCmdArg = getCmdOption(argv, argv + argc, "--output");
+    char *outputCmdArgShort = getCmdOption(argv, argv + argc, "-o");
+    if (outputCmdArg) {
+        fileOutput = outputCmdArg;
+        fpath << "./" << fileOutput << ".txt";
+    } else if (outputCmdArgShort) {
+        fileOutput = outputCmdArgShort;
+        fpath << "./" << fileOutput << ".txt";
+    } else {
+        int fileNum = 1;
+        do {
+            fpath.str(string());
+            fpath << "./" << fileOutput << "_" << setw(3) << setfill('0') << fileNum++ << ".txt";
+        } while (ifstream(fpath.str()).is_open());
+    }
+
+    char *resolutionCmdArg = getCmdOption(argv, argv + argc, "--resolution");
+    char *resolutionCmdArgShort = getCmdOption(argv, argv + argc, "-r");
+    Real resolution;
+    if (resolutionCmdArg) resolution = atof(resolutionCmdArg);
+    else if (resolutionCmdArgShort) resolution = atof(resolutionCmdArgShort);
+    else resolution = DEFAULT_RESOLUTION;
+
+    gridRes *= resolution;
 
     // if openmp is enabled, we print the number of threads used
 #ifdef _OPENMP
@@ -64,14 +133,6 @@ int main(int argc, char **argv) {
         cout << e.what() << endl;
         return 0;
     }
-
-    ofstream file;
-    stringstream fpath;
-    int fileNum = 1;
-    do {
-        fpath.str(string());
-        fpath << "./" << fileOutput << "_" << setw(3) << setfill('0') << fileNum++ << ".txt";
-    } while (ifstream(fpath.str()).is_open());
 
     const unsigned long int nbFluidPart = solver.fluidParticleCount();
     const int nbWallPart = solver.wallParticleCount();
