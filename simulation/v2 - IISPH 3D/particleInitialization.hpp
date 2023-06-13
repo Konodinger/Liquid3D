@@ -13,8 +13,6 @@ enum class InitType {
 };
 
 void initBlock(Vec3f blockPosition, Vec3f blockDimensions, std::vector<Vec3f> &particlePositions) {
-    unsigned int initialSize = particlePositions.size();
-
     const int minX = blockPosition.x - blockDimensions.x / 2.0f;
     const int maxX = blockPosition.x + blockDimensions.x / 2.0f;
 
@@ -41,8 +39,6 @@ void initBlock(Vec3f blockPosition, Vec3f blockDimensions, std::vector<Vec3f> &p
 }
 
 void initSphere(Vec3f spherePosition, float sphereRadius, std::vector<Vec3f> &particlePositions) {
-    unsigned int initialSize = particlePositions.size();
-
     const int minX = spherePosition.x - sphereRadius;
     const int maxX = spherePosition.x + sphereRadius;
 
@@ -72,8 +68,6 @@ void initSphere(Vec3f spherePosition, float sphereRadius, std::vector<Vec3f> &pa
 }
 
 void initTorus(Vec3f torusPosition, float majorRadius, float minorRadius, std::vector<Vec3f> &particlePositions) {
-    unsigned int initialSize = particlePositions.size();
-
     const int minX = torusPosition.x - majorRadius - minorRadius;
     const int maxX = torusPosition.x + majorRadius + minorRadius;
 
