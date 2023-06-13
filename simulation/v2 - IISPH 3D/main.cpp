@@ -9,7 +9,9 @@
 #include "IISPH_solver.hpp"
 
 #ifdef _OPENMP
+
 #include <omp.h>
+
 #endif
 
 using namespace std;
@@ -69,7 +71,7 @@ int main(int argc, char **argv) {
     for (unsigned long int i = 0; i < nbFluidPart; ++i) {
         partPos[i] = solver.position(i + nbWallPart);
     }
-    
+
     for (unsigned int t = 1; t < timesteps; ++t) {
 #ifdef __DEBUG1__
         cout << "Step number " << t << endl;
@@ -80,7 +82,7 @@ int main(int argc, char **argv) {
             solver.update(timeStepDt);
 
             timeElapsed += timeStepDt;
-            Real cflCriterion = cflNumber * solver.getKernel().supportRadius()/solver.maxVelocity().length();
+            Real cflCriterion = cflNumber * solver.getKernel().supportRadius() / solver.maxVelocity().length();
             timeStepDt = min(min(dt, cflCriterion), fileDt - timeElapsed);
 
         }

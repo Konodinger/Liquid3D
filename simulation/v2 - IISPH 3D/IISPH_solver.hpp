@@ -18,6 +18,7 @@
 #endif
 
 #include "Vector.hpp"
+#include "particleInitialization.hpp"
 
 using namespace std;
 
@@ -100,9 +101,9 @@ public:
         }
         _pos.clear();
 
-        _resX = (int)gridRes.x;
-        _resY = (int)gridRes.y;
-        _resZ = (int)gridRes.z;
+        _resX = (int) gridRes.x;
+        _resY = (int) gridRes.y;
+        _resZ = (int) gridRes.z;
 
         // set wall for boundary
         _left = 0.5 * _h;
@@ -165,23 +166,7 @@ public:
 
         obsPart += _nbWallParticles;
 
-        // sample a fluid mass
-        for (int i = initShift.x; i < initBlock.x + initShift.x; ++i) {
-            for (int j = initShift.y; j < initBlock.y + initShift.y; ++j) {
-                for (int k = initShift.z; k < initBlock.z + initShift.z; ++k) {
-                    _pos.push_back(Vec3f(i + 1.25, j + 1.25, k + 1.25));
-                    _pos.push_back(Vec3f(i + 1.75, j + 1.25, k + 1.25));
-                    _pos.push_back(Vec3f(i + 1.25, j + 1.75, k + 1.25));
-                    _pos.push_back(Vec3f(i + 1.75, j + 1.75, k + 1.25));
-                    _pos.push_back(Vec3f(i + 1.25, j + 1.25, k + 1.25));
-                    _pos.push_back(Vec3f(i + 1.75, j + 1.25, k + 1.25));
-                    _pos.push_back(Vec3f(i + 1.25, j + 1.75, k + 1.25));
-                    _pos.push_back(Vec3f(i + 1.75, j + 1.75, k + 1.25));
-                }
-            }
-        }
-
-
+        initCube(initShift, initBlock, _pos);
 
         // make sure for the other particle quantities
         _vel = vector<Vec3f>(_pos.size(), Vec3f(0, 0, 0));
@@ -240,20 +225,33 @@ public:
     }
 
     const CubicSpline &getKernel() const { return _kernel; }
+
     tIndex particleCount() const { return _pos.size(); }
+
     tIndex wallParticleCount() const { return _nbWallParticles; }
+
     tIndex fluidParticleCount() const { return _pos.size() - _nbWallParticles; }
+
     const vector<tIndex> &gridParticles(const tIndex i, const tIndex j, const tIndex k) {
         return _pidxInGrid[idx1d(i, j, k)];
     };
+
     const Vec3f &position(const tIndex i) const { return _pos[i]; }
+
     const Vec3f &velocity(const tIndex i) const { return _vel[i]; }
+
     const Vec3f &acceleration(const tIndex i) const { return _acc[i]; }
+
     Real pressure(const tIndex i) const { return _p[i]; }
+
     Real density(const tIndex i) const { return _d[i]; }
-    const Vec3f &maxVelocity() const {return maxVel; }
+
+    const Vec3f &maxVelocity() const { return maxVel; }
+
     int resX() const { return _resX; }
+
     int resY() const { return _resY; }
+
     int resZ() const { return _resZ; }
 
 private:
