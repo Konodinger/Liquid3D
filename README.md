@@ -15,7 +15,7 @@ The goal of this project is to simulate fluids using the IISPH technique in orde
 
 ### Simulation
 
-The 3D IISPH Simulation can be built using CMake or using Make whichever you prefer. The 2D IISPH simulation can only be built using Make.
+The 3D IISPH Simulation can be built using CMake or using Make whichever you prefer. The 2D IISPH simulation can only be built using Make. Detailled information is available in the `Readme.md` of each simulation folder.
 
 ### OpenVDB C++ bridge
 
