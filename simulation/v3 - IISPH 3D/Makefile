@@ -19,7 +19,7 @@ SRC = main.cpp
 OBJ = $(SRC:.cpp=.o)
 
 # Header files
-HDR = IISPH_solver.hpp Vector.hpp
+HDR = IISPH_solver.hpp Vector.hpp particleInitialization.hpp
 
 # Compile
 $(EXEC): $(OBJ)

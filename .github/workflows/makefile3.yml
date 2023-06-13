@@ -1,4 +1,4 @@
-name: 3D IISPH Makefile CI
+name: 3D IISPH Makefile CI (V3)
 
 on:
   push:
@@ -15,4 +15,4 @@ jobs:
     - uses: actions/checkout@v3
 
     - name: Build
-      run: cd simulation/v2\ -\ IISPH\ 3D && make
+      run: cd simulation/v3\ -\ IISPH\ 3D && make
