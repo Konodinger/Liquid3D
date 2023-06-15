@@ -131,6 +131,7 @@ int main(int argc, char **argv) {
 
     try {
         solver.initScene(gridRes, initType);
+        sfbSim.initScene();
     } catch (length_error &e) {
         cout << e.what() << endl;
         return 0;

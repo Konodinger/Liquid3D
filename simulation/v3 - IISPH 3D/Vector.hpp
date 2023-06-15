@@ -131,7 +131,7 @@ public:
     return Vector3(*this).increase(di, d);
   }
 
-  Vector3& normalize() { return (x==0 && y==0 && z==0) ? (*this) : (*this)/=length(); }
+  Vector3& normalize() { return (length() == 0) ? (*this) : (*this)/=length(); }
   Vector3 normalized() const { return Vector3(*this).normalize(); }
 
   T dotProduct(const Vector3 &r) const { return x*r.x + y*r.y + z*r.z; }

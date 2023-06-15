@@ -42,16 +42,12 @@ public:
         const IisphSolver * solver, const Real h = 0.5f, const Real dt = 0.0005,
                 const int minBubbleNeighbor = 20, const int minFoamNeighbor = 6,
                 const Real kb = 0.3f, const Real kd = 0.7f) :
-            _solver(solver), _resX(_solver->resX()),
-            _resY(_solver->resY()), _resZ(_solver->resZ()),
+            _solver(solver),
             _lKernel(h), _cKernel(h), _sr(2.f*h), _dt(dt),
             _minBubbleNeighbor(minBubbleNeighbor), _minFoamNeighbor(minFoamNeighbor),
             _kb(kb), _kd(kd)
         {
             sfbList = list<sfb>();
-            for (int i = 0; i < _resX * _resY * _resZ; i++) {
-                _sfbIndexInGrid.push_back(vector <tIndex> {});
-            }
             
         };
 
@@ -59,16 +55,26 @@ public:
         _dt = dt;
         //Step 1: advection and dissolution.
         computeNeighbor();
-        cout << sfbList.size() << endl;
         computeVelocityPosition();
 
         //Step 2: formation.
         sfbFormation();
+        cout << sfbList.size() << " diffuse particles." << endl;
     };
+
+    void initScene() {
+        _resX = _solver->resX();
+        _resY = _solver->resY();
+        _resZ = _solver->resZ();
+
+        for (int i = 0; i < _resX * _resY * _resZ; i++) {
+            _sfbIndexInGrid.push_back(vector <tIndex> {});
+        }
+    }
 
 private:
     void computeNeighbor() {
-        for (sfb diffuse : sfbList) {
+        for (sfb &diffuse : sfbList) {
             diffuse.fluidNeighbor = vector<tIndex>();
 
             for (tIndex _kernelX = max(0, (int) floor(diffuse.position.x - _sr));
@@ -87,21 +93,31 @@ private:
                 }
             }
 
+            // if((diffuse.fluidNeighbor.size() > 0) && (diffuse.fluidNeighbor.size() != 4)) {
+            //     cout << diffuse.fluidNeighbor.size() << endl;
+            // }
+
             if (diffuse.fluidNeighbor.size() >= _minBubbleNeighbor) {
                 diffuse.nature = BUBBLE;
+                cout << "BUBBLE!" <<endl;
             } else if (diffuse.fluidNeighbor.size() >= _minFoamNeighbor) {
                 diffuse.nature = FOAM;
                 diffuse.lifetime -= _dt;
+                cout << "FOAM!";
             } else {
                 diffuse.nature = SPRAY;
+                diffuse.lifetime = 0;
+                //cout << "SPRAY!";
             }
         }
 
         for (list<sfb>::iterator it = sfbList.begin(); it != sfbList.end();) {
-            if (((*it).nature == FOAM) & ((*it).lifetime <= 0.f)) {
-                cout << "DEAD";
+            if ((*it).lifetime <= 0.f) {
+                //cout << "DEAD";
                 it = sfbList.erase(it);
             } else {
+                (*it).lifetime = 0.f;
+                //cout << (*it).lifetime;
                 ++it;
             }
         }
@@ -137,8 +153,8 @@ private:
         }
 
     };
+
     void sfbFormation() {
-        sfbList.push_back(sfb());
 
         for (tIndex i = (_solver->wallParticleCount()); i < _solver->particleCount(); ++i) {
             Vec3f posI = _solver->position(i);
@@ -149,7 +165,6 @@ private:
             Vec3f normal(0);
             Real cumul = 0.;
             //À COMPLETER
-
             for (tIndex _kernelX = max(0, (int) floor(posI.x - _sr));
                  _kernelX < min(_resX, (int) floor(posI.x + _sr + 1)); ++_kernelX) {
                 for (tIndex _kernelY = max(0, (int) floor(posI.y - _sr));
@@ -159,16 +174,29 @@ private:
                         for (tIndex j: _solver->gridParticles(_kernelX, _kernelY, _kernelZ)) {
 
                             Vec3f pos_ij = _solver->position(j) - posI;
-                            Vec3f vel_ij = _solver->velocity(j) - _solver->velocity(i);
-                            scaVelDiff += vel_ij.length() * (1 - vel_ij.normalized().dotProduct(pos_ij.normalized())) * _lKernel.w(pos_ij);
+                            if (pos_ij.length() > 1e-5) {
+                                Vec3f vel_ij = _solver->velocity(j) - _solver->velocity(i);
+                                scaVelDiff += vel_ij.length() * (1 - vel_ij.normalized().dotProduct(pos_ij.normalized())) * _lKernel.w(pos_ij);
 
-                            normal -= pos_ij;
+                                normal -= pos_ij;
+                            }
                         }
                     }
                 }
             }
 
             Real trappedPotential = _clamp(scaVelDiff, _tauTrappedMin, _tauTrappedMax);
+            Real crestPotential = 0.f;
+
+            int particleGen = int(_dt * kineticPotential * (trappedPotential*_generateTrapped + crestPotential*_generateCrest));
+            if (i == (_solver->wallParticleCount())) {
+                cout << "Energy " << kineticPotential << " Scaled velocity dif " << scaVelDiff << " Generate " << particleGen << " particles." << endl;
+            }
+
+            for (int d = 0; d < particleGen; ++d) {
+                sfbList.push_back(sfb());
+            }
+
         }
     };
 
@@ -192,7 +220,7 @@ private:
     inline tIndex idx1d(const int i, const int j, const int k) { return i + j * _resX + k * _resX * _resY; }
     
     const IisphSolver * _solver;
-    const int _resX, _resY, _resZ;
+    int _resX, _resY, _resZ;
     const LinearKernel _lKernel;
     const CubicSpline _cKernel;
     const Real _sr;
@@ -209,10 +237,10 @@ private:
     //Generation parameters.
     const Real _tauTrappedMin = 0.;
     const Real _tauTrappedMax = 1.;
-    const Real _generateTrapped = 1.;
+    const Real _generateTrapped = 1000.;
     const Real _tauCrestMin = 0.;
     const Real _tauCrestMax = 1.;
-    const Real _generateCrest = 1.;
+    const Real _generateCrest = 100.;
     const Real _tauEnergyMin = 0.;
     const Real _tauEnergyMax = 1.;
 };

@@ -129,7 +129,7 @@ public:
     return Vector2(*this).increase(di, d);
   }
 
-  Vector2& normalize() { return (x==0 && y==0) ? (*this) : (*this)/=length(); }
+  Vector2& normalize() { return (length() == 0) ? (*this) : (*this)/=length(); }
   Vector2 normalized() const { return Vector2(*this).normalize(); }
 
   T dotProduct(const Vector2 &r) const { return x*r.x + y*r.y; }
