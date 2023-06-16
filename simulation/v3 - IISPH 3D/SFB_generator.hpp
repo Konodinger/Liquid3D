@@ -9,9 +9,14 @@
 #include <list>
 #include <cmath>
 #include <math.h>
+#include <random>
 
 #ifdef _OPENMP
 #include <omp.h>
+#endif
+
+#ifndef M_PI
+#define M_PI 3.141592
 #endif
 
 #include "Vector.hpp"
@@ -43,11 +48,15 @@ public:
                 const int minBubbleNeighbor = 20, const int minFoamNeighbor = 6,
                 const Real kb = 0.3f, const Real kd = 0.7f) :
             _solver(solver),
-            _lKernel(h), _cKernel(h), _sr(2.f*h), _dt(dt),
+            _lKernel(h), _cKernel(h), _sr(2*h), _dt(dt),
             _minBubbleNeighbor(minBubbleNeighbor), _minFoamNeighbor(minFoamNeighbor),
-            _kb(kb), _kd(kd)
+            _kb(kb), _kd(kd), _partRad(h/2), _diffuseTimer(dt*5)
         {
             sfbList = list<sfb>();
+
+        random_device _rd;
+        mt19937 _gen(_rd());
+        uniform_real_distribution<> _randU(0.f, 1.f);
             
         };
 
@@ -71,6 +80,10 @@ public:
             _sfbIndexInGrid.push_back(vector <tIndex> {});
         }
     }
+
+    tIndex particleCount() const { return sfbList.size(); }
+
+    const list<sfb> *diffuseList() const { return &sfbList; }
 
 private:
     void computeNeighbor() {
@@ -99,25 +112,19 @@ private:
 
             if (diffuse.fluidNeighbor.size() >= _minBubbleNeighbor) {
                 diffuse.nature = BUBBLE;
-                cout << "BUBBLE!" <<endl;
             } else if (diffuse.fluidNeighbor.size() >= _minFoamNeighbor) {
                 diffuse.nature = FOAM;
                 diffuse.lifetime -= _dt;
-                cout << "FOAM!";
             } else {
                 diffuse.nature = SPRAY;
-                diffuse.lifetime = 0;
-                //cout << "SPRAY!";
+                diffuse.lifetime -= _dt*_sprayResistance;
             }
         }
 
         for (list<sfb>::iterator it = sfbList.begin(); it != sfbList.end();) {
             if ((*it).lifetime <= 0.f) {
-                //cout << "DEAD";
                 it = sfbList.erase(it);
             } else {
-                (*it).lifetime = 0.f;
-                //cout << (*it).lifetime;
                 ++it;
             }
         }
@@ -158,7 +165,8 @@ private:
 
         for (tIndex i = (_solver->wallParticleCount()); i < _solver->particleCount(); ++i) {
             Vec3f posI = _solver->position(i);
-            Real kineticPotential = _clamp(0.5*_solver->particleMass()*_solver->velocity(i).lengthSquare(), _tauEnergyMin, _tauEnergyMax);
+            Vec3f velI = _solver->velocity(i);
+            Real kineticPotential = _clamp(0.5*_solver->particleMass()*velI.lengthSquare(), _tauEnergyMin, _tauEnergyMax);
             
             Real scaVelDiff = 0.f;
 
@@ -175,7 +183,7 @@ private:
 
                             Vec3f pos_ij = _solver->position(j) - posI;
                             if (pos_ij.length() > 1e-5) {
-                                Vec3f vel_ij = _solver->velocity(j) - _solver->velocity(i);
+                                Vec3f vel_ij = _solver->velocity(j) - velI;
                                 scaVelDiff += vel_ij.length() * (1 - vel_ij.normalized().dotProduct(pos_ij.normalized())) * _lKernel.w(pos_ij);
 
                                 normal -= pos_ij;
@@ -192,9 +200,36 @@ private:
             if (i == (_solver->wallParticleCount())) {
                 cout << "Energy " << kineticPotential << " Scaled velocity dif " << scaVelDiff << " Generate " << particleGen << " particles." << endl;
             }
+            
+            if (particleGen > 0) {
+                Vec3f partXaxis(1.f, 0.f, 0.f);
+                Vec3f partYaxis(0.f, 1.f, 0.f);
+                Vec3f partZaxis(0.f, 0.f, 1.f);
+                if (velI.length() != 0.f) {
+                    Vec3f partZaxis = velI.normalized();
+                    Vec3f partXaxis = partZaxis.crossProduct(Vec3f(1.f, 0.f, 0.f)).normalize();
+                    if (partXaxis.length() < 1e-9) {
+                        partXaxis = partZaxis.crossProduct(Vec3f(0.f, 1.f, 0.f)).normalize();
+                    }
+                    partYaxis = partZaxis.crossProduct(partXaxis).normalize();
 
-            for (int d = 0; d < particleGen; ++d) {
-                sfbList.push_back(sfb());
+                }
+
+                for (int d = 0; d < particleGen; ++d) {
+                    
+                    Real randR = _randU(_gen);
+                    Real randT = _randU(_gen);
+                    Real randH = _randU(_gen);
+                    Real r = _partRad*sqrtf(randR);
+                    Real theta = randT*M_PI*2;
+                    Real h = randH*_dt*velI.length();
+
+                    sfb diffPart;
+                    diffPart.position = posI + r*cosf(theta)*partXaxis + r*sinf(theta)*partYaxis + h*partZaxis;
+                    diffPart.velocity = velI + r*cosf(theta)*partXaxis + r*sin(theta)*partYaxis;
+                    diffPart.lifetime = _diffuseTimer;
+                    sfbList.push_back(diffPart);
+                }
             }
 
         }
@@ -235,14 +270,20 @@ private:
     const Real _kd;
 
     //Generation parameters.
-    const Real _tauTrappedMin = 0.;
-    const Real _tauTrappedMax = 1.;
-    const Real _generateTrapped = 1000.;
+    const Real _partRad;
+    const Real _tauTrappedMin = 10.;
+    const Real _tauTrappedMax = 100.;
+    const Real _generateTrapped = 150.;
     const Real _tauCrestMin = 0.;
     const Real _tauCrestMax = 1.;
     const Real _generateCrest = 100.;
-    const Real _tauEnergyMin = 0.;
-    const Real _tauEnergyMax = 1.;
+    const Real _tauEnergyMin = 5.;
+    const Real _tauEnergyMax = 50.;
+    const Real _diffuseTimer;
+    const Real _sprayResistance = 0.2;
+
+    mt19937 _gen;
+    uniform_real_distribution<> _randU;
 };
 
 #endif

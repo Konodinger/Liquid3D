@@ -135,6 +135,11 @@ public:
   Vector3 normalized() const { return Vector3(*this).normalize(); }
 
   T dotProduct(const Vector3 &r) const { return x*r.x + y*r.y + z*r.z; }
+  Vector3 crossProduct(const Vector3 &r) const {
+    return Vector3(y*r.z - z*r.y,
+                  z*r.x - x*r.z,
+                  x*r.y - y*r.x);
+  }
 
   T length() const { return sqrt(lengthSquare()); }
   T lengthSquare() const { return x*x + y*y + z*z; }

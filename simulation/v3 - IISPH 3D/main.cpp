@@ -19,7 +19,8 @@
 
 using namespace std;
 
-string fileOutput = "liquidPointCloud";
+string fileOutputFluid = "liquidPointCloud";
+string fileOutputDiffuse = "diffusePointCloud";
 
 //Simulation parameters
 const Real solvNu = 0.02;
@@ -94,23 +95,26 @@ int main(int argc, char **argv) {
         }
     }
 
-    stringstream fpath;
+    stringstream fpathFluid;
+    stringstream fpathDiffuse;
     ofstream file;
 
     char *outputCmdArg = getCmdOption(argv, argv + argc, "--output");
     char *outputCmdArgShort = getCmdOption(argv, argv + argc, "-o");
     if (outputCmdArg) {
-        fileOutput = outputCmdArg;
-        fpath << "./" << fileOutput << ".txt";
+        fileOutputFluid = outputCmdArg;
+        fpathFluid << "./" << fileOutputFluid << ".txt";
     } else if (outputCmdArgShort) {
-        fileOutput = outputCmdArgShort;
-        fpath << "./" << fileOutput << ".txt";
+        fileOutputFluid = outputCmdArgShort;
+        fpathFluid << "./" << fileOutputFluid << ".txt";
     } else {
-        int fileNum = 1;
+        int fileNum = 0;
         do {
-            fpath.str(string());
-            fpath << "./" << fileOutput << "_" << setw(3) << setfill('0') << fileNum++ << ".txt";
-        } while (ifstream(fpath.str()).is_open());
+            fpathFluid.str(string());
+            fpathFluid << "./" << fileOutputFluid << "_" << setw(3) << setfill('0') << ++fileNum << ".txt";
+            fpathDiffuse.str(string());
+            fpathDiffuse << "./" << fileOutputFluid << "Diffuse_" << setw(3) << setfill('0') << fileNum << ".txt";
+        } while (ifstream(fpathFluid.str()).is_open());
     }
 
     char *resolutionCmdArg = getCmdOption(argv, argv + argc, "--resolution");
@@ -141,6 +145,9 @@ int main(int argc, char **argv) {
     const int nbWallPart = solver.wallParticleCount();
     vector<Vec3f> partPos((timesteps + 1) * nbFluidPart, Vec3f(0));
     vector<Vec3f> partVel((timesteps + 1) * nbFluidPart, Vec3f(0));
+    vector<vector<Vec3f>> diffPos(timesteps + 1, vector<Vec3f>(0));
+
+    const list<sfb> *diffuseList = sfbSim.diffuseList();
 
     for (unsigned long int i = 0; i < nbFluidPart; ++i) {
         partPos[i] = solver.position(i + nbWallPart);
@@ -167,11 +174,19 @@ int main(int argc, char **argv) {
             partPos[t * nbFluidPart + i] = solver.position(i + nbWallPart);
             partVel[t * nbFluidPart + i] = solver.velocity(i + nbWallPart);
         }
+
+        vector<Vec3f> diffPosStep;
+        for (const sfb &diffuse : (*diffuseList)) {
+            diffPosStep.push_back(diffuse.position);
+        }
+
+        diffPos[t] = diffPosStep;
     }
 
     cout << "End of the simulation, saving data..." << endl;
 
-    file.open(fpath.str());
+    //Fluid part.
+    file.open(fpathFluid.str());
     file << gridRes.x << " " << gridRes.y << " " << gridRes.z << "\n";
     file << dt * nbConsecutiveSteps << " " << timesteps + 1 << "\n";
 
@@ -185,9 +200,24 @@ int main(int argc, char **argv) {
         file << "\n";
 
     }
-
-    cout << " > Quit" << endl;
     file.close();
 
+    //Diffuse part.
+    file.open(fpathDiffuse.str());
+
+    file << gridRes.x << " " << gridRes.y << " " << gridRes.z << "\n";
+    file << dt * nbConsecutiveSteps << " " << timesteps + 1 << "\n";
+
+    for (unsigned int i = 0; i <= timesteps; ++i) {
+        file << diffPos[i].size() << "\n";
+        for (unsigned long long int j = 0; j < diffPos[i].size(); ++j) {
+            file << diffPos[i][j].x << " " << diffPos[i][j].y << " " << diffPos[i][j].z << "\n";
+        }
+    }
+
+    file.close();
+
+
+    cout << " > Quit" << endl;
     return 0;
 }
