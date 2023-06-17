@@ -125,6 +125,7 @@ int main(int argc, char **argv) {
     else resolution = DEFAULT_RESOLUTION;
 
     gridRes *= resolution;
+    solver.scaleGarvity(resolution);
 
     // if openmp is enabled, we print the number of threads used
 #ifdef _OPENMP
@@ -176,7 +177,7 @@ int main(int argc, char **argv) {
         }
 
         vector<Vec3f> diffPosStep;
-        for (const sfb &diffuse : (*diffuseList)) {
+        for (const sfb &diffuse: (*diffuseList)) {
             diffPosStep.push_back(diffuse.position);
         }
 
@@ -190,14 +191,16 @@ int main(int argc, char **argv) {
     file << gridRes.x << " " << gridRes.y << " " << gridRes.z << "\n";
     file << dt * nbConsecutiveSteps << " " << timesteps + 1 << "\n";
 
-    file << nbFluidPart << "\n";
-
-    for (unsigned int i = 0; i < (timesteps + 1) * nbFluidPart; ++i) {
-        file << partPos[i].x << " " << partPos[i].y << " " << partPos[i].z;
+    for (unsigned int i = 0; i < (timesteps + 1); ++i) {
+        file << nbFluidPart << "\n";
+        for (unsigned long int j = 0; j < nbFluidPart; ++j) {
+            unsigned long int index = i * nbFluidPart + j;
+            file << partPos[index].x << " " << partPos[index].y << " " << partPos[index].z;
 #ifdef __PRINT_VELOCITY__
-        << " " << partVel[i].x << " " << partVel[i].y << " " << partVel[i].z;
+            << " " << partVel[index].x << " " << partVel[index].y << " " << partVel[index].z;
 #endif
-        file << "\n";
+            file << "\n";
+        }
 
     }
     file.close();

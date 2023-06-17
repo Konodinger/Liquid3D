@@ -53,6 +53,7 @@ The options are:
 ```
 Options:
 	-f <fileName>	Specify the file to read
+	-o <fileName>	Specify the output file name
 	-h		Print this help message
 	-p	    Generate point grids as well
 	--obj	Generate obj files as well

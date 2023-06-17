@@ -52,6 +52,8 @@ public:
         _resY = gridRes.y;
         _resZ = gridRes.z;
 
+        /// WALL BOUNDARY PARTICLES
+
         // set wall for boundary
         _left = 0.5 * _h;
         _right = static_cast<Real>(_resX) - 0.5 * _h;
@@ -61,7 +63,6 @@ public:
         _front = static_cast<Real>(_resZ) - 0.5 * _h;
 
 
-        _nbWallParticles = 0;
         for (int i: {0, _resX - 1}) {
             for (int j = 0; j < _resY; ++j) {
                 for (int k = 0; k < _resZ; ++k) {
@@ -73,7 +74,6 @@ public:
                     _pos.push_back(Vec3f(i + 0.75, j + 0.25, k + 0.75));
                     _pos.push_back(Vec3f(i + 0.25, j + 0.75, k + 0.75));
                     _pos.push_back(Vec3f(i + 0.75, j + 0.75, k + 0.75));
-                    _nbWallParticles += 8;
                 }
             }
         }
@@ -90,7 +90,6 @@ public:
                     _pos.push_back(Vec3f(i + 0.75, j + 0.25, k + 0.75));
                     _pos.push_back(Vec3f(i + 0.25, j + 0.75, k + 0.75));
                     _pos.push_back(Vec3f(i + 0.75, j + 0.75, k + 0.75));
-                    _nbWallParticles += 8;
                 }
             }
         }
@@ -106,12 +105,22 @@ public:
                     _pos.push_back(Vec3f(i + 0.75, j + 0.25, k + 0.75));
                     _pos.push_back(Vec3f(i + 0.25, j + 0.75, k + 0.75));
                     _pos.push_back(Vec3f(i + 0.75, j + 0.75, k + 0.75));
-                    _nbWallParticles += 8;
                 }
             }
         }
 
+        // Additional obstacles
+
+        const Vec3f blockObstacleDimensions1 = Vec3f(0.5f * gridRes.x, 0.4f * gridRes.y, 0.25f * gridRes.z);
+        const Vec3f blockObstaclePosition1 = Vec3f(0.5f * gridRes.x, 0.5f * gridRes.y,
+                                                   blockObstacleDimensions1.z / 2.0f);
+        initBlock(blockObstaclePosition1, blockObstacleDimensions1, _pos);
+
+        _nbWallParticles = _pos.size();
+
         obsPart += _nbWallParticles;
+
+        /// FLUID PARTICLES
 
         const Vec3f blockPosition = Vec3f(0.5f * gridRes.x, 0.5f * gridRes.y, 0.5f * gridRes.z);
         const Vec3f blockDimensions = Vec3f(0.5f * gridRes.x, 0.5f * gridRes.y, 0.25f * gridRes.z);
@@ -237,6 +246,10 @@ public:
     int resY() const { return _resY; }
 
     int resZ() const { return _resZ; }
+
+    void scaleGarvity(Real d) {
+        _g *= d;
+    }
 
 private:
     void buildNeighbor() {
