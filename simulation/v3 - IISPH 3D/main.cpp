@@ -65,6 +65,7 @@ int main(int argc, char **argv) {
                 << "\t--init <value>, -i <value>\t Set the initial particle configuration (default: sphere) (torus, block, sphere)"
                 << endl;
         cout << "\t--resolution <value>, -r <value>\t Set the resolution of the scene (default: 1.0)" << endl;
+        cout << "\t--noFoam\t Disable foam generation" << endl;
 
         return 0;
     }
@@ -127,6 +128,8 @@ int main(int argc, char **argv) {
     gridRes *= resolution;
     solver.scaleGarvity(resolution);
 
+    bool foamEnabled = !cmdOptionExists(argv, argv + argc, "--noFoam");
+
     // if openmp is enabled, we print the number of threads used
 #ifdef _OPENMP
     cout << "OpenMP enabled, using " << omp_get_max_threads() << " threads" << endl;
@@ -136,7 +139,7 @@ int main(int argc, char **argv) {
 
     try {
         solver.initScene(gridRes, initType);
-        sfbSim.initScene();
+        if (foamEnabled) sfbSim.initScene();
     } catch (length_error &e) {
         cout << e.what() << endl;
         return 0;
@@ -163,7 +166,7 @@ int main(int argc, char **argv) {
         Real timeElapsed = 0.;
         while (timeElapsed < fileDt) {
             solver.update(timeStepDt);
-            sfbSim.sfbStep(timeStepDt);
+            if (foamEnabled) sfbSim.sfbStep(timeStepDt);
 
             timeElapsed += timeStepDt;
             Real cflCriterion = cflNumber * solver.getKernel().supportRadius() / solver.maxVelocity().length();
@@ -176,12 +179,14 @@ int main(int argc, char **argv) {
             partVel[t * nbFluidPart + i] = solver.velocity(i + nbWallPart);
         }
 
-        vector<Vec3f> diffPosStep;
-        for (const sfb &diffuse: (*diffuseList)) {
-            diffPosStep.push_back(diffuse.position);
-        }
+        if (foamEnabled) {
+            vector<Vec3f> diffPosStep;
+            for (const sfb &diffuse: (*diffuseList)) {
+                diffPosStep.push_back(diffuse.position);
+            }
 
-        diffPos[t] = diffPosStep;
+            diffPos[t] = diffPosStep;
+        }
     }
 
     cout << "End of the simulation, saving data..." << endl;
@@ -206,19 +211,21 @@ int main(int argc, char **argv) {
     file.close();
 
     //Diffuse part.
-    file.open(fpathDiffuse.str());
+    if (foamEnabled) {
+        file.open(fpathDiffuse.str());
 
-    file << gridRes.x << " " << gridRes.y << " " << gridRes.z << "\n";
-    file << dt * nbConsecutiveSteps << " " << timesteps + 1 << "\n";
+        file << gridRes.x << " " << gridRes.y << " " << gridRes.z << "\n";
+        file << dt * nbConsecutiveSteps << " " << timesteps + 1 << "\n";
 
-    for (unsigned int i = 0; i <= timesteps; ++i) {
-        file << diffPos[i].size() << "\n";
-        for (unsigned long long int j = 0; j < diffPos[i].size(); ++j) {
-            file << diffPos[i][j].x << " " << diffPos[i][j].y << " " << diffPos[i][j].z << "\n";
+        for (unsigned int i = 0; i <= timesteps; ++i) {
+            file << diffPos[i].size() << "\n";
+            for (unsigned long long int j = 0; j < diffPos[i].size(); ++j) {
+                file << diffPos[i][j].x << " " << diffPos[i][j].y << " " << diffPos[i][j].z << "\n";
+            }
         }
-    }
 
-    file.close();
+        file.close();
+    }
 
 
     cout << " > Quit" << endl;
