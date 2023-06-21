@@ -96,8 +96,7 @@ int main(int argc, char **argv) {
         }
     }
 
-    stringstream fpathFluid;
-    stringstream fpathDiffuse;
+    stringstream fpathFluid, fpathSpray, fpathFoam, fpathBubble;
     ofstream file;
 
     char *outputCmdArg = getCmdOption(argv, argv + argc, "--output");
@@ -113,8 +112,12 @@ int main(int argc, char **argv) {
         do {
             fpathFluid.str(string());
             fpathFluid << "./" << fileOutputFluid << "_" << setw(3) << setfill('0') << ++fileNum << ".txt";
-            fpathDiffuse.str(string());
-            fpathDiffuse << "./" << fileOutputFluid << "Diffuse_" << setw(3) << setfill('0') << fileNum << ".txt";
+            fpathSpray.str(string());
+            fpathSpray << "./" << fileOutputFluid << "Spray_" << setw(3) << setfill('0') << fileNum << ".txt";
+            fpathFoam.str(string());
+            fpathFoam << "./" << fileOutputFluid << "Foam_" << setw(3) << setfill('0') << fileNum << ".txt";
+            fpathBubble.str(string());
+            fpathBubble << "./" << fileOutputFluid << "Bubble_" << setw(3) << setfill('0') << fileNum << ".txt";
         } while (ifstream(fpathFluid.str()).is_open());
     }
 
@@ -149,7 +152,9 @@ int main(int argc, char **argv) {
     const int nbWallPart = solver.wallParticleCount();
     vector<Vec3f> partPos((timesteps + 1) * nbFluidPart, Vec3f(0));
     vector<Vec3f> partVel((timesteps + 1) * nbFluidPart, Vec3f(0));
-    vector<vector<Vec3f>> diffPos(timesteps + 1, vector<Vec3f>(0));
+    vector<vector<Vec3f>> sprayPos(timesteps + 1, vector<Vec3f>(0));
+    vector<vector<Vec3f>> foamPos(timesteps + 1, vector<Vec3f>(0));
+    vector<vector<Vec3f>> bubblePos(timesteps + 1, vector<Vec3f>(0));
 
     const list<sfb> *diffuseList = sfbSim.diffuseList();
 
@@ -180,12 +185,18 @@ int main(int argc, char **argv) {
         }
 
         if (foamEnabled) {
-            vector<Vec3f> diffPosStep;
+            vector<Vec3f> sprayPosStep, foamPosStep, bubblePosStep;
             for (const sfb &diffuse: (*diffuseList)) {
-                diffPosStep.push_back(diffuse.position);
+                switch (diffuse.nature) {
+                    case sfbType::SPRAY : sprayPosStep.push_back(diffuse.position); break;
+                    case sfbType::FOAM : foamPosStep.push_back(diffuse.position); break;
+                    case sfbType::BUBBLE : bubblePosStep.push_back(diffuse.position); break;
+                }
             }
 
-            diffPos[t] = diffPosStep;
+            sprayPos[t] = sprayPosStep;
+            foamPos[t] = foamPosStep;
+            sprayPos[t] = sprayPosStep;
         }
     }
 
@@ -212,15 +223,43 @@ int main(int argc, char **argv) {
 
     //Diffuse part.
     if (foamEnabled) {
-        file.open(fpathDiffuse.str());
+        file.open(fpathSpray.str());
 
         file << gridRes.x << " " << gridRes.y << " " << gridRes.z << "\n";
         file << dt * nbConsecutiveSteps << " " << timesteps + 1 << "\n";
 
         for (unsigned int i = 0; i <= timesteps; ++i) {
-            file << diffPos[i].size() << "\n";
-            for (unsigned long long int j = 0; j < diffPos[i].size(); ++j) {
-                file << diffPos[i][j].x << " " << diffPos[i][j].y << " " << diffPos[i][j].z << "\n";
+            file << sprayPos[i].size() << "\n";
+            for (unsigned long long int j = 0; j < sprayPos[i].size(); ++j) {
+                file << sprayPos[i][j].x << " " << sprayPos[i][j].y << " " << sprayPos[i][j].z << "\n";
+            }
+        }
+
+        file.close();
+
+        file.open(fpathFoam.str());
+
+        file << gridRes.x << " " << gridRes.y << " " << gridRes.z << "\n";
+        file << dt * nbConsecutiveSteps << " " << timesteps + 1 << "\n";
+
+        for (unsigned int i = 0; i <= timesteps; ++i) {
+            file << sprayPos[i].size() << "\n";
+            for (unsigned long long int j = 0; j < foamPos[i].size(); ++j) {
+                file << foamPos[i][j].x << " " << foamPos[i][j].y << " " << foamPos[i][j].z << "\n";
+            }
+        }
+
+        file.close();
+
+        file.open(fpathBubble.str());
+
+        file << gridRes.x << " " << gridRes.y << " " << gridRes.z << "\n";
+        file << dt * nbConsecutiveSteps << " " << timesteps + 1 << "\n";
+
+        for (unsigned int i = 0; i <= timesteps; ++i) {
+            file << sprayPos[i].size() << "\n";
+            for (unsigned long long int j = 0; j < bubblePos[i].size(); ++j) {
+                file << bubblePos[i][j].x << " " << bubblePos[i][j].y << " " << bubblePos[i][j].z << "\n";
             }
         }
 
