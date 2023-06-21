@@ -79,6 +79,8 @@ public:
         for (int i = 0; i < _resX * _resY * _resZ; i++) {
             _sfbIndexInGrid.push_back(vector <tIndex> {});
         }
+
+        _fluidNormal = vector<Vec3f>(_solver->fluidParticleCount(), Vec3f());
     }
 
     tIndex particleCount() const { return sfbList.size(); }
@@ -187,6 +189,7 @@ private:
                                 scaVelDiff += vel_ij.length() * (1 - vel_ij.normalized().dotProduct(pos_ij.normalized())) * _lKernel.w(pos_ij);
 
                                 normal -= pos_ij;
+                                cumul += max(0.f, 1 - pos_ij.length());
                             }
                         }
                     }
@@ -194,6 +197,14 @@ private:
             }
 
             Real trappedPotential = _clamp(scaVelDiff, _tauTrappedMin, _tauTrappedMax);
+            
+            if (cumul == 0.f) {
+                //À FAIRE
+            } else {
+                //À FAIRE
+            }
+            
+            
             Real crestPotential = 0.f;
 
             int particleGen = int(_dt * kineticPotential * (trappedPotential*_generateTrapped + crestPotential*_generateCrest));
@@ -262,6 +273,7 @@ private:
     Real _dt;
     list<sfb> sfbList;
     vector <vector<tIndex>> _sfbIndexInGrid; // will help you find neighbor particles.
+    vector <Vec3f> _fluidNormal; // will be used for wave crest foam generation.
 
     //Advection parameters.
     long long unsigned int _minBubbleNeighbor;
