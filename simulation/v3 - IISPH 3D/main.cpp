@@ -189,7 +189,7 @@ int main(int argc, char **argv) {
         }
     }
 
-    cout << "End of the simulation, saving data..." << endl;
+    cout << "End of the simulation, saving data to " << fpathFluid.str() << endl;
 
     //Fluid part.
     file.open(fpathFluid.str());

@@ -111,10 +111,19 @@ public:
 
         // Additional obstacles
 
-        const Vec3f blockObstacleDimensions1 = Vec3f(0.5f * gridRes.x, 0.4f * gridRes.y, 0.25f * gridRes.z);
-        const Vec3f blockObstaclePosition1 = Vec3f(0.5f * gridRes.x, 0.5f * gridRes.y,
-                                                   blockObstacleDimensions1.z / 2.0f);
+        const float epsilon = 0.000001f;
+
+        const Vec3f blockObstacleDimensions1 = Vec3f(0.4f, 0.4f, 0.25f) * gridRes;
+        const Vec3f blockObstaclePosition1 = Vec3f(epsilon * gridRes.x + blockObstacleDimensions1.x / 2.0f,
+                                                   0.5f * gridRes.y,
+                                                   epsilon * gridRes.z + blockObstacleDimensions1.z / 2.0f);
         initBlock(blockObstaclePosition1, blockObstacleDimensions1, _pos);
+
+        const Vec3f blockObstacleDimensions2 = Vec3f(0.4f, 0.4f, 0.25f) * gridRes;
+        const Vec3f blockObstaclePosition2 = Vec3f((1.0f - epsilon) * gridRes.x - blockObstacleDimensions1.x / 2.0f,
+                                                   0.5f * gridRes.y,
+                                                   epsilon * gridRes.z + blockObstacleDimensions2.z / 2.0f);
+        initBlock(blockObstaclePosition2, blockObstacleDimensions2, _pos);
 
         _nbWallParticles = _pos.size();
 
@@ -144,8 +153,6 @@ public:
                 break;
         }
         std::cout << "Simulating " << fluidParticleCount() << " particles of fluid" << std::endl;
-
-
 
         // make sure for the other particle quantities
         _vel = vector<Vec3f>(_pos.size(), Vec3f(0, 0, 0));
@@ -259,7 +266,15 @@ private:
         }
 
         for (tIndex i = 0; i < particleCount(); ++i) {
-            _pidxInGrid[idx1d(floor(position(i).x), floor(position(i).y), floor(position(i).z))].push_back(i);
+            const tIndex index = idx1d(floor(position(i).x), floor(position(i).y), floor(position(i).z));
+            if (index > _pidxInGrid.size()) {
+                std::cout << "Index out of bound: " << i << std::endl;
+                std::cout << "Position: " << position(i) << std::endl;
+                std::cout << "Index: " << index << std::endl;
+
+                exit(1);
+            }
+            _pidxInGrid[index].push_back(i);
         }
     }
 
@@ -537,7 +552,7 @@ private:
     }
 
     void updatePosition() {
-#pragma omp parallel for
+#pragma omp parallel for default(none)
         for (tIndex i = _nbWallParticles; i < particleCount(); ++i) {
             _pos[i] += _dt * _vel[i];
         }
@@ -546,14 +561,14 @@ private:
     // simple collision detection/resolution for each particle
     void resolveCollision() {
 
-#pragma omp parallel for
+#pragma omp parallel for default(none) shared(_pos, _vel)
         for (tIndex i = _nbWallParticles; i < particleCount(); ++i) {
             if (particleCollision(_pos[i])) {
                 const Vec3f p0 = _pos[i];
                 clampParticle(_pos[i]);
-                if (p0 == _pos[i]) {
-                    cout << "ALERT FLUID COLLISION IS NOT RESOLVED" << endl;
-                }
+                /*if (p0 == _pos[i]) {
+                    std::cout << "ALERT FLUID COLLISION IS NOT RESOLVED" << std::endl;
+                }*/
                 _vel[i] = (_pos[i] - p0) / _dt;
             }
         }
@@ -600,8 +615,6 @@ private:
     const Real _initP;                  // initial pressure for Jacobi method. Must be between 0 and 1
     const Real _omega;                  // relaxation coefficient. Must be between 0 and 1
     const Real _pressureError;           // maximum pressure variation rate serving as a limit of the Jacobi method
-
-
 };
 
 #endif
