@@ -184,10 +184,10 @@ private:
                          _kernelZ < min(_resZ, (int) floor(posI.z + _sr + 1)); ++_kernelZ) {
                         for (tIndex j: _solver->gridParticles(_kernelX, _kernelY, _kernelZ)) {
 
-                            Vec3f pos_ij = _solver->position(j) - posI;
-                            if (pos_ij.length() > 1e-5) {
-                                normal -= pos_ij;
-                                cumul += max(0.f, 1 - pos_ij.length());
+                            Vec3f pos_ji = posI - _solver->position(j);
+                            if (pos_ji.length() > 1e-5) {
+                                normal += pos_ji;
+                                cumul += max(0.f, 1 - pos_ji.length());
                             }
                         }
                     }
@@ -218,8 +218,8 @@ private:
                     }
                 }
 
-                 _fluidNormal[i - _solver->wallParticleCount()] = ((cumulWrong > 0.5 * cumul) ? normal : Vec3f());
-                 if (cumulWrong <= 0.5 * cumul) {nbNormal++;}
+                 _fluidNormal[i - _solver->wallParticleCount()] = ((cumulWrong > _normalConfCoef * cumul) ? normal : Vec3f());
+                 if (cumulWrong <= _normalConfCoef * cumul) {nbNormal++;}
             }
             
         }
@@ -361,11 +361,12 @@ private:
 
     //Generation parameters.
     const Real _partRad;
-    const Real _tauTrappedMin = 10.;
+    const Real _tauTrappedMin = 50.;
     const Real _tauTrappedMax = 100.;
-    const Real _generateTrapped = 150.;
-    const Real _tauCrestMin = 0.;
-    const Real _tauCrestMax = 1.;
+    const Real _generateTrapped = 120.;
+    const Real _normalConfCoef = 0.25f;
+    const Real _tauCrestMin = 1.;
+    const Real _tauCrestMax = 5.;
     const Real _generateCrest = 100.;
     const Real _tauEnergyMin = 5.;
     const Real _tauEnergyMax = 50.;
