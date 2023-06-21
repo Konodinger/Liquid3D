@@ -3,6 +3,7 @@
 //#define __DEBUG3__
 //#define __DEBUG4__
 //#define __DEBUG5__  //For CFL conditions.
+#define __DEBUG6__ //For debugging diffuse particle formation.
 //#define __PRINT_VELOCITY__
 
 #include <iostream>
@@ -200,7 +201,7 @@ int main(int argc, char **argv) {
         }
     }
 
-    cout << "End of the simulation, saving data to " << fpathFluid.str() << endl;
+    cout << "End of the simulation, saving data..." << endl;
 
     //Fluid part.
     file.open(fpathFluid.str());
