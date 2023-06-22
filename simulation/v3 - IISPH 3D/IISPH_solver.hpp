@@ -111,7 +111,7 @@ public:
 
         // Additional obstacles
 
-        const float epsilon = 0.000001f;
+        /*const float epsilon = 0.000001f;
 
         const Vec3f blockObstacleDimensions1 = Vec3f(0.4f, 0.4f, 0.25f) * gridRes;
         const Vec3f blockObstaclePosition1 = Vec3f(epsilon * gridRes.x + blockObstacleDimensions1.x / 2.0f,
@@ -123,7 +123,7 @@ public:
         const Vec3f blockObstaclePosition2 = Vec3f((1.0f - epsilon) * gridRes.x - blockObstacleDimensions1.x / 2.0f,
                                                    0.5f * gridRes.y,
                                                    epsilon * gridRes.z + blockObstacleDimensions2.z / 2.0f);
-        initBlock(blockObstaclePosition2, blockObstacleDimensions2, _pos);
+        initBlock(blockObstaclePosition2, blockObstacleDimensions2, _pos);*/
 
         _nbWallParticles = _pos.size();
 
