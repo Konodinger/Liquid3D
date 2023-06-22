@@ -188,9 +188,15 @@ int main(int argc, char **argv) {
             vector<Vec3f> sprayPosStep, foamPosStep, bubblePosStep;
             for (const sfb &diffuse: (*diffuseList)) {
                 switch (diffuse.nature) {
-                    case sfbType::SPRAY : sprayPosStep.push_back(diffuse.position); break;
-                    case sfbType::FOAM : foamPosStep.push_back(diffuse.position); break;
-                    case sfbType::BUBBLE : bubblePosStep.push_back(diffuse.position); break;
+                    case sfbType::SPRAY :
+                        sprayPosStep.push_back(diffuse.position);
+                        break;
+                    case sfbType::FOAM :
+                        foamPosStep.push_back(diffuse.position);
+                        break;
+                    case sfbType::BUBBLE :
+                        bubblePosStep.push_back(diffuse.position);
+                        break;
                 }
             }
 
@@ -243,7 +249,7 @@ int main(int argc, char **argv) {
         file << dt * nbConsecutiveSteps << " " << timesteps + 1 << "\n";
 
         for (unsigned int i = 0; i <= timesteps; ++i) {
-            file << sprayPos[i].size() << "\n";
+            file << foamPos[i].size() << "\n";
             for (unsigned long long int j = 0; j < foamPos[i].size(); ++j) {
                 file << foamPos[i][j].x << " " << foamPos[i][j].y << " " << foamPos[i][j].z << "\n";
             }
@@ -257,7 +263,7 @@ int main(int argc, char **argv) {
         file << dt * nbConsecutiveSteps << " " << timesteps + 1 << "\n";
 
         for (unsigned int i = 0; i <= timesteps; ++i) {
-            file << sprayPos[i].size() << "\n";
+            file << bubblePos[i].size() << "\n";
             for (unsigned long long int j = 0; j < bubblePos[i].size(); ++j) {
                 file << bubblePos[i][j].x << " " << bubblePos[i][j].y << " " << bubblePos[i][j].z << "\n";
             }
