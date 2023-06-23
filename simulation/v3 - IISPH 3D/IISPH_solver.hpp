@@ -1,5 +1,5 @@
-#ifndef __IISPH_SOLVER_HPP__
-#define __IISPH_SOLVER_HPP__
+#ifndef ___IISPH_SOLVER___
+#define ___IISPH_SOLVER___
 
 #include <cstdio>
 #include <iostream>
@@ -43,7 +43,7 @@ public:
     // assume an arbitrary grid with the size of res_x*res_y; a fluid mass fill up
     // the size of f_width, f_height; each cell is sampled with 2x2 particles.
     void initScene(const Vec3f gridRes, InitType initType, bool useLConfig = false) {
-        this->useLConfig = useLConfig;
+        this->_useLConfig = useLConfig;
 
         _pos.clear();
 
@@ -220,7 +220,7 @@ public:
         bool collision = (part.x < _left || part.y < _bottom || part.z < _back || part.x > _right ||
                           part.y > _top || part.z > _front);
 
-        if (useLConfig) {
+        if (_useLConfig) {
             collision = collision ||
                         (part.x > (1.0f - LCONFING_FRACTION) * _resX && part.y > (1.0f - LCONFING_FRACTION) * _resY);
             //std::cout << part.x / _resX << part.y / _resY << std::endl;
@@ -234,7 +234,7 @@ public:
         part.y = clamp(part.y, _bottom, _top);
         part.z = clamp(part.z, _back, _front);
 
-        if (useLConfig) {
+        if (_useLConfig) {
             if (part.x > (1.0f - LCONFING_FRACTION) * _resX && part.y < (1.0f - LCONFING_FRACTION) * _resY) {
                 part.x = (1.0f - LCONFING_FRACTION) * _resX;
             }
@@ -613,7 +613,7 @@ private:
 
     // wall
     Real _left, _right, _bottom, _top, _back, _front;          // wall (boundary)
-    bool useLConfig = false;
+    bool _useLConfig = false;
     tIndex _nbWallParticles;          // number of particles that belong to the wall
 
     // SPH coefficients
@@ -643,4 +643,4 @@ private:
     const Real _pressureError;           // maximum pressure variation rate serving as a limit of the Jacobi method
 };
 
-#endif
+#endif /* ___IISPH_SOLVER___ */

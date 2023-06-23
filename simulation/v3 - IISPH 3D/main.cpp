@@ -3,7 +3,7 @@
 //#define __DEBUG3__
 //#define __DEBUG4__
 //#define __DEBUG5__  //For CFL conditions.
-#define __DEBUG6__ //For debugging diffuse particle formation.
+//#define __DEBUG6__ //For debugging diffuse particle formation.
 //#define __PRINT_VELOCITY__
 
 #include <iostream>

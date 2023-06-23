@@ -68,7 +68,9 @@ public:
 
         //Step 2: formation.
         sfbFormation();
+#ifdef __DEBUG6__
         cout << sfbList.size() << " diffuse particles." << endl;
+#endif
     };
 
     void initScene() {
