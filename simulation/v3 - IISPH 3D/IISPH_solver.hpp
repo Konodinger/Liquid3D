@@ -24,10 +24,7 @@ using namespace std;
 // debug index
 int obsPart = 2000;
 
-// for recording videos
-FILE *ffmpeg;
-int *movieBuffer;
-
+#define LCONFING_FRACTION 0.8f
 
 class IisphSolver {
 public:
@@ -45,7 +42,9 @@ public:
 
     // assume an arbitrary grid with the size of res_x*res_y; a fluid mass fill up
     // the size of f_width, f_height; each cell is sampled with 2x2 particles.
-    void initScene(const Vec3f gridRes, InitType initType) {
+    void initScene(const Vec3f gridRes, InitType initType, bool useLConfig = false) {
+        this->useLConfig = useLConfig;
+
         _pos.clear();
 
         _resX = gridRes.x;
@@ -111,19 +110,13 @@ public:
 
         // Additional obstacles
 
-        /*const float epsilon = 0.000001f;
-
-        const Vec3f blockObstacleDimensions1 = Vec3f(0.4f, 0.4f, 0.25f) * gridRes;
-        const Vec3f blockObstaclePosition1 = Vec3f(epsilon * gridRes.x + blockObstacleDimensions1.x / 2.0f,
-                                                   0.5f * gridRes.y,
-                                                   epsilon * gridRes.z + blockObstacleDimensions1.z / 2.0f);
-        initBlock(blockObstaclePosition1, blockObstacleDimensions1, _pos);
-
-        const Vec3f blockObstacleDimensions2 = Vec3f(0.4f, 0.4f, 0.25f) * gridRes;
-        const Vec3f blockObstaclePosition2 = Vec3f((1.0f - epsilon) * gridRes.x - blockObstacleDimensions1.x / 2.0f,
-                                                   0.5f * gridRes.y,
-                                                   epsilon * gridRes.z + blockObstacleDimensions2.z / 2.0f);
-        initBlock(blockObstaclePosition2, blockObstacleDimensions2, _pos);*/
+        if (useLConfig) {
+            // add a block obstacle that spans almost the entire domain
+            const Vec3f blockObstacleDimensions = Vec3f(LCONFING_FRACTION, LCONFING_FRACTION, 1.0f) * gridRes;
+            const Vec3f blockObstaclePosition =
+                    gridRes - blockObstacleDimensions / 2.0f - Vec3f(0.001f, 0.001f, 0.001f);
+            initBlock(blockObstaclePosition, blockObstacleDimensions, _pos);
+        }
 
         _nbWallParticles = _pos.size();
 
@@ -131,15 +124,29 @@ public:
 
         /// FLUID PARTICLES
 
-        const Vec3f blockPosition = Vec3f(0.5f * gridRes.x, 0.5f * gridRes.y, 0.5f * gridRes.z);
-        const Vec3f blockDimensions = Vec3f(0.5f * gridRes.x, 0.5f * gridRes.y, 0.25f * gridRes.z);
+        Vec3f blockPosition = Vec3f(0.5f * gridRes.x, 0.5f * gridRes.y, 0.5f * gridRes.z);
+        Vec3f blockDimensions = Vec3f(0.5f * gridRes.x, 0.5f * gridRes.y, 0.25f * gridRes.z);
 
-        const Vec3f spherePosition = Vec3f(0.5f * gridRes.x, 0.5f * gridRes.y, 0.5f * gridRes.z);
-        const Real sphereRadius = min(gridRes.x, min(gridRes.y, gridRes.z)) / 4.0f;
+        Vec3f spherePosition = Vec3f(0.5f * gridRes.x, 0.5f * gridRes.y, 0.5f * gridRes.z);
+        Real sphereRadius = min(gridRes.x, min(gridRes.y, gridRes.z)) / 4.0f;
 
-        const Vec3f torusPosition = Vec3f(0.5f * gridRes.x, 0.5f * gridRes.y, 0.5f * gridRes.z);
-        const Real torusMajorRadius = min(gridRes.x, min(gridRes.y, gridRes.z)) / 4.0f;
-        const Real torusMinorRadius = torusMajorRadius / 3.0f;
+        Vec3f torusPosition = Vec3f(0.5f * gridRes.x, 0.5f * gridRes.y, 0.5f * gridRes.z);
+        Real torusMajorRadius = min(gridRes.x, min(gridRes.y, gridRes.z)) / 4.0f;
+        Real torusMinorRadius = torusMajorRadius / 3.0f;
+
+        if (useLConfig) {
+            blockDimensions = Vec3f(LCONFING_FRACTION * gridRes.x / 2.0f, LCONFING_FRACTION * gridRes.y / 2.0f,
+                                    0.5f * gridRes.z);
+            blockPosition = Vec3f(0.25f * gridRes.x, 0.25f * gridRes.y, 0.5f * gridRes.z);
+
+            sphereRadius = (1.0f - LCONFING_FRACTION) * min(gridRes.x, min(gridRes.y, gridRes.z)) / 2.0f;
+            spherePosition = Vec3f((1.0 - LCONFING_FRACTION) * gridRes.x / 2.0f,
+                                   (1.0f - LCONFING_FRACTION) * gridRes.y / 2.0f, 0.5f * gridRes.z);
+
+            torusMajorRadius = 0.15f * min(gridRes.x, min(gridRes.y, gridRes.z));
+            torusMinorRadius = 0.05f * min(gridRes.x, min(gridRes.y, gridRes.z));
+            torusPosition = Vec3f(0.25f * gridRes.x, 0.25f * gridRes.y, 0.5f * gridRes.z);
+        }
 
         switch (initType) {
             case InitType::BLOCK:
@@ -210,14 +217,32 @@ public:
     }
 
     bool particleCollision(const Vec3f &part) const {
-        return (part.x < _left || part.y < _bottom || part.z < _back || part.x > _right ||
-                part.y > _top || part.z > _front);
+        bool collision = (part.x < _left || part.y < _bottom || part.z < _back || part.x > _right ||
+                          part.y > _top || part.z > _front);
+
+        if (useLConfig) {
+            collision = collision ||
+                        (part.x > (1.0f - LCONFING_FRACTION) * _resX && part.y > (1.0f - LCONFING_FRACTION) * _resY);
+            //std::cout << part.x / _resX << part.y / _resY << std::endl;
+        }
+
+        return collision;
     }
 
     void clampParticle(Vec3f &part) const {
         part.x = clamp(part.x, _left, _right);
         part.y = clamp(part.y, _bottom, _top);
         part.z = clamp(part.z, _back, _front);
+
+        if (useLConfig) {
+            if (part.x > (1.0f - LCONFING_FRACTION) * _resX && part.y < (1.0f - LCONFING_FRACTION) * _resY) {
+                part.x = (1.0f - LCONFING_FRACTION) * _resX;
+            }
+
+            if (part.y > (1.0f - LCONFING_FRACTION) * _resY && part.x < (1.0f - LCONFING_FRACTION) * _resX) {
+                part.y = (1.0f - LCONFING_FRACTION) * _resY;
+            }
+        }
     }
 
     const CubicSpline &getKernel() const { return _kernel; }
@@ -588,6 +613,7 @@ private:
 
     // wall
     Real _left, _right, _bottom, _top, _back, _front;          // wall (boundary)
+    bool useLConfig = false;
     tIndex _nbWallParticles;          // number of particles that belong to the wall
 
     // SPH coefficients

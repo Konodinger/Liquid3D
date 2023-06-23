@@ -46,6 +46,8 @@ const Real cflNumber = 0.4f;
 #define DEFAULT_NB_TIMESTEPS 50
 #define DEFAULT_INIT_TYPE InitType::SPHERE;
 
+#define DEFAULT_USE_LCONFIG false
+
 #define DEFAULT_RESOLUTION 1.0f
 Vec3f gridRes = Vec3f(20, 20, 25);
 
@@ -64,8 +66,7 @@ int main(int argc, char **argv) {
         cout << "\t--noFoam\t Disable foam generation" << endl;
         cout << "\t--viscosity <value>, -v <value>\t Set the viscosity of the fluid (default: " << DEFAULT_VISCOSITY
              << ")" << endl;
-        cout << "\t--density <value>, -d <value>\t Set the density of the fluid (default: " << solvDensity << ")"
-             << endl;
+        cout << "\t--useLConfig\t Use the LConfig file to initialize the scene (default: false)" << endl;
 
         return 0;
     }
@@ -150,8 +151,10 @@ int main(int argc, char **argv) {
     sfbSimulation sfbSim(&solver, solvH, dt, minBubbleNeighbor, minFoamNeighbor);
     solver.scaleGarvity(resolution);
 
+    bool useLConfig = cmdOptionExists(argv, argv + argc, "--useLConfig");
+
     try {
-        solver.initScene(gridRes, initType);
+        solver.initScene(gridRes, initType, useLConfig);
         if (foamEnabled) sfbSim.initScene();
     } catch (length_error &e) {
         cout << e.what() << endl;
