@@ -24,7 +24,7 @@ string fileOutputFluid = "liquidPointCloud";
 string fileOutputDiffuse = "diffusePointCloud";
 
 //Simulation parameters
-const Real solvNu = 0.02;
+#define DEFAULT_VISCOSITY 0.02f
 const Real solvH = 0.5;
 const Real solvDensity = 3e3;
 const Vec3f solvG = Vec3f(0, 0, -9.8);
@@ -49,11 +49,6 @@ const Real cflNumber = 0.4f;
 #define DEFAULT_RESOLUTION 1.0f
 Vec3f gridRes = Vec3f(20, 20, 25);
 
-IisphSolver solver(dt, solvNu, solvH, solvDensity, solvG, solvInitP, solvOmega, solvPressureError);
-
-sfbSimulation sfbSim(&solver, solvH, dt, minBubbleNeighbor, minFoamNeighbor);
-
-
 int main(int argc, char **argv) {
     if (cmdOptionExists(argv, argv + argc, "--help") || cmdOptionExists(argv, argv + argc, "-h")) {
         cout << "Usage: ./main [options]" << endl;
@@ -67,6 +62,10 @@ int main(int argc, char **argv) {
                 << endl;
         cout << "\t--resolution <value>, -r <value>\t Set the resolution of the scene (default: 1.0)" << endl;
         cout << "\t--noFoam\t Disable foam generation" << endl;
+        cout << "\t--viscosity <value>, -v <value>\t Set the viscosity of the fluid (default: " << DEFAULT_VISCOSITY
+             << ")" << endl;
+        cout << "\t--density <value>, -d <value>\t Set the density of the fluid (default: " << solvDensity << ")"
+             << endl;
 
         return 0;
     }
@@ -130,9 +129,15 @@ int main(int argc, char **argv) {
     else resolution = DEFAULT_RESOLUTION;
 
     gridRes *= resolution;
-    solver.scaleGarvity(resolution);
 
     bool foamEnabled = !cmdOptionExists(argv, argv + argc, "--noFoam");
+
+    char *viscosityCmdArg = getCmdOption(argv, argv + argc, "--viscosity");
+    char *viscosityCmdArgShort = getCmdOption(argv, argv + argc, "-v");
+    Real viscosity;
+    if (viscosityCmdArg) viscosity = atof(viscosityCmdArg);
+    else if (viscosityCmdArgShort) viscosity = atof(viscosityCmdArgShort);
+    else viscosity = DEFAULT_VISCOSITY;
 
     // if openmp is enabled, we print the number of threads used
 #ifdef _OPENMP
@@ -140,6 +145,10 @@ int main(int argc, char **argv) {
 #else
     cout << "OpenMP not enabled, using only 1 thread" << endl;
 #endif
+
+    IisphSolver solver(dt, viscosity, solvH, solvDensity, solvG, solvInitP, solvOmega, solvPressureError);
+    sfbSimulation sfbSim(&solver, solvH, dt, minBubbleNeighbor, minFoamNeighbor);
+    solver.scaleGarvity(resolution);
 
     try {
         solver.initScene(gridRes, initType);
