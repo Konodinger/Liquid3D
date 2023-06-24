@@ -48,7 +48,7 @@ const Real cflNumber = 0.4f;
 
 #define DEFAULT_USE_LCONFIG false
 
-#define DEFAULT_RESOLUTION 1.0f
+#define DEFAULT_RESOLUTION 1
 Vec3f gridRes = Vec3f(20, 20, 25);
 
 int main(int argc, char **argv) {
@@ -62,7 +62,9 @@ int main(int argc, char **argv) {
         cout
                 << "\t--init <value>, -i <value>\t Set the initial particle configuration (default: sphere) (torus, block, sphere)"
                 << endl;
-        cout << "\t--resolution <value>, -r <value>\t Set the resolution of the scene (default: 1.0)" << endl;
+        cout
+                << "\t--resolution <value>, -r <value>\t Set the resolution of the scene. It must be an integer (default: 1)"
+                << endl;
         cout << "\t--noFoam\t Disable foam generation" << endl;
         cout << "\t--viscosity <value>, -v <value>\t Set the viscosity of the fluid (default: " << DEFAULT_VISCOSITY
              << ")" << endl;
@@ -76,6 +78,7 @@ int main(int argc, char **argv) {
     char *timestepsCmdArgShort = getCmdOption(argv, argv + argc, "-t");
     if (timestepsCmdArg) timesteps = atoi(timestepsCmdArg);
     else if (timestepsCmdArgShort) timesteps = atoi(timestepsCmdArgShort);
+    std::cout << "Number of timesteps: " << timesteps << std::endl;
 
     InitType initType = DEFAULT_INIT_TYPE;
     char *initTypeCmdArg = getCmdOption(argv, argv + argc, "--init");
@@ -87,10 +90,13 @@ int main(int argc, char **argv) {
         // sphere
         if (initTypeStr == "sphere") {
             initType = InitType::SPHERE;
+            std::cout << "Init type: sphere" << std::endl;
         } else if (initTypeStr == "torus") {
             initType = InitType::TORUS;
+            std::cout << "Init type: torus" << std::endl;
         } else if (initTypeStr == "block") {
             initType = InitType::BLOCK;
+            std::cout << "Init type: block" << std::endl;
         } else {
             cout << "Unknown initial scene type: " << initTypeStr << endl;
             return 0;
@@ -121,15 +127,17 @@ int main(int argc, char **argv) {
             fpathBubble << "./" << fileOutputFluid << "Bubble_" << setw(3) << setfill('0') << fileNum << ".txt";
         } while (ifstream(fpathFluid.str()).is_open());
     }
+    std::cout << "Output file: " << fpathFluid.str() << std::endl;
 
     char *resolutionCmdArg = getCmdOption(argv, argv + argc, "--resolution");
     char *resolutionCmdArgShort = getCmdOption(argv, argv + argc, "-r");
-    Real resolution;
-    if (resolutionCmdArg) resolution = atof(resolutionCmdArg);
-    else if (resolutionCmdArgShort) resolution = atof(resolutionCmdArgShort);
+    int resolution;
+    if (resolutionCmdArg) resolution = atoi(resolutionCmdArg);
+    else if (resolutionCmdArgShort) resolution = atoi(resolutionCmdArgShort);
     else resolution = DEFAULT_RESOLUTION;
+    std::cout << "Resolution: " << resolution << std::endl;
 
-    gridRes *= resolution;
+    gridRes *= (float) resolution;
 
     bool foamEnabled = !cmdOptionExists(argv, argv + argc, "--noFoam");
 
@@ -149,9 +157,10 @@ int main(int argc, char **argv) {
 
     IisphSolver solver(dt, viscosity, solvH, solvDensity, solvG, solvInitP, solvOmega, solvPressureError);
     sfbSimulation sfbSim(&solver, solvH, dt, minBubbleNeighbor, minFoamNeighbor);
-    solver.scaleGarvity(resolution);
+    solver.scaleGarvity((float) resolution);
 
     bool useLConfig = cmdOptionExists(argv, argv + argc, "--useLConfig");
+    if (useLConfig) std::cout << "Using LConfig" << std::endl;
 
     try {
         solver.initScene(gridRes, initType, useLConfig);
