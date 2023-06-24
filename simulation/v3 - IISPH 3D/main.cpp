@@ -140,6 +140,7 @@ int main(int argc, char **argv) {
     gridRes *= (float) resolution;
 
     bool foamEnabled = !cmdOptionExists(argv, argv + argc, "--noFoam");
+    std::cout << "Foam enabled: " << foamEnabled << std::endl;
 
     char *viscosityCmdArg = getCmdOption(argv, argv + argc, "--viscosity");
     char *viscosityCmdArgShort = getCmdOption(argv, argv + argc, "-v");
@@ -147,6 +148,7 @@ int main(int argc, char **argv) {
     if (viscosityCmdArg) viscosity = atof(viscosityCmdArg);
     else if (viscosityCmdArgShort) viscosity = atof(viscosityCmdArgShort);
     else viscosity = DEFAULT_VISCOSITY;
+    std::cout << "Viscosity: " << viscosity << std::endl;
 
     // if openmp is enabled, we print the number of threads used
 #ifdef _OPENMP
@@ -160,7 +162,7 @@ int main(int argc, char **argv) {
     solver.scaleGarvity((float) resolution);
 
     bool useLConfig = cmdOptionExists(argv, argv + argc, "--useLConfig");
-    if (useLConfig) std::cout << "Using LConfig" << std::endl;
+    std::cout << "Using LConfig:" << useLConfig << std::endl;
 
     try {
         solver.initScene(gridRes, initType, useLConfig);
