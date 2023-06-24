@@ -24,8 +24,8 @@ using namespace std;
 // debug index
 int obsPart = 2000;
 
-#define LCONFING_FRACTION_X 0.5f
-#define LCONFING_FRACTION_Y 0.6f
+#define LCONFING_FRACTION_X 0.7f
+#define LCONFING_FRACTION_Y 0.5f
 
 class IisphSolver {
 public:
@@ -163,8 +163,8 @@ public:
                                     0.5f * gridRes.z);
             blockPosition = Vec3f(0.5f * gridRes.x, 0.25f * gridRes.y, 0.5f * gridRes.z);
 
-            sphereRadius = (1.0f - LCONFING_FRACTION_Y) * min(gridRes.x, min(gridRes.y, gridRes.z)) * 0.4f;
-            spherePosition = Vec3f((1.0f - LCONFING_FRACTION_Y) * gridRes.x / 2.0f,
+            sphereRadius = (1.0f - LCONFING_FRACTION_X) * min(gridRes.x, min(gridRes.y, gridRes.z)) * 0.4f;
+            spherePosition = Vec3f((1.0f - LCONFING_FRACTION_X) * gridRes.x / 2.0f,
                                    gridRes.y * 0.5f, 0.2f * gridRes.z);
 
             torusMajorRadius = 0.15f * min(gridRes.x, min(gridRes.y, gridRes.z));
