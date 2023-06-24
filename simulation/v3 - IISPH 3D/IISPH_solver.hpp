@@ -164,7 +164,7 @@ public:
             blockPosition = Vec3f(0.5f * gridRes.x, 0.25f * gridRes.y, 0.5f * gridRes.z);
 
             sphereRadius = (1.0f - LCONFING_FRACTION_Y) * min(gridRes.x, min(gridRes.y, gridRes.z)) * 0.4f;
-            spherePosition = Vec3f(sphereRadius * 1.5f,
+            spherePosition = Vec3f((1.0f - LCONFING_FRACTION_Y) * gridRes.x / 2.0f,
                                    gridRes.y * 0.5f, 0.2f * gridRes.z);
 
             torusMajorRadius = 0.15f * min(gridRes.x, min(gridRes.y, gridRes.z));
