@@ -245,7 +245,6 @@ public:
         if (_useLConfig) {
             collision = collision ||
                         (part.x > (1.0f - LCONFING_FRACTION) * _resX && part.y > (1.0f - LCONFING_FRACTION) * _resY);
-            //std::cout << part.x / _resX << part.y / _resY << std::endl;
         }
 
         return collision;
@@ -258,8 +257,9 @@ public:
 
         if (_useLConfig) {
             if (part.x > (1.0f - LCONFING_FRACTION) * _resX && part.y > (1.0f - LCONFING_FRACTION) * _resY) {
-                part.x = (1.0f - LCONFING_FRACTION) * _resX;
-                part.y = (1.0f - LCONFING_FRACTION) * _resY;
+                if (part.x < part.y) part.x = (1.0f - LCONFING_FRACTION) * _resX - 0.01f * _resX;
+                else part.y = (1.0f - LCONFING_FRACTION) * _resY - 0.01f * _resY;
+
             }
         }
     }
