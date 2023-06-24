@@ -24,7 +24,7 @@ using namespace std;
 // debug index
 int obsPart = 2000;
 
-#define LCONFING_FRACTION 0.8f
+#define LCONFING_FRACTION 0.5f
 
 class IisphSolver {
 public:
@@ -43,7 +43,7 @@ public:
     // assume an arbitrary grid with the size of res_x*res_y; a fluid mass fill up
     // the size of f_width, f_height; each cell is sampled with 2x2 particles.
     void initScene(const Vec3f gridRes, InitType initType, bool useLConfig = false) {
-        this->_useLConfig = useLConfig;
+        _useLConfig = useLConfig;
 
         _pos.clear();
 
@@ -110,12 +110,34 @@ public:
 
         // Additional obstacles
 
-        if (useLConfig) {
-            // add a block obstacle that spans almost the entire domain
-            const Vec3f blockObstacleDimensions = Vec3f(LCONFING_FRACTION, LCONFING_FRACTION, 1.0f) * gridRes;
-            const Vec3f blockObstaclePosition =
-                    gridRes - blockObstacleDimensions / 2.0f - Vec3f(0.001f, 0.001f, 0.001f);
-            initBlock(blockObstaclePosition, blockObstacleDimensions, _pos);
+        if (_useLConfig) {
+            int lLineX = int(_resX * LCONFING_FRACTION);
+            int lLineY = int(_resY * LCONFING_FRACTION);
+            for (int j = 1; j < lLineY + 1; ++j) {
+                for (int k = 1; k < _resZ - 1; ++k) {
+                    _pos.push_back(Vec3f(lLineX + 0.25, j + 0.25, k + 0.25));
+                    _pos.push_back(Vec3f(lLineX + 0.75, j + 0.25, k + 0.25));
+                    _pos.push_back(Vec3f(lLineX + 0.25, j + 0.75, k + 0.25));
+                    _pos.push_back(Vec3f(lLineX + 0.75, j + 0.75, k + 0.25));
+                    _pos.push_back(Vec3f(lLineX + 0.25, j + 0.25, k + 0.75));
+                    _pos.push_back(Vec3f(lLineX + 0.75, j + 0.25, k + 0.75));
+                    _pos.push_back(Vec3f(lLineX + 0.25, j + 0.75, k + 0.75));
+                    _pos.push_back(Vec3f(lLineX + 0.75, j + 0.75, k + 0.75));
+                }
+            }
+
+            for (int i = 1; i < lLineX; ++i) {
+                for (int k = 1; k < _resZ - 1; ++k) {
+                    _pos.push_back(Vec3f(i + 0.25, lLineY + 0.25, k + 0.25));
+                    _pos.push_back(Vec3f(i + 0.75, lLineY + 0.25, k + 0.25));
+                    _pos.push_back(Vec3f(i + 0.25, lLineY + 0.75, k + 0.25));
+                    _pos.push_back(Vec3f(i + 0.75, lLineY + 0.75, k + 0.25));
+                    _pos.push_back(Vec3f(i + 0.25, lLineY + 0.25, k + 0.75));
+                    _pos.push_back(Vec3f(i + 0.75, lLineY + 0.25, k + 0.75));
+                    _pos.push_back(Vec3f(i + 0.25, lLineY + 0.75, k + 0.75));
+                    _pos.push_back(Vec3f(i + 0.75, lLineY + 0.75, k + 0.75));
+                }
+            }
         }
 
         _nbWallParticles = _pos.size();
@@ -134,14 +156,14 @@ public:
         Real torusMajorRadius = min(gridRes.x, min(gridRes.y, gridRes.z)) / 4.0f;
         Real torusMinorRadius = torusMajorRadius / 3.0f;
 
-        if (useLConfig) {
+        if (_useLConfig) {
             blockDimensions = Vec3f(LCONFING_FRACTION * gridRes.x / 2.0f, LCONFING_FRACTION * gridRes.y / 2.0f,
                                     0.5f * gridRes.z);
             blockPosition = Vec3f(0.25f * gridRes.x, 0.25f * gridRes.y, 0.5f * gridRes.z);
 
-            sphereRadius = (1.0f - LCONFING_FRACTION) * min(gridRes.x, min(gridRes.y, gridRes.z)) / 2.0f;
+            sphereRadius = (1.0f - LCONFING_FRACTION) * min(gridRes.x, min(gridRes.y, gridRes.z)) / 3.0f;
             spherePosition = Vec3f((1.0 - LCONFING_FRACTION) * gridRes.x / 2.0f,
-                                   (1.0f - LCONFING_FRACTION) * gridRes.y / 2.0f, 0.5f * gridRes.z);
+                                   (1.0f - LCONFING_FRACTION) * gridRes.y / 2.0f, 0.2f * gridRes.z);
 
             torusMajorRadius = 0.15f * min(gridRes.x, min(gridRes.y, gridRes.z));
             torusMinorRadius = 0.05f * min(gridRes.x, min(gridRes.y, gridRes.z));
@@ -235,11 +257,8 @@ public:
         part.z = clamp(part.z, _back, _front);
 
         if (_useLConfig) {
-            if (part.x > (1.0f - LCONFING_FRACTION) * _resX && part.y < (1.0f - LCONFING_FRACTION) * _resY) {
+            if (part.x > (1.0f - LCONFING_FRACTION) * _resX && part.y > (1.0f - LCONFING_FRACTION) * _resY) {
                 part.x = (1.0f - LCONFING_FRACTION) * _resX;
-            }
-
-            if (part.y > (1.0f - LCONFING_FRACTION) * _resY && part.x < (1.0f - LCONFING_FRACTION) * _resX) {
                 part.y = (1.0f - LCONFING_FRACTION) * _resY;
             }
         }
@@ -521,6 +540,10 @@ private:
 #ifdef __DEBUG3__
             cout << "NbIssue " << nbIssue << " InterVel " << _interVel[obsPart] << " d_ii " << _d_ii[obsPart] << " a_ii " << _a_ii[obsPart] << " InterDen " << _interD[obsPart] << " c_i " << _c_i[obsPart] << " PredP " << _predP[obsPart] <<" Pr " << _p[obsPart] << endl;
 #endif
+            if (iter > 100) {
+                std::cout << "Pressure solver did not converge" << std::endl;
+                break;
+            }
         }
 #ifdef __DEBUG2__
         cout << "Iterations : " << iter << endl;

@@ -62,8 +62,8 @@ public:
         _bottom = 0.5 * _h;
         _top = static_cast<Real>(_resZ) - 0.5 * _h;
         if (_useLConfig) {
-            _lBack = _back + int(_resX*LCONFIG_FRACTION_X);
-            _lLeft = _left + int(_resY*LCONFIG_FRACTION_Y);
+            _lBack = _back + int(_resX * LCONFIG_FRACTION_X);
+            _lLeft = _left + int(_resY * LCONFIG_FRACTION_Y);
         }
 
 
@@ -118,8 +118,8 @@ public:
         if (_useLConfig) {
             // add a block obstacle that spans almost the entire domain
 
-            int lLineX = int(_resX*LCONFIG_FRACTION_X);
-            int lLineY = int(_resY*LCONFIG_FRACTION_Y);
+            int lLineX = int(_resX * LCONFIG_FRACTION_X);
+            int lLineY = int(_resY * LCONFIG_FRACTION_Y);
             for (int j = 1; j < lLineY + 1; ++j) {
                 for (int k = 1; k < _resZ - 1; ++k) {
                     _pos.push_back(Vec3f(lLineX + 0.25, j + 0.25, k + 0.25));
@@ -153,13 +153,13 @@ public:
 
         /// FLUID PARTICLES
 
-        Vec3f blockPosition = Vec3f(0.5f * gridRes.x, 0.5f * gridRes.y, 0.5f * gridRes.z);
+        Vec3f blockPosition = Vec3f(0.5f * gridRes.x, 0.5f * gridRes.y, 0.3f * gridRes.z);
         Vec3f blockDimensions = Vec3f(0.5f * gridRes.x, 0.5f * gridRes.y, 0.25f * gridRes.z);
 
-        Vec3f spherePosition = Vec3f(0.5f * gridRes.x, 0.5f * gridRes.y, 0.5f * gridRes.z);
-        Real sphereRadius = min(gridRes.x, min(gridRes.y, gridRes.z)) / 4.0f;
+        Vec3f spherePosition = Vec3f(0.5f * gridRes.x, 0.5f * gridRes.y, 0.3f * gridRes.z);
+        Real sphereRadius = min(gridRes.x, min(gridRes.y, gridRes.z)) * 0.25f;
 
-        Vec3f torusPosition = Vec3f(0.5f * gridRes.x, 0.5f * gridRes.y, 0.5f * gridRes.z);
+        Vec3f torusPosition = Vec3f(0.5f * gridRes.x, 0.5f * gridRes.y, 0.3f * gridRes.z);
         Real torusMajorRadius = min(gridRes.x, min(gridRes.y, gridRes.z)) / 4.0f;
         Real torusMinorRadius = torusMajorRadius / 3.0f;
 
@@ -639,7 +639,7 @@ private:
     int _resX, _resY, _resZ;             // background grid resolution
 
     // wall
-    Real _back, _front, _left, _right, _bottom, _top ;          // wall (boundary): x is the depth, y is the width, and z is the height.
+    Real _back, _front, _left, _right, _bottom, _top;          // wall (boundary): x is the depth, y is the width, and z is the height.
     Real _lBack = 0.f, _lLeft = 0.f;
     bool _useLConfig = false;
     tIndex _nbWallParticles;          // number of particles that belong to the wall
