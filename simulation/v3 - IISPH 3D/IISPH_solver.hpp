@@ -162,8 +162,8 @@ public:
             blockPosition = Vec3f(0.25f * gridRes.x, 0.25f * gridRes.y, 0.5f * gridRes.z);
 
             sphereRadius = (1.0f - LCONFING_FRACTION) * min(gridRes.x, min(gridRes.y, gridRes.z)) / 3.0f;
-            spherePosition = Vec3f((1.0 - LCONFING_FRACTION) * gridRes.x / 2.0f,
-                                   (1.0f - LCONFING_FRACTION) * gridRes.y / 2.0f, 0.2f * gridRes.z);
+            spherePosition = Vec3f(sphereRadius * 1.02f,
+                                   gridRes.y - sphereRadius * 1.5f, 0.2f * gridRes.z);
 
             torusMajorRadius = 0.15f * min(gridRes.x, min(gridRes.y, gridRes.z));
             torusMinorRadius = 0.05f * min(gridRes.x, min(gridRes.y, gridRes.z));
@@ -257,8 +257,8 @@ public:
 
         if (_useLConfig) {
             if (part.x > (1.0f - LCONFING_FRACTION) * _resX && part.y > (1.0f - LCONFING_FRACTION) * _resY) {
-                if (part.x < part.y) part.x = (1.0f - LCONFING_FRACTION) * _resX - 0.01f * _resX;
-                else part.y = (1.0f - LCONFING_FRACTION) * _resY - 0.01f * _resY;
+                if (part.x < part.y) part.x = (1.0f - LCONFING_FRACTION) * _resX;
+                else part.y = (1.0f - LCONFING_FRACTION) * _resY;
 
             }
         }
@@ -540,7 +540,7 @@ private:
 #ifdef __DEBUG3__
             cout << "NbIssue " << nbIssue << " InterVel " << _interVel[obsPart] << " d_ii " << _d_ii[obsPart] << " a_ii " << _a_ii[obsPart] << " InterDen " << _interD[obsPart] << " c_i " << _c_i[obsPart] << " PredP " << _predP[obsPart] <<" Pr " << _p[obsPart] << endl;
 #endif
-            if (iter > 100) {
+            if (iter > 500) {
                 std::cout << "Pressure solver did not converge" << std::endl;
                 break;
             }
