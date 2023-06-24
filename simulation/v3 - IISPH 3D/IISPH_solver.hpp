@@ -24,7 +24,8 @@ using namespace std;
 // debug index
 int obsPart = 2000;
 
-#define LCONFING_FRACTION 0.5f
+#define LCONFING_FRACTION_X 0.5f
+#define LCONFING_FRACTION_Y 0.6f
 
 class IisphSolver {
 public:
@@ -111,8 +112,8 @@ public:
         // Additional obstacles
 
         if (_useLConfig) {
-            int lLineX = int(_resX * LCONFING_FRACTION);
-            int lLineY = int(_resY * LCONFING_FRACTION);
+            int lLineX = int(_resX * LCONFING_FRACTION_X);
+            int lLineY = int(_resY * LCONFING_FRACTION_Y);
             for (int j = 1; j < lLineY + 1; ++j) {
                 for (int k = 1; k < _resZ - 1; ++k) {
                     _pos.push_back(Vec3f(lLineX + 0.25, j + 0.25, k + 0.25));
@@ -157,13 +158,14 @@ public:
         Real torusMinorRadius = torusMajorRadius / 3.0f;
 
         if (_useLConfig) {
-            blockDimensions = Vec3f(LCONFING_FRACTION * gridRes.x / 2.0f, LCONFING_FRACTION * gridRes.y / 2.0f,
+            blockDimensions = Vec3f((1.0f - LCONFING_FRACTION_X) * gridRes.x * 0.8f,
+                                    (1.0f - LCONFING_FRACTION_Y) * gridRes.y * 0.8f,
                                     0.5f * gridRes.z);
-            blockPosition = Vec3f(0.25f * gridRes.x, 0.25f * gridRes.y, 0.5f * gridRes.z);
+            blockPosition = Vec3f(0.5f * gridRes.x, 0.25f * gridRes.y, 0.5f * gridRes.z);
 
-            sphereRadius = (1.0f - LCONFING_FRACTION) * min(gridRes.x, min(gridRes.y, gridRes.z)) / 3.0f;
-            spherePosition = Vec3f(sphereRadius * 1.02f,
-                                   gridRes.y - sphereRadius * 1.5f, 0.2f * gridRes.z);
+            sphereRadius = (1.0f - LCONFING_FRACTION_Y) * min(gridRes.x, min(gridRes.y, gridRes.z)) * 0.4f;
+            spherePosition = Vec3f(sphereRadius * 1.5f,
+                                   gridRes.y * 0.5f, 0.2f * gridRes.z);
 
             torusMajorRadius = 0.15f * min(gridRes.x, min(gridRes.y, gridRes.z));
             torusMinorRadius = 0.05f * min(gridRes.x, min(gridRes.y, gridRes.z));
@@ -244,7 +246,8 @@ public:
 
         if (_useLConfig) {
             collision = collision ||
-                        (part.x > (1.0f - LCONFING_FRACTION) * _resX && part.y > (1.0f - LCONFING_FRACTION) * _resY);
+                        (part.x > (1.0f - LCONFING_FRACTION_X) * _resX &&
+                         part.y > (1.0f - LCONFING_FRACTION_Y) * _resY);
         }
 
         return collision;
@@ -256,9 +259,11 @@ public:
         part.z = clamp(part.z, _back, _front);
 
         if (_useLConfig) {
-            if (part.x > (1.0f - LCONFING_FRACTION) * _resX && part.y > (1.0f - LCONFING_FRACTION) * _resY) {
-                if (part.x < part.y) part.x = (1.0f - LCONFING_FRACTION) * _resX;
-                else part.y = (1.0f - LCONFING_FRACTION) * _resY;
+            if (part.x > (1.0f - LCONFING_FRACTION_X) * _resX && part.y > (1.0f - LCONFING_FRACTION_Y) * _resY) {
+                if (part.x / (1.0f - LCONFING_FRACTION_X) < part.y / (1.0f - LCONFING_FRACTION_Y))
+                    part.x = (1.0f - LCONFING_FRACTION_X) *
+                             _resX;
+                else part.y = (1.0f - LCONFING_FRACTION_Y) * _resY;
 
             }
         }
