@@ -31,7 +31,7 @@ public:
     explicit IisphSolver(
             const Real dt = 0.0005, const Real nu = 0.08,
             const Real h = 0.5, const Real density = 1e3,
-            const Vec3f g = Vec3f(0, -9.8, 0), const Real initP = 0.5,
+            const Vec3f g = Vec3f(0, 0, -9.8), const Real initP = 0.5,
             const Real omega = 0.5, const Real pressureError = 1.) :
             _kernel(h), _rad(_kernel.supportRadius()), _dt(dt), _nu(nu),
             _h(h), _d0(density), _g(g),
@@ -146,14 +146,14 @@ public:
 
         /// FLUID PARTICLES
 
-        Vec3f blockPosition = Vec3f(0.5f * gridRes.x, 0.5f * gridRes.y, 0.5f * gridRes.z);
+        Vec3f blockPosition = Vec3f(0.5f * gridRes.x, 0.5f * gridRes.y, 0.2f * gridRes.z);
         Vec3f blockDimensions = Vec3f(0.5f * gridRes.x, 0.5f * gridRes.y, 0.25f * gridRes.z);
 
-        Vec3f spherePosition = Vec3f(0.5f * gridRes.x, 0.5f * gridRes.y, 0.5f * gridRes.z);
-        Real sphereRadius = min(gridRes.x, min(gridRes.y, gridRes.z)) / 4.0f;
+        Vec3f spherePosition = Vec3f(0.5f * gridRes.x, 0.5f * gridRes.y, 0.3f * gridRes.z);
+        Real sphereRadius = min(gridRes.x, min(gridRes.y, gridRes.z)) * 0.25f;
 
-        Vec3f torusPosition = Vec3f(0.5f * gridRes.x, 0.5f * gridRes.y, 0.5f * gridRes.z);
-        Real torusMajorRadius = min(gridRes.x, min(gridRes.y, gridRes.z)) / 4.0f;
+        Vec3f torusPosition = Vec3f(0.5f * gridRes.x, 0.5f * gridRes.y, 0.3f * gridRes.z);
+        Real torusMajorRadius = min(gridRes.x, min(gridRes.y, gridRes.z)) * 0.25f;
         Real torusMinorRadius = torusMajorRadius / 3.0f;
 
         if (_useLConfig) {
