@@ -246,8 +246,8 @@ public:
 
         if (_useLConfig) {
             collision = collision ||
-                        (part.x > (1.0f - LCONFING_FRACTION_X) * _resX &&
-                         part.y > (1.0f - LCONFING_FRACTION_Y) * _resY);
+                        (part.x > (int) ((1.0f - LCONFING_FRACTION_X) * _resX) - 0.5 * _h &&
+                         part.y > (int) ((1.0f - LCONFING_FRACTION_Y) * _resY) - 0.5 * _h);
         }
 
         return collision;
@@ -259,7 +259,8 @@ public:
         part.z = clamp(part.z, _back, _front);
 
         if (_useLConfig) {
-            if (part.x > (1.0f - LCONFING_FRACTION_X) * _resX && part.y > (1.0f - LCONFING_FRACTION_Y) * _resY) {
+            if (part.x > (int) ((1.0f - LCONFING_FRACTION_X) * _resX) - 0.5 * _h &&
+                part.y > (int) ((1.0f - LCONFING_FRACTION_Y) * _resY) - 0.5 * _h) {
                 if (part.x / (1.0f - LCONFING_FRACTION_X) < part.y / (1.0f - LCONFING_FRACTION_Y))
                     part.x = (1.0f - LCONFING_FRACTION_X) *
                              _resX;
