@@ -8,9 +8,14 @@
 
 #include <iostream>
 #include <fstream>
+#include <csignal>
 #include "IISPH_solver.hpp"
 #include "SFB_generator.hpp"
 #include "utils.hpp"
+
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 #ifdef _OPENMP
 
@@ -22,6 +27,13 @@ using namespace std;
 
 string fileOutputFluid = "liquidPointCloud";
 string fileOutputDiffuse = "diffusePointCloud";
+
+bool killed = false;
+
+void killHandler(int) {
+    std::cout << "Interrupt signal received. Waiting for the end of current simulation step..." << std::endl;
+    killed = true;
+}
 
 //Simulation parameters
 #define DEFAULT_VISCOSITY 0.02f
@@ -52,6 +64,22 @@ const Real cflNumber = 0.4f;
 Vec3f gridRes = Vec3f(20, 20, 25);
 
 int main(int argc, char **argv) {
+#ifdef __unix__
+    // on linux, this will prevent the program from terminating when receiving a SIGINT
+    // see https://stackoverflow.com/questions/1641182/how-can-i-catch-a-ctrl-c-event
+    struct sigaction sigIntHandler{};
+    sigIntHandler.sa_handler = killHandler;
+    sigemptyset(&sigIntHandler.sa_mask);
+    sigIntHandler.sa_flags = 0;
+    sigaction(SIGINT, &sigIntHandler, nullptr);
+#elifdef _WIN32
+    // on windows, this will prevent the program from terminating when receiving a CTRL+C
+    if (!SetConsoleCtrlHandler((PHANDLER_ROUTINE) killHandler, TRUE)) {
+        cerr << "Unable to install handler!" << endl;
+        return EXIT_FAILURE;
+    }
+#endif
+
     if (cmdOptionExists(argv, argv + argc, "--help") || cmdOptionExists(argv, argv + argc, "-h")) {
         cout << "Usage: ./main [options]" << endl;
         cout << "Options:" << endl;
@@ -201,6 +229,12 @@ int main(int argc, char **argv) {
             Real cflCriterion = cflNumber * solver.getKernel().supportRadius() / solver.maxVelocity().length();
             timeStepDt = min(min(dt, cflCriterion), fileDt - timeElapsed);
 
+            if (killed) {
+                timesteps = t - 1;
+                cout << "Simulation stopped by user, gracefully shutting down..." << endl;
+                break;
+            }
+
         }
 
         for (unsigned long int i = 0; i < nbFluidPart; ++i) {
@@ -227,6 +261,13 @@ int main(int argc, char **argv) {
             sprayPos[t] = sprayPosStep;
             foamPos[t] = foamPosStep;
             sprayPos[t] = sprayPosStep;
+        }
+
+        // if ctrl+c is pressed, we stop the simulation and save the data
+        if (killed) {
+            timesteps = t;
+            cout << "Simulation stopped by user, gracefully shutting down..." << endl;
+            break;
         }
     }
 
