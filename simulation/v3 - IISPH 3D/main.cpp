@@ -72,7 +72,8 @@ int main(int argc, char **argv) {
     sigemptyset(&sigIntHandler.sa_mask);
     sigIntHandler.sa_flags = 0;
     sigaction(SIGINT, &sigIntHandler, nullptr);
-#elifdef _WIN32
+#endif
+#ifdef _WIN32
     // on windows, this will prevent the program from terminating when receiving a CTRL+C
     if (!SetConsoleCtrlHandler((PHANDLER_ROUTINE) killHandler, TRUE)) {
         cerr << "Unable to install handler!" << endl;
