@@ -153,7 +153,7 @@ public:
         Vec3f spherePosition = Vec3f(0.5f * gridRes.x, 0.5f * gridRes.y, 0.3f * gridRes.z);
         Real sphereRadius = min(gridRes.x, min(gridRes.y, gridRes.z)) * 0.25f;
 
-        Vec3f torusPosition = Vec3f(0.5f * gridRes.x, 0.5f * gridRes.y, 0.3f * gridRes.z);
+        Vec3f torusPosition = Vec3f(0.5f * gridRes.x, 0.5f * gridRes.y, 0.12f * gridRes.z);
         Real torusMajorRadius = min(gridRes.x, min(gridRes.y, gridRes.z)) * 0.25f;
         Real torusMinorRadius = torusMajorRadius / 3.0f;
 
