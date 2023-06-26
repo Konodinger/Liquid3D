@@ -31,11 +31,11 @@ class IisphSolver {
 public:
     explicit IisphSolver(
             const Real dt = 0.0005, const Real nu = 0.08,
-            const Real h = 0.5, const Real density = 1e3,
+            const Real h = 0.5, const Real density = 1e3, const Real wallWeightCoef = 2.f,
             const Vec3f g = Vec3f(0, 0, -9.8), const Real initP = 0.5,
             const Real omega = 0.5, const Real pressureError = 1.) :
-            _kernel(h), _rad(_kernel.supportRadius()), _dt(dt), _nu(nu),
-            _h(h), _d0(density), _g(g),
+            _kernel(h), _rad(_kernel.supportRadius()), _dt(dt), _wallWeightCoef(wallWeightCoef),
+            _nu(nu), _h(h), _d0(density), _g(g),
             _initP(initP), _omega(omega), _pressureError(pressureError) {
         _m0 = _d0 * _h * _h * _h / 8. * M_PI * 4. / 3.;
         maxVel = Vec3f();
@@ -527,7 +527,7 @@ private:
                                 for (tIndex j: _pidxInGrid[idx1d(_kernelX, _kernelY, _kernelZ)]) {
                                     if (j < _nbWallParticles) { //Boundary
                                         _predP[i] -=
-                                                _m0 * _c_i[i].dotProduct(_kernel.grad_w(position(i) - position(j)));
+                                                _m0 * _wallWeightCoef * _c_i[i].dotProduct(_kernel.grad_w(position(i) - position(j)));
                                     } else {
                                         _predP[i] -= _m0 * (_c_i[i] - _d_ii[j] * _p[j] - _c_i[j] -
                                                             _dt * _dt * _m0 / (_d[i] * _d[i]) *
@@ -651,6 +651,7 @@ private:
     // wall
     Real _left, _right, _bottom, _top, _back, _front;          // wall (boundary)
     bool _useLConfig = false;
+    Real _wallWeightCoef;
     tIndex _nbWallParticles;          // number of particles that belong to the wall
 
     // SPH coefficients
