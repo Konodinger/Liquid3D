@@ -48,8 +48,7 @@ compile_commands.json
 CTestTestfile.cmake
 _deps
 
-openvdbCppBridge/build
-openvdbCppBridge/cmake-build-debug
+openvdbCppBridge/OpenVdbBridge
 
 build
 3DIISPH
