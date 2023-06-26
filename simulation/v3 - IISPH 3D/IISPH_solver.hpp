@@ -262,9 +262,16 @@ public:
     }
 
     void clampParticle(Vec3f &part) const {
-        part.x = clamp(part.x, _left, _right);
-        part.y = clamp(part.y, _bottom, _top);
-        part.z = clamp(part.z, _back, _front);
+        const Real newX = clamp(part.x, _left, _right);
+        const Real newY = clamp(part.y, _bottom, _top);
+        const Real newZ = clamp(part.z, _back, _front);
+
+        if (newX != part.x || newY != part.y || newZ != part.z)
+            std::cout << "Clamping particle" << std::endl;
+        
+        part.x = newX;
+        part.y = newY;
+        part.z = newZ;
 
         if (_useLConfig) {
             if (part.x > (int) ((1.0f - LCONFING_FRACTION_X) * _resX) - 0.5 * _h &&
@@ -527,7 +534,8 @@ private:
                                 for (tIndex j: _pidxInGrid[idx1d(_kernelX, _kernelY, _kernelZ)]) {
                                     if (j < _nbWallParticles) { //Boundary
                                         _predP[i] -=
-                                                _m0 * _wallWeightCoef * _c_i[i].dotProduct(_kernel.grad_w(position(i) - position(j)));
+                                                _m0 * _wallWeightCoef *
+                                                _c_i[i].dotProduct(_kernel.grad_w(position(i) - position(j)));
                                     } else {
                                         _predP[i] -= _m0 * (_c_i[i] - _d_ii[j] * _p[j] - _c_i[j] -
                                                             _dt * _dt * _m0 / (_d[i] * _d[i]) *
