@@ -63,3 +63,11 @@ If this should fail, you can fallback on the python implementation of the bridge
 ### Blender
 
 You can use the `vdb_blender.blend` file to import the `.vdb` files generated using the bridge. The file contains a material to visualize fluids.
+
+## Team
+
+<a href="https://github.com/Konodinger/Liquid3D/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=Konodinger/Liquid3D" />
+</a>
+
+Made with [contrib.rocks](https://contrib.rocks).
