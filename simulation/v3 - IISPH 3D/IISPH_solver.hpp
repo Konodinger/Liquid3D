@@ -62,7 +62,7 @@ public:
         _back = 0.5 * _h;
         _front = static_cast<Real>(_resZ) - 0.5 * _h;
 
-        const int wallDensity = 8; // minimum is 4, go higher to prevent particles from leaving the matrix
+        const int wallDensity = 8;
         for (int x: {0, _resX - 1}) {
             for (int y = 0; y < _resY; ++y) {
                 for (int z = 0; z < _resZ; ++z) {
