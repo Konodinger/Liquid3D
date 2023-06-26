@@ -47,7 +47,7 @@ void rasterizeParticles(std::vector<openvdb::Vec3R> &positions, const std::strin
     // see also https://stackoverflow.com/questions/68405603/i-am-trying-to-convert-point-cloud-to-mesh-using-openvdb
 
     openvdb::FloatGrid::Ptr levelSet = openvdb::createLevelSet<openvdb::FloatGrid>(voxelSize, halfWidth);
-    levelSet->setName("levelSet" + std::to_string(iteration));
+    levelSet->setName(fileName + "SDF");
     levelSet->insertMeta("dt", openvdb::FloatMetadata(dt));
 
     openvdb::tools::ParticlesToLevelSet<openvdb::FloatGrid> raster(*levelSet);
