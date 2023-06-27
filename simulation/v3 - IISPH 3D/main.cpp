@@ -39,7 +39,7 @@ void killHandler(int) {
 #define DEFAULT_VISCOSITY 0.02f
 const Real solvH = 0.5;
 const Real solvDensity = 3e3;
-const Real solvWallWeightCoef = 1.f;
+const Real solvWallWeightCoef = 2.f;
 const Vec3f solvG = Vec3f(0, 0, -9.8);
 const Real solvInitP = 0.5;
 const Real solvOmega = 0.3;
