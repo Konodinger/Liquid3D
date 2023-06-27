@@ -63,17 +63,26 @@ public:
         _front = static_cast<Real>(_resZ) - 0.5 * _h;
 
 
-        for (int x: {0, 1, _resX - 2, _resX - 1}) {
+        const int wallDensity = 8;
+        for (int x: {0, _resX - 1}) {
             for (int y = 0; y < _resY; ++y) {
                 for (int z = 0; z < _resZ; ++z) {
-                    _pos.push_back(Vec3f(x + 0.25, y + 0.25, z + 0.25));
+                    for (int lx = 1; lx < wallDensity; lx++) {
+                        for (int ly = 1; ly < wallDensity; ly++) {
+                            for (int lz = 1; lz < wallDensity; lz++) {
+                                _pos.push_back(Vec3f(x + lx / (Real) wallDensity, y + ly / (Real) wallDensity,
+                                                     z + lz / (Real) wallDensity));
+                            }
+                        }
+                    }
+                    /*_pos.push_back(Vec3f(x + 0.25, y + 0.25, z + 0.25));
                     _pos.push_back(Vec3f(x + 0.75, y + 0.25, z + 0.25));
                     _pos.push_back(Vec3f(x + 0.25, y + 0.75, z + 0.25));
                     _pos.push_back(Vec3f(x + 0.75, y + 0.75, z + 0.25));
                     _pos.push_back(Vec3f(x + 0.25, y + 0.25, z + 0.75));
                     _pos.push_back(Vec3f(x + 0.75, y + 0.25, z + 0.75));
                     _pos.push_back(Vec3f(x + 0.25, y + 0.75, z + 0.75));
-                    _pos.push_back(Vec3f(x + 0.75, y + 0.75, z + 0.75));
+                    _pos.push_back(Vec3f(x + 0.75, y + 0.75, z + 0.75));*/
                 }
             }
         }
@@ -82,29 +91,30 @@ public:
         for (int x = 2; x < _resX - 2; ++x) {
             for (int y: {0, 1, _resY - 2, _resY - 1}) {
                 for (int z = 0; z < _resZ; ++z) {
-                    _pos.push_back(Vec3f(x + 0.25, y + 0.25, z + 0.25));
-                    _pos.push_back(Vec3f(x + 0.75, y + 0.25, z + 0.25));
-                    _pos.push_back(Vec3f(x + 0.25, y + 0.75, z + 0.25));
-                    _pos.push_back(Vec3f(x + 0.75, y + 0.75, z + 0.25));
-                    _pos.push_back(Vec3f(x + 0.25, y + 0.25, z + 0.75));
-                    _pos.push_back(Vec3f(x + 0.75, y + 0.25, z + 0.75));
-                    _pos.push_back(Vec3f(x + 0.25, y + 0.75, z + 0.75));
-                    _pos.push_back(Vec3f(x + 0.75, y + 0.75, z + 0.75));
+                    for (int lx = 1; lx < wallDensity; lx++) {
+                        for (int ly = 1; ly < wallDensity; ly++) {
+                            for (int lz = 1; lz < wallDensity; lz++) {
+                                _pos.push_back(Vec3f(x + lx / (Real) wallDensity, y + ly / (Real) wallDensity,
+                                                     z + lz / (Real) wallDensity));
+                            }
+                        }
+                    }
                 }
             }
         }
 
-        for (int x = 2; x < _resX - 2; ++x) {
-            for (int y = 2; y < _resY - 2; ++y) {
-                for (int z: {0, 1, _resZ - 2, _resZ - 1}) {
-                    _pos.push_back(Vec3f(x + 0.25, y + 0.25, z + 0.25));
-                    _pos.push_back(Vec3f(x + 0.75, y + 0.25, z + 0.25));
-                    _pos.push_back(Vec3f(x + 0.25, y + 0.75, z + 0.25));
-                    _pos.push_back(Vec3f(x + 0.75, y + 0.75, z + 0.25));
-                    _pos.push_back(Vec3f(x + 0.25, y + 0.25, z + 0.75));
-                    _pos.push_back(Vec3f(x + 0.75, y + 0.25, z + 0.75));
-                    _pos.push_back(Vec3f(x + 0.25, y + 0.75, z + 0.75));
-                    _pos.push_back(Vec3f(x + 0.75, y + 0.75, z + 0.75));
+
+        for (int x = 1; x < _resX - 1; ++x) {
+            for (int y = 1; y < _resY - 1; ++y) {
+                for (int z: {0, _resZ - 1}) {
+                    for (int lx = 1; lx < wallDensity; lx++) {
+                        for (int ly = 1; ly < wallDensity; ly++) {
+                            for (int lz = 1; lz < wallDensity; lz++) {
+                                _pos.push_back(Vec3f(x + lx / (Real) wallDensity, y + ly / (Real) wallDensity,
+                                                     z + lz / (Real) wallDensity));
+                            }
+                        }
+                    }
                 }
             }
         }
