@@ -161,8 +161,8 @@ public:
 
         /// FLUID PARTICLES
 
-        Vec3f blockPosition = Vec3f(0.5f * gridRes.x, 0.5f * gridRes.y, 0.2f * gridRes.z);
-        Vec3f blockDimensions = Vec3f(0.5f * gridRes.x, 0.5f * gridRes.y, 0.25f * gridRes.z);
+        Vec3f blockPosition = Vec3f(0.5f * gridRes.x, 0.8f * gridRes.y, 0.3f * gridRes.z);
+        Vec3f blockDimensions = Vec3f(0.8f * gridRes.x, 0.15f * gridRes.y, 0.5f * gridRes.z);
 
         Vec3f spherePosition = Vec3f(0.5f * gridRes.x, 0.5f * gridRes.y, 0.3f * gridRes.z);
         Real sphereRadius = min(gridRes.x, min(gridRes.y, gridRes.z)) * 0.25f;
@@ -272,8 +272,8 @@ public:
         const Real newY = clamp(part.y, _bottom, _top);
         const Real newZ = clamp(part.z, _back, _front);
 
-        // if (newX != part.x || newY != part.y || newZ != part.z)
-        //     std::cout << "Clamping particle" << std::endl;
+        if (newX != part.x || newY != part.y || newZ != part.z)
+            std::cout << "Clamping particle" << std::endl;
 
         part.x = newX;
         part.y = newY;

@@ -2,7 +2,7 @@
 //#define __DEBUG2__
 //#define __DEBUG3__
 //#define __DEBUG4__
-//#define __DEBUG5__  //For CFL conditions.
+#define __DEBUG5__  //For CFL conditions.
 //#define __DEBUG6__ //For debugging diffuse particle formation.
 //#define __PRINT_VELOCITY__
 
@@ -39,7 +39,7 @@ void killHandler(int) {
 #define DEFAULT_VISCOSITY 0.02f
 const Real solvH = 0.5;
 const Real solvDensity = 3e3;
-const Real solvWallWeightCoef = 2.f;
+const Real solvWallWeightCoef = 1.f;
 const Vec3f solvG = Vec3f(0, 0, -9.8);
 const Real solvInitP = 0.5;
 const Real solvOmega = 0.3;
@@ -62,7 +62,7 @@ const Real cflNumber = 0.4f;
 #define DEFAULT_USE_LCONFIG false
 
 #define DEFAULT_RESOLUTION 1
-Vec3f gridRes = Vec3f(20, 20, 25);
+Vec3f gridRes = Vec3f(10, 20, 25);
 
 int main(int argc, char **argv) {
 #ifdef __unix__
