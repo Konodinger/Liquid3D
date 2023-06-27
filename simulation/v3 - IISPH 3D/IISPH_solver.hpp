@@ -63,7 +63,7 @@ public:
         _front = static_cast<Real>(_resZ) - 0.5 * _h;
 
 
-        const int wallDensity = 8;
+        const int wallDensity = 6;
         for (int x: {0, _resX - 1}) {
             for (int y = 0; y < _resY; ++y) {
                 for (int z = 0; z < _resZ; ++z) {
@@ -124,7 +124,7 @@ public:
         if (_useLConfig) {
             int lLineX = int(_resX * LCONFING_FRACTION_X);
             int lLineY = int(_resY * LCONFING_FRACTION_Y);
-            for(int i : {lLineX, lLineX + 1}) {
+            for (int i: {lLineX, lLineX + 1}) {
                 for (int j = 2; j < lLineY + 2; ++j) {
                     for (int k = 2; k < _resZ - 2; ++k) {
                         _pos.push_back(Vec3f(i + 0.25, j + 0.25, k + 0.25));
@@ -140,7 +140,7 @@ public:
             }
 
             for (int i = 2; i < lLineX; ++i) {
-                for (int j : {lLineY, lLineY + 1}) {
+                for (int j: {lLineY, lLineY + 1}) {
                     for (int k = 2; k < _resZ - 2; ++k) {
                         _pos.push_back(Vec3f(i + 0.25, j + 0.25, k + 0.25));
                         _pos.push_back(Vec3f(i + 0.75, j + 0.25, k + 0.25));
@@ -274,7 +274,7 @@ public:
 
         // if (newX != part.x || newY != part.y || newZ != part.z)
         //     std::cout << "Clamping particle" << std::endl;
-        
+
         part.x = newX;
         part.y = newY;
         part.z = newZ;
