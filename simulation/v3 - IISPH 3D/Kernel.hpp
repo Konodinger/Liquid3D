@@ -15,7 +15,7 @@
 //Linear kernel for diffuse particule generation.
 class LinearKernel {
 public:
-    explicit LinearKernel(const Real h = 1.f) : _h(2.f*h) {};
+    explicit LinearKernel(const Real h = 0.5f) : _h(2.f*h) {};
     Real supportRadius() const { return _h; }
     Real w(const Vec3f &rij) const { return max(0.f, 1 - (rij.length())/_h); }
 

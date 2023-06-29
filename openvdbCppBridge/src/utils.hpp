@@ -33,7 +33,6 @@ void writeGrid(const openvdb::GridBase::Ptr &grid, const std::string &fileName) 
     }
 
     std::cout << "\nWriting \"" << fileName << "\" to file\n";
-    grid->setName(fileName);
     openvdb::GridPtrVec grids;
     grids.push_back(grid);
     openvdb::io::File file("./results/" + fileName + ".vdb");

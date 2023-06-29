@@ -2,14 +2,20 @@
 //#define __DEBUG2__
 //#define __DEBUG3__
 //#define __DEBUG4__
-//#define __DEBUG5__  //For CFL conditions.
+#define __DEBUG5__  //For CFL conditions.
+//#define __DEBUG6__ //For debugging diffuse particle formation.
 //#define __PRINT_VELOCITY__
 
 #include <iostream>
 #include <fstream>
+#include <csignal>
 #include "IISPH_solver.hpp"
 #include "SFB_generator.hpp"
 #include "utils.hpp"
+
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 #ifdef _OPENMP
 
@@ -19,12 +25,21 @@
 
 using namespace std;
 
-string fileOutput = "liquidPointCloud";
+string fileOutputFluid = "liquidPointCloud";
+string fileOutputDiffuse = "diffusePointCloud";
+
+bool killed = false;
+
+void killHandler(int) {
+    std::cout << "Interrupt signal received. Waiting for the end of current simulation step..." << std::endl;
+    killed = true;
+}
 
 //Simulation parameters
-const Real solvNu = 0.02;
+#define DEFAULT_VISCOSITY 0.02f
 const Real solvH = 0.5;
 const Real solvDensity = 3e3;
+const Real solvWallWeightCoef = 1.f;
 const Vec3f solvG = Vec3f(0, 0, -9.8);
 const Real solvInitP = 0.5;
 const Real solvOmega = 0.3;
@@ -44,15 +59,29 @@ const Real cflNumber = 0.4f;
 #define DEFAULT_NB_TIMESTEPS 50
 #define DEFAULT_INIT_TYPE InitType::SPHERE;
 
-#define DEFAULT_RESOLUTION 1.0f
-Vec3f gridRes = Vec3f(20, 20, 25);
+#define DEFAULT_USE_LCONFIG false
 
-IisphSolver solver(dt, solvNu, solvH, solvDensity, solvG, solvInitP, solvOmega, solvPressureError);
-
-sfbSimulation sfbSim(&solver, solvH, dt, minBubbleNeighbor, minFoamNeighbor);
-
+#define DEFAULT_RESOLUTION 1
+Vec3f gridRes = Vec3f(10, 20, 25);
 
 int main(int argc, char **argv) {
+#ifdef __unix__
+    // on linux, this will prevent the program from terminating when receiving a SIGINT
+    // see https://stackoverflow.com/questions/1641182/how-can-i-catch-a-ctrl-c-event
+    struct sigaction sigIntHandler{};
+    sigIntHandler.sa_handler = killHandler;
+    sigemptyset(&sigIntHandler.sa_mask);
+    sigIntHandler.sa_flags = 0;
+    sigaction(SIGINT, &sigIntHandler, nullptr);
+#endif
+#ifdef _WIN32
+    // on windows, this will prevent the program from terminating when receiving a CTRL+C
+    if (!SetConsoleCtrlHandler((PHANDLER_ROUTINE) killHandler, TRUE)) {
+        cerr << "Unable to install handler!" << endl;
+        return EXIT_FAILURE;
+    }
+#endif
+
     if (cmdOptionExists(argv, argv + argc, "--help") || cmdOptionExists(argv, argv + argc, "-h")) {
         cout << "Usage: ./main [options]" << endl;
         cout << "Options:" << endl;
@@ -63,7 +92,13 @@ int main(int argc, char **argv) {
         cout
                 << "\t--init <value>, -i <value>\t Set the initial particle configuration (default: sphere) (torus, block, sphere)"
                 << endl;
-        cout << "\t--resolution <value>, -r <value>\t Set the resolution of the scene (default: 1.0)" << endl;
+        cout
+                << "\t--resolution <value>, -r <value>\t Set the resolution of the scene. It must be an integer (default: 1)"
+                << endl;
+        cout << "\t--noFoam\t Disable foam generation" << endl;
+        cout << "\t--viscosity <value>, -v <value>\t Set the viscosity of the fluid (default: " << DEFAULT_VISCOSITY
+             << ")" << endl;
+        cout << "\t--useLConfig\t Use the LConfig file to initialize the scene (default: false)" << endl;
 
         return 0;
     }
@@ -73,6 +108,7 @@ int main(int argc, char **argv) {
     char *timestepsCmdArgShort = getCmdOption(argv, argv + argc, "-t");
     if (timestepsCmdArg) timesteps = atoi(timestepsCmdArg);
     else if (timestepsCmdArgShort) timesteps = atoi(timestepsCmdArgShort);
+    std::cout << "Number of timesteps: " << timesteps << std::endl;
 
     InitType initType = DEFAULT_INIT_TYPE;
     char *initTypeCmdArg = getCmdOption(argv, argv + argc, "--init");
@@ -84,43 +120,65 @@ int main(int argc, char **argv) {
         // sphere
         if (initTypeStr == "sphere") {
             initType = InitType::SPHERE;
+            std::cout << "Init type: sphere" << std::endl;
         } else if (initTypeStr == "torus") {
             initType = InitType::TORUS;
+            std::cout << "Init type: torus" << std::endl;
         } else if (initTypeStr == "block") {
             initType = InitType::BLOCK;
+            std::cout << "Init type: block" << std::endl;
         } else {
             cout << "Unknown initial scene type: " << initTypeStr << endl;
             return 0;
         }
     }
 
-    stringstream fpath;
+    stringstream fpathFluid, fpathSpray, fpathFoam, fpathBubble;
     ofstream file;
 
     char *outputCmdArg = getCmdOption(argv, argv + argc, "--output");
     char *outputCmdArgShort = getCmdOption(argv, argv + argc, "-o");
     if (outputCmdArg) {
-        fileOutput = outputCmdArg;
-        fpath << "./" << fileOutput << ".txt";
+        fileOutputFluid = outputCmdArg;
+        fpathFluid << "./" << fileOutputFluid << ".txt";
     } else if (outputCmdArgShort) {
-        fileOutput = outputCmdArgShort;
-        fpath << "./" << fileOutput << ".txt";
+        fileOutputFluid = outputCmdArgShort;
+        fpathFluid << "./" << fileOutputFluid << ".txt";
     } else {
-        int fileNum = 1;
+        int fileNum = 0;
         do {
-            fpath.str(string());
-            fpath << "./" << fileOutput << "_" << setw(3) << setfill('0') << fileNum++ << ".txt";
-        } while (ifstream(fpath.str()).is_open());
+            fpathFluid.str(string());
+            fpathFluid << "./" << fileOutputFluid << "_" << setw(3) << setfill('0') << ++fileNum << ".txt";
+            fpathSpray.str(string());
+            fpathSpray << "./" << fileOutputFluid << "Spray_" << setw(3) << setfill('0') << fileNum << ".txt";
+            fpathFoam.str(string());
+            fpathFoam << "./" << fileOutputFluid << "Foam_" << setw(3) << setfill('0') << fileNum << ".txt";
+            fpathBubble.str(string());
+            fpathBubble << "./" << fileOutputFluid << "Bubble_" << setw(3) << setfill('0') << fileNum << ".txt";
+        } while (ifstream(fpathFluid.str()).is_open());
     }
+    std::cout << "Output file: " << fpathFluid.str() << std::endl;
 
     char *resolutionCmdArg = getCmdOption(argv, argv + argc, "--resolution");
     char *resolutionCmdArgShort = getCmdOption(argv, argv + argc, "-r");
-    Real resolution;
-    if (resolutionCmdArg) resolution = atof(resolutionCmdArg);
-    else if (resolutionCmdArgShort) resolution = atof(resolutionCmdArgShort);
+    int resolution;
+    if (resolutionCmdArg) resolution = atoi(resolutionCmdArg);
+    else if (resolutionCmdArgShort) resolution = atoi(resolutionCmdArgShort);
     else resolution = DEFAULT_RESOLUTION;
+    std::cout << "Resolution: " << resolution << std::endl;
 
-    gridRes *= resolution;
+    gridRes *= (float) resolution;
+
+    bool foamEnabled = !cmdOptionExists(argv, argv + argc, "--noFoam");
+    std::cout << "Foam enabled: " << foamEnabled << std::endl;
+
+    char *viscosityCmdArg = getCmdOption(argv, argv + argc, "--viscosity");
+    char *viscosityCmdArgShort = getCmdOption(argv, argv + argc, "-v");
+    Real viscosity;
+    if (viscosityCmdArg) viscosity = atof(viscosityCmdArg);
+    else if (viscosityCmdArgShort) viscosity = atof(viscosityCmdArgShort);
+    else viscosity = DEFAULT_VISCOSITY;
+    std::cout << "Viscosity: " << viscosity << std::endl;
 
     // if openmp is enabled, we print the number of threads used
 #ifdef _OPENMP
@@ -129,8 +187,16 @@ int main(int argc, char **argv) {
     cout << "OpenMP not enabled, using only 1 thread" << endl;
 #endif
 
+    IisphSolver solver(dt, viscosity, solvH, solvDensity, solvWallWeightCoef, solvG, solvInitP, solvOmega, solvPressureError);
+    sfbSimulation sfbSim(&solver, solvH, dt, minBubbleNeighbor, minFoamNeighbor);
+    solver.scaleGarvity((float) resolution);
+
+    bool useLConfig = cmdOptionExists(argv, argv + argc, "--useLConfig");
+    std::cout << "Using LConfig:" << useLConfig << std::endl;
+
     try {
-        solver.initScene(gridRes, initType);
+        solver.initScene(gridRes, initType, useLConfig);
+        if (foamEnabled) sfbSim.initScene();
     } catch (length_error &e) {
         cout << e.what() << endl;
         return 0;
@@ -140,6 +206,11 @@ int main(int argc, char **argv) {
     const int nbWallPart = solver.wallParticleCount();
     vector<Vec3f> partPos((timesteps + 1) * nbFluidPart, Vec3f(0));
     vector<Vec3f> partVel((timesteps + 1) * nbFluidPart, Vec3f(0));
+    vector<vector<Vec3f>> sprayPos(timesteps + 1, vector<Vec3f>(0));
+    vector<vector<Vec3f>> foamPos(timesteps + 1, vector<Vec3f>(0));
+    vector<vector<Vec3f>> bubblePos(timesteps + 1, vector<Vec3f>(0));
+
+    const list<sfb> *diffuseList = sfbSim.diffuseList();
 
     for (unsigned long int i = 0; i < nbFluidPart; ++i) {
         partPos[i] = solver.position(i + nbWallPart);
@@ -154,11 +225,17 @@ int main(int argc, char **argv) {
         Real timeElapsed = 0.;
         while (timeElapsed < fileDt) {
             solver.update(timeStepDt);
-            sfbSim.sfbStep(timeStepDt);
+            if (foamEnabled) sfbSim.sfbStep(timeStepDt);
 
             timeElapsed += timeStepDt;
             Real cflCriterion = cflNumber * solver.getKernel().supportRadius() / solver.maxVelocity().length();
             timeStepDt = min(min(dt, cflCriterion), fileDt - timeElapsed);
+
+            if (killed) {
+                timesteps = t - 1;
+                cout << "Simulation stopped by user, gracefully shutting down..." << endl;
+                break;
+            }
 
         }
 
@@ -166,27 +243,103 @@ int main(int argc, char **argv) {
             partPos[t * nbFluidPart + i] = solver.position(i + nbWallPart);
             partVel[t * nbFluidPart + i] = solver.velocity(i + nbWallPart);
         }
+
+        if (foamEnabled) {
+            vector<Vec3f> sprayPosStep, foamPosStep, bubblePosStep;
+            for (const sfb &diffuse: (*diffuseList)) {
+                switch (diffuse.nature) {
+                    case sfbType::SPRAY :
+                        sprayPosStep.push_back(diffuse.position);
+                        break;
+                    case sfbType::FOAM :
+                        foamPosStep.push_back(diffuse.position);
+                        break;
+                    case sfbType::BUBBLE :
+                        bubblePosStep.push_back(diffuse.position);
+                        break;
+                }
+            }
+
+            sprayPos[t] = sprayPosStep;
+            foamPos[t] = foamPosStep;
+            sprayPos[t] = sprayPosStep;
+        }
+
+        // if ctrl+c is pressed, we stop the simulation and save the data
+        if (killed) {
+            timesteps = t;
+            cout << "Simulation stopped by user, gracefully shutting down..." << endl;
+            break;
+        }
     }
 
-    cout << "End of the simulation, saving data..." << endl;
+    cout << "End of the simulation, saving data to " << fpathFluid.str() << endl;
 
-    file.open(fpath.str());
+    //Fluid part.
+    file.open(fpathFluid.str());
     file << gridRes.x << " " << gridRes.y << " " << gridRes.z << "\n";
     file << dt * nbConsecutiveSteps << " " << timesteps + 1 << "\n";
 
-    file << nbFluidPart << "\n";
-
-    for (unsigned int i = 0; i < (timesteps + 1) * nbFluidPart; ++i) {
-        file << partPos[i].x << " " << partPos[i].y << " " << partPos[i].z;
+    for (unsigned int i = 0; i < (timesteps + 1); ++i) {
+        file << nbFluidPart << "\n";
+        for (unsigned long int j = 0; j < nbFluidPart; ++j) {
+            unsigned long int index = i * nbFluidPart + j;
+            file << partPos[index].x << " " << partPos[index].y << " " << partPos[index].z;
 #ifdef __PRINT_VELOCITY__
-        << " " << partVel[i].x << " " << partVel[i].y << " " << partVel[i].z;
+            << " " << partVel[index].x << " " << partVel[index].y << " " << partVel[index].z;
 #endif
-        file << "\n";
+            file << "\n";
+        }
 
     }
-
-    cout << " > Quit" << endl;
     file.close();
 
+    //Diffuse part.
+    if (foamEnabled) {
+        file.open(fpathSpray.str());
+
+        file << gridRes.x << " " << gridRes.y << " " << gridRes.z << "\n";
+        file << dt * nbConsecutiveSteps << " " << timesteps + 1 << "\n";
+
+        for (unsigned int i = 0; i <= timesteps; ++i) {
+            file << sprayPos[i].size() << "\n";
+            for (unsigned long long int j = 0; j < sprayPos[i].size(); ++j) {
+                file << sprayPos[i][j].x << " " << sprayPos[i][j].y << " " << sprayPos[i][j].z << "\n";
+            }
+        }
+
+        file.close();
+
+        file.open(fpathFoam.str());
+
+        file << gridRes.x << " " << gridRes.y << " " << gridRes.z << "\n";
+        file << dt * nbConsecutiveSteps << " " << timesteps + 1 << "\n";
+
+        for (unsigned int i = 0; i <= timesteps; ++i) {
+            file << foamPos[i].size() << "\n";
+            for (unsigned long long int j = 0; j < foamPos[i].size(); ++j) {
+                file << foamPos[i][j].x << " " << foamPos[i][j].y << " " << foamPos[i][j].z << "\n";
+            }
+        }
+
+        file.close();
+
+        file.open(fpathBubble.str());
+
+        file << gridRes.x << " " << gridRes.y << " " << gridRes.z << "\n";
+        file << dt * nbConsecutiveSteps << " " << timesteps + 1 << "\n";
+
+        for (unsigned int i = 0; i <= timesteps; ++i) {
+            file << bubblePos[i].size() << "\n";
+            for (unsigned long long int j = 0; j < bubblePos[i].size(); ++j) {
+                file << bubblePos[i][j].x << " " << bubblePos[i][j].y << " " << bubblePos[i][j].z << "\n";
+            }
+        }
+
+        file.close();
+    }
+
+
+    cout << " > Quit" << endl;
     return 0;
 }

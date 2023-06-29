@@ -1,13 +1,13 @@
-#ifndef __IISPH_SOLVER_HPP__
-#define __IISPH_SOLVER_HPP__
+#ifndef ___IISPH_SOLVER___
+#define ___IISPH_SOLVER___
 
-#include <stdio.h>
+#include <cstdio>
 #include <iostream>
 #include <sstream>
 #include <iomanip>
 #include <vector>
 #include <cmath>
-#include <math.h>
+#include <cmath>
 
 #ifdef _OPENMP
 
@@ -24,20 +24,18 @@ using namespace std;
 // debug index
 int obsPart = 2000;
 
-// for recording videos
-FILE *ffmpeg;
-int *movieBuffer;
-
+#define LCONFING_FRACTION_X 0.4f
+#define LCONFING_FRACTION_Y 0.4f
 
 class IisphSolver {
 public:
     explicit IisphSolver(
             const Real dt = 0.0005, const Real nu = 0.08,
-            const Real h = 0.5, const Real density = 1e3,
-            const Vec3f g = Vec3f(0, -9.8, 0), const Real initP = 0.5,
+            const Real h = 0.5, const Real density = 1e3, const Real wallWeightCoef = 2.f,
+            const Vec3f g = Vec3f(0, 0, -9.8), const Real initP = 0.5,
             const Real omega = 0.5, const Real pressureError = 1.) :
-            _kernel(h), _rad(_kernel.supportRadius()), _dt(dt), _nu(nu),
-            _h(h), _d0(density), _g(g),
+            _kernel(h), _rad(_kernel.supportRadius()), _dt(dt), _wallWeightCoef(wallWeightCoef),
+            _nu(nu), _h(h), _d0(density), _g(g),
             _initP(initP), _omega(omega), _pressureError(pressureError) {
         _m0 = _d0 * _h * _h * _h / 8. * M_PI * 4. / 3.;
         maxVel = Vec3f();
@@ -45,12 +43,16 @@ public:
 
     // assume an arbitrary grid with the size of res_x*res_y; a fluid mass fill up
     // the size of f_width, f_height; each cell is sampled with 2x2 particles.
-    void initScene(const Vec3f gridRes, InitType initType) {
+    void initScene(const Vec3f gridRes, InitType initType, bool useLConfig = false) {
+        _useLConfig = useLConfig;
+
         _pos.clear();
 
         _resX = gridRes.x;
         _resY = gridRes.y;
         _resZ = gridRes.z;
+
+        /// WALL BOUNDARY PARTICLES
 
         // set wall for boundary
         _left = 0.5 * _h;
@@ -61,67 +63,128 @@ public:
         _front = static_cast<Real>(_resZ) - 0.5 * _h;
 
 
-        _nbWallParticles = 0;
-        for (int i: {0, _resX - 1}) {
-            for (int j = 0; j < _resY; ++j) {
-                for (int k = 0; k < _resZ; ++k) {
-                    _pos.push_back(Vec3f(i + 0.25, j + 0.25, k + 0.25));
-                    _pos.push_back(Vec3f(i + 0.75, j + 0.25, k + 0.25));
-                    _pos.push_back(Vec3f(i + 0.25, j + 0.75, k + 0.25));
-                    _pos.push_back(Vec3f(i + 0.75, j + 0.75, k + 0.25));
-                    _pos.push_back(Vec3f(i + 0.25, j + 0.25, k + 0.75));
-                    _pos.push_back(Vec3f(i + 0.75, j + 0.25, k + 0.75));
-                    _pos.push_back(Vec3f(i + 0.25, j + 0.75, k + 0.75));
-                    _pos.push_back(Vec3f(i + 0.75, j + 0.75, k + 0.75));
-                    _nbWallParticles += 8;
+        const int wallDensity = 5;
+        for (int x: {0, _resX - 1}) {
+            for (int y = 0; y < _resY; ++y) {
+                for (int z = 0; z < _resZ; ++z) {
+                    for (int lx = 1; lx < wallDensity; lx++) {
+                        for (int ly = 1; ly < wallDensity; ly++) {
+                            for (int lz = 1; lz < wallDensity; lz++) {
+                                _pos.push_back(Vec3f(x + lx / (Real) wallDensity, y + ly / (Real) wallDensity,
+                                                     z + lz / (Real) wallDensity));
+                            }
+                        }
+                    }
+                    /*_pos.push_back(Vec3f(x + 0.25, y + 0.25, z + 0.25));
+                    _pos.push_back(Vec3f(x + 0.75, y + 0.25, z + 0.25));
+                    _pos.push_back(Vec3f(x + 0.25, y + 0.75, z + 0.25));
+                    _pos.push_back(Vec3f(x + 0.75, y + 0.75, z + 0.25));
+                    _pos.push_back(Vec3f(x + 0.25, y + 0.25, z + 0.75));
+                    _pos.push_back(Vec3f(x + 0.75, y + 0.25, z + 0.75));
+                    _pos.push_back(Vec3f(x + 0.25, y + 0.75, z + 0.75));
+                    _pos.push_back(Vec3f(x + 0.75, y + 0.75, z + 0.75));*/
                 }
             }
         }
 
 
-        for (int i = 1; i < _resX - 1; ++i) {
-            for (int j: {0, _resY - 1}) {
-                for (int k = 0; k < _resZ; ++k) {
-                    _pos.push_back(Vec3f(i + 0.25, j + 0.25, k + 0.25));
-                    _pos.push_back(Vec3f(i + 0.75, j + 0.25, k + 0.25));
-                    _pos.push_back(Vec3f(i + 0.25, j + 0.75, k + 0.25));
-                    _pos.push_back(Vec3f(i + 0.75, j + 0.75, k + 0.25));
-                    _pos.push_back(Vec3f(i + 0.25, j + 0.25, k + 0.75));
-                    _pos.push_back(Vec3f(i + 0.75, j + 0.25, k + 0.75));
-                    _pos.push_back(Vec3f(i + 0.25, j + 0.75, k + 0.75));
-                    _pos.push_back(Vec3f(i + 0.75, j + 0.75, k + 0.75));
-                    _nbWallParticles += 8;
+        for (int x = 2; x < _resX - 2; ++x) {
+            for (int y: {0, 1, _resY - 2, _resY - 1}) {
+                for (int z = 0; z < _resZ; ++z) {
+                    for (int lx = 1; lx < wallDensity; lx++) {
+                        for (int ly = 1; ly < wallDensity; ly++) {
+                            for (int lz = 1; lz < wallDensity; lz++) {
+                                _pos.push_back(Vec3f(x + lx / (Real) wallDensity, y + ly / (Real) wallDensity,
+                                                     z + lz / (Real) wallDensity));
+                            }
+                        }
+                    }
                 }
             }
         }
 
-        for (int i = 1; i < _resX - 1; ++i) {
-            for (int j = 1; j < _resY - 1; ++j) {
-                for (int k: {0, _resZ - 1}) {
-                    _pos.push_back(Vec3f(i + 0.25, j + 0.25, k + 0.25));
-                    _pos.push_back(Vec3f(i + 0.75, j + 0.25, k + 0.25));
-                    _pos.push_back(Vec3f(i + 0.25, j + 0.75, k + 0.25));
-                    _pos.push_back(Vec3f(i + 0.75, j + 0.75, k + 0.25));
-                    _pos.push_back(Vec3f(i + 0.25, j + 0.25, k + 0.75));
-                    _pos.push_back(Vec3f(i + 0.75, j + 0.25, k + 0.75));
-                    _pos.push_back(Vec3f(i + 0.25, j + 0.75, k + 0.75));
-                    _pos.push_back(Vec3f(i + 0.75, j + 0.75, k + 0.75));
-                    _nbWallParticles += 8;
+
+        for (int x = 1; x < _resX - 1; ++x) {
+            for (int y = 1; y < _resY - 1; ++y) {
+                for (int z: {0, _resZ - 1}) {
+                    for (int lx = 1; lx < wallDensity; lx++) {
+                        for (int ly = 1; ly < wallDensity; ly++) {
+                            for (int lz = 1; lz < wallDensity; lz++) {
+                                _pos.push_back(Vec3f(x + lx / (Real) wallDensity, y + ly / (Real) wallDensity,
+                                                     z + lz / (Real) wallDensity));
+                            }
+                        }
+                    }
                 }
             }
         }
+
+        // Additional obstacles
+
+        if (_useLConfig) {
+            int lLineX = int(_resX * LCONFING_FRACTION_X);
+            int lLineY = int(_resY * LCONFING_FRACTION_Y);
+            for (int i: {lLineX, lLineX + 1}) {
+                for (int j = 2; j < lLineY + 2; ++j) {
+                    for (int k = 2; k < _resZ - 2; ++k) {
+                        _pos.push_back(Vec3f(i + 0.25, j + 0.25, k + 0.25));
+                        _pos.push_back(Vec3f(i + 0.75, j + 0.25, k + 0.25));
+                        _pos.push_back(Vec3f(i + 0.25, j + 0.75, k + 0.25));
+                        _pos.push_back(Vec3f(i + 0.75, j + 0.75, k + 0.25));
+                        _pos.push_back(Vec3f(i + 0.25, j + 0.25, k + 0.75));
+                        _pos.push_back(Vec3f(i + 0.75, j + 0.25, k + 0.75));
+                        _pos.push_back(Vec3f(i + 0.25, j + 0.75, k + 0.75));
+                        _pos.push_back(Vec3f(i + 0.75, j + 0.75, k + 0.75));
+                    }
+                }
+            }
+
+            for (int i = 2; i < lLineX; ++i) {
+                for (int j: {lLineY, lLineY + 1}) {
+                    for (int k = 2; k < _resZ - 2; ++k) {
+                        _pos.push_back(Vec3f(i + 0.25, j + 0.25, k + 0.25));
+                        _pos.push_back(Vec3f(i + 0.75, j + 0.25, k + 0.25));
+                        _pos.push_back(Vec3f(i + 0.25, j + 0.75, k + 0.25));
+                        _pos.push_back(Vec3f(i + 0.75, j + 0.75, k + 0.25));
+                        _pos.push_back(Vec3f(i + 0.25, j + 0.25, k + 0.75));
+                        _pos.push_back(Vec3f(i + 0.75, j + 0.25, k + 0.75));
+                        _pos.push_back(Vec3f(i + 0.25, j + 0.75, k + 0.75));
+                        _pos.push_back(Vec3f(i + 0.75, j + 0.75, k + 0.75));
+                    }
+                }
+            }
+        }
+
+        _nbWallParticles = _pos.size();
 
         obsPart += _nbWallParticles;
 
-        const Vec3f blockPosition = Vec3f(0.5f * gridRes.x, 0.5f * gridRes.y, 0.5f * gridRes.z);
-        const Vec3f blockDimensions = Vec3f(0.5f * gridRes.x, 0.5f * gridRes.y, 0.25f * gridRes.z);
+        /// FLUID PARTICLES
 
-        const Vec3f spherePosition = Vec3f(0.5f * gridRes.x, 0.5f * gridRes.y, 0.5f * gridRes.z);
-        const Real sphereRadius = min(gridRes.x, min(gridRes.y, gridRes.z)) / 4.0f;
+        Vec3f blockPosition = Vec3f(0.5f * gridRes.x, 0.8f * gridRes.y, 0.3f * gridRes.z);
+        Vec3f blockDimensions = Vec3f(0.8f * gridRes.x, 0.15f * gridRes.y, 0.5f * gridRes.z);
 
-        const Vec3f torusPosition = Vec3f(0.5f * gridRes.x, 0.5f * gridRes.y, 0.5f * gridRes.z);
-        const Real torusMajorRadius = min(gridRes.x, min(gridRes.y, gridRes.z)) / 4.0f;
-        const Real torusMinorRadius = torusMajorRadius / 3.0f;
+        Vec3f spherePosition = Vec3f(0.5f * gridRes.x, 0.5f * gridRes.y, 0.3f * gridRes.z);
+        Real sphereRadius = min(gridRes.x, min(gridRes.y, gridRes.z)) * 0.25f;
+
+        Vec3f torusPosition = Vec3f(0.5f * gridRes.x, 0.5f * gridRes.y, 0.12f * gridRes.z);
+        Real torusMajorRadius = min(gridRes.x, min(gridRes.y, gridRes.z)) * 0.25f;
+        Real torusMinorRadius = torusMajorRadius / 3.0f;
+
+        if (_useLConfig) {
+            blockDimensions = Vec3f((1.0f - LCONFING_FRACTION_X) * gridRes.x * 0.3f,
+                                    gridRes.y * 0.5f,
+                                    0.5f * gridRes.z);
+            blockPosition = Vec3f((1.0f - LCONFING_FRACTION_X) * gridRes.x / 2.0f, 0.5f * gridRes.y, 0.3f * gridRes.z);
+
+            sphereRadius = (1.0f - LCONFING_FRACTION_X) * min(gridRes.x, min(gridRes.y, gridRes.z)) * 0.3f;
+            spherePosition = Vec3f((1.0f - LCONFING_FRACTION_X) * gridRes.x / 2.0f,
+                                   gridRes.y * 0.5f, 0.2f * gridRes.z);
+
+            torusMajorRadius = 0.15f * min(gridRes.x, min(gridRes.y, gridRes.z));
+            torusMinorRadius = 0.05f * min(gridRes.x, min(gridRes.y, gridRes.z));
+            torusPosition = Vec3f(0.25f * gridRes.x, 0.25f * gridRes.y, 0.5f * gridRes.z);
+        }
 
         switch (initType) {
             case InitType::BLOCK:
@@ -135,8 +198,6 @@ public:
                 break;
         }
         std::cout << "Simulating " << fluidParticleCount() << " particles of fluid" << std::endl;
-
-
 
         // make sure for the other particle quantities
         _vel = vector<Vec3f>(_pos.size(), Vec3f(0, 0, 0));
@@ -194,14 +255,40 @@ public:
     }
 
     bool particleCollision(const Vec3f &part) const {
-        return (part.x < _left || part.y < _bottom || part.z < _back || part.x > _right ||
-                part.y > _top || part.z > _front);
+        bool collision = (part.x < _left || part.y < _bottom || part.z < _back || part.x > _right ||
+                          part.y > _top || part.z > _front);
+
+        if (_useLConfig) {
+            collision = collision ||
+                        (part.x > (int) ((1.0f - LCONFING_FRACTION_X) * _resX) - 0.5 * _h &&
+                         part.y > (int) ((1.0f - LCONFING_FRACTION_Y) * _resY) - 0.5 * _h);
+        }
+
+        return collision;
     }
 
     void clampParticle(Vec3f &part) const {
-        part.x = clamp(part.x, _left, _right);
-        part.y = clamp(part.y, _bottom, _top);
-        part.z = clamp(part.z, _back, _front);
+        const Real newX = clamp(part.x, _left, _right);
+        const Real newY = clamp(part.y, _bottom, _top);
+        const Real newZ = clamp(part.z, _back, _front);
+
+        if (newX != part.x || newY != part.y || newZ != part.z)
+            std::cout << "Clamping particle" << std::endl;
+
+        part.x = newX;
+        part.y = newY;
+        part.z = newZ;
+
+        if (_useLConfig) {
+            if (part.x > (int) ((1.0f - LCONFING_FRACTION_X) * _resX) - 0.5 * _h &&
+                part.y > (int) ((1.0f - LCONFING_FRACTION_Y) * _resY) - 0.5 * _h) {
+                if (part.x / (1.0f - LCONFING_FRACTION_X) < part.y / (1.0f - LCONFING_FRACTION_Y))
+                    part.x = (1.0f - LCONFING_FRACTION_X) *
+                             _resX;
+                else part.y = (1.0f - LCONFING_FRACTION_Y) * _resY;
+
+            }
+        }
     }
 
     const CubicSpline &getKernel() const { return _kernel; }
@@ -238,6 +325,10 @@ public:
 
     int resZ() const { return _resZ; }
 
+    void scaleGarvity(Real d) {
+        _g *= d;
+    }
+
 private:
     void buildNeighbor() {
 
@@ -246,7 +337,15 @@ private:
         }
 
         for (tIndex i = 0; i < particleCount(); ++i) {
-            _pidxInGrid[idx1d(floor(position(i).x), floor(position(i).y), floor(position(i).z))].push_back(i);
+            const tIndex index = idx1d(floor(position(i).x), floor(position(i).y), floor(position(i).z));
+            if (index > _pidxInGrid.size()) {
+                std::cout << "Index out of bound: " << i << std::endl;
+                std::cout << "Position: " << position(i) << std::endl;
+                std::cout << "Index: " << index << std::endl;
+
+                exit(1);
+            }
+            _pidxInGrid[index].push_back(i);
         }
     }
 
@@ -441,7 +540,8 @@ private:
                                 for (tIndex j: _pidxInGrid[idx1d(_kernelX, _kernelY, _kernelZ)]) {
                                     if (j < _nbWallParticles) { //Boundary
                                         _predP[i] -=
-                                                _m0 * _c_i[i].dotProduct(_kernel.grad_w(position(i) - position(j)));
+                                                _m0 * _wallWeightCoef *
+                                                _c_i[i].dotProduct(_kernel.grad_w(position(i) - position(j)));
                                     } else {
                                         _predP[i] -= _m0 * (_c_i[i] - _d_ii[j] * _p[j] - _c_i[j] -
                                                             _dt * _dt * _m0 / (_d[i] * _d[i]) *
@@ -468,6 +568,10 @@ private:
 #ifdef __DEBUG3__
             cout << "NbIssue " << nbIssue << " InterVel " << _interVel[obsPart] << " d_ii " << _d_ii[obsPart] << " a_ii " << _a_ii[obsPart] << " InterDen " << _interD[obsPart] << " c_i " << _c_i[obsPart] << " PredP " << _predP[obsPart] <<" Pr " << _p[obsPart] << endl;
 #endif
+            if (iter > 500) {
+                std::cout << "Pressure solver did not converge" << std::endl;
+                break;
+            }
         }
 #ifdef __DEBUG2__
         cout << "Iterations : " << iter << endl;
@@ -524,7 +628,7 @@ private:
     }
 
     void updatePosition() {
-#pragma omp parallel for
+#pragma omp parallel for default(none)
         for (tIndex i = _nbWallParticles; i < particleCount(); ++i) {
             _pos[i] += _dt * _vel[i];
         }
@@ -533,14 +637,14 @@ private:
     // simple collision detection/resolution for each particle
     void resolveCollision() {
 
-#pragma omp parallel for
+#pragma omp parallel for default(none) shared(_pos, _vel)
         for (tIndex i = _nbWallParticles; i < particleCount(); ++i) {
             if (particleCollision(_pos[i])) {
                 const Vec3f p0 = _pos[i];
                 clampParticle(_pos[i]);
-                if (p0 == _pos[i]) {
-                    cout << "ALERT FLUID COLLISION IS NOT RESOLVED" << endl;
-                }
+                /*if (p0 == _pos[i]) {
+                    std::cout << "ALERT FLUID COLLISION IS NOT RESOLVED" << std::endl;
+                }*/
                 _vel[i] = (_pos[i] - p0) / _dt;
             }
         }
@@ -560,6 +664,8 @@ private:
 
     // wall
     Real _left, _right, _bottom, _top, _back, _front;          // wall (boundary)
+    bool _useLConfig = false;
+    Real _wallWeightCoef;
     tIndex _nbWallParticles;          // number of particles that belong to the wall
 
     // SPH coefficients
@@ -587,8 +693,6 @@ private:
     const Real _initP;                  // initial pressure for Jacobi method. Must be between 0 and 1
     const Real _omega;                  // relaxation coefficient. Must be between 0 and 1
     const Real _pressureError;           // maximum pressure variation rate serving as a limit of the Jacobi method
-
-
 };
 
-#endif
+#endif /* ___IISPH_SOLVER___ */
